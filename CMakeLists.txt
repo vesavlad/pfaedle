@@ -99,3 +99,26 @@ install(
 	FILES build/pfaedle DESTINATION bin
 	PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE COMPONENT binaries
 )
+
+################################
+# clang-format check
+################################
+find_program(CLANG_FORMAT_COMMAND NAMES clang-format clang-format-9)
+add_custom_target(format-check
+        COMMAND find
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/pfaedle
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/util
+        -type f
+(
+        -name "*.cpp"
+        -o
+        -name "*.h"
+        )
+        -print0
+        | xargs -0 ${CLANG_FORMAT_COMMAND} -i
+        COMMAND git status --porcelain
+        COMMAND git status --porcelain | xargs -I {} -0 test -z \"{}\"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Checking source code formatting"
+        VERBATIM
+        )
