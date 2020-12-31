@@ -18,3 +18,6 @@ compile_commands.json
 [._]s[a-w][a-z]
 *.cppr
 *.hr
+gtfs-out
+.DS_Store
+cmake-build-*
