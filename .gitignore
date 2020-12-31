@@ -21,3 +21,4 @@ compile_commands.json
 gtfs-out
 .DS_Store
 cmake-build-*
+.clang-tidy

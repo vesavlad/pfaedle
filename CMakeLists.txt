@@ -59,6 +59,15 @@ else()
 	set(VERSION_GIT_FULL "${VERSION_GIT}-${VERSION_GIT_IS_DIRTY}")
 endif()
 
+################################
+# Linter
+################################
+option(PFAEDLE_LINT "Run clang-tidy with the compiler." OFF)
+if(PFAEDLE_LINT)
+	# clang-tidy will be run on all targets defined hereafter
+	include(cmake/clang-tidy.cmake)
+endif()
+
 # Download submodules if needed
 
 if(NOT EXISTS ${CMAKE_SOURCE_DIR}/src/configparser/.git OR NOT EXISTS ${CMAKE_SOURCE_DIR}/src/cppgtfs/.git OR NOT EXISTS ${CMAKE_SOURCE_DIR}/src/xml/.git)
