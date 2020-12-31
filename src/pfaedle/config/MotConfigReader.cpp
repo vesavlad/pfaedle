@@ -5,6 +5,7 @@
 #include <set>
 #include <string>
 #include "pfaedle/config/MotConfigReader.h"
+#include "configparser/parse_exception.h"
 #include "util/Misc.h"
 #include "util/String.h"
 #include "util/log/Log.h"
@@ -13,8 +14,8 @@ using pfaedle::config::MotConfigReader;
 using pfaedle::config::MotConfig;
 using pfaedle::osm::FilterRule;
 using pfaedle::osm::KeyVal;
-using configparser::ConfigFileParser;
-using configparser::ParseExc;
+using configparser::config_file_parser;
+using configparser::parse_exception;
 using pfaedle::osm::DeepAttrRule;
 using pfaedle::trgraph::ReplRules;
 using ad::cppgtfs::gtfs::Route;
@@ -24,7 +25,7 @@ MotConfigReader::MotConfigReader() {}
 
 // _____________________________________________________________________________
 void MotConfigReader::parse(const std::vector<std::string>& paths) {
-  ConfigFileParser p;
+  config_file_parser p;
 
   // parse explicitely given paths
   for (const auto& s : paths) {
@@ -366,7 +367,7 @@ void MotConfigReader::parse(const std::vector<std::string>& paths) {
         curCfg.osmBuildOpts.statNormzer =
             trgraph::Normalizer(getNormRules(arr));
       } catch (const std::exception& e) {
-        throw ParseExc(p.getVal(secStr, "station_normalize_chain").line,
+        throw parse_exception(p.getVal(secStr, "station_normalize_chain").line,
                        p.getVal(secStr, "station_normalize_chain").pos,
                        "<valid regular expression>",
                        std::string("<regex error: ") + e.what() + ">",
@@ -381,7 +382,7 @@ void MotConfigReader::parse(const std::vector<std::string>& paths) {
         curCfg.osmBuildOpts.trackNormzer =
             trgraph::Normalizer(getNormRules(arr));
       } catch (const std::exception& e) {
-        throw ParseExc(p.getVal(secStr, "track_normalize_chain").line,
+        throw parse_exception(p.getVal(secStr, "track_normalize_chain").line,
                        p.getVal(secStr, "track_normalize_chain").pos,
                        "<valid regular expression>",
                        std::string("<regex error: ") + e.what() + ">",
@@ -396,7 +397,7 @@ void MotConfigReader::parse(const std::vector<std::string>& paths) {
         curCfg.osmBuildOpts.lineNormzer =
             trgraph::Normalizer(getNormRules(arr));
       } catch (const std::exception& e) {
-        throw ParseExc(p.getVal(secStr, "line_normalize_chain").line,
+        throw parse_exception(p.getVal(secStr, "line_normalize_chain").line,
                        p.getVal(secStr, "line_normalize_chain").pos,
                        "<valid regular expression>",
                        std::string("<regex error: ") + e.what() + ">",
@@ -410,7 +411,7 @@ void MotConfigReader::parse(const std::vector<std::string>& paths) {
         auto arr = p.getStrArr(secStr, "station_id_normalize_chain", ';');
         curCfg.osmBuildOpts.idNormzer = trgraph::Normalizer(getNormRules(arr));
       } catch (const std::exception& e) {
-        throw ParseExc(p.getVal(secStr, "station_id_normalize_chain").line,
+        throw parse_exception(p.getVal(secStr, "station_id_normalize_chain").line,
                        p.getVal(secStr, "station_id_normalize_chain").pos,
                        "<valid regular expression>",
                        std::string("<regex error: ") + e.what() + ">",

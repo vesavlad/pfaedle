@@ -7,7 +7,7 @@
 #include <set>
 #include <string>
 #include <utility>
-#include "ad/cppgtfs/gtfs/Feed.h"
+#include "cppgtfs/gtfs/Feed.h"
 #include "pfaedle/Def.h"
 #include "pfaedle/eval/Collector.h"
 #include "pfaedle/eval/Result.h"

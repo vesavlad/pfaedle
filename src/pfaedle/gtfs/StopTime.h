@@ -9,8 +9,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "ad/cppgtfs/gtfs/Stop.h"
-#include "ad/cppgtfs/gtfs/StopTime.h"
+#include "cppgtfs/gtfs/Stop.h"
+#include "cppgtfs/gtfs/StopTime.h"
 #include "util/Misc.h"
 
 using std::exception;

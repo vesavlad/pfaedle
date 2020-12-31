@@ -6,7 +6,7 @@
 #define PFAEDLE_GTFS_SERVICE_H_
 
 #include <string>
-#include "ad/cppgtfs/gtfs/Service.h"
+#include "cppgtfs/gtfs/Service.h"
 #include "util/Misc.h"
 
 namespace pfaedle {

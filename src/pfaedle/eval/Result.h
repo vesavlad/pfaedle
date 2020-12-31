@@ -6,7 +6,7 @@
 #define PFAEDLE_EVAL_RESULT_H_
 
 #include "pfaedle/gtfs/Feed.h"
-#include "ad/cppgtfs/gtfs/Feed.h"
+#include "cppgtfs/gtfs/Feed.h"
 
 using pfaedle::gtfs::Trip;
 using ad::cppgtfs::gtfs::Shape;

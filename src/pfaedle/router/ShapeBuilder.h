@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include "ad/cppgtfs/gtfs/Feed.h"
+#include "cppgtfs/gtfs/Feed.h"
 #include "pfaedle/Def.h"
 #include "pfaedle/config/MotConfig.h"
 #include "pfaedle/config/PfaedleConfig.h"

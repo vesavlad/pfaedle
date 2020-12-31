@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.17)
 
 project (pfaedle C CXX)
 include(cmake/buildcache.cmake)
+include(cmake/pkg.cmake)
 
 enable_testing()
 
@@ -31,20 +32,20 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -g -DLOGLEVEL=3")
 # export compile commands to tools like clang
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Compiler-specific C++11 activation.
+# Compiler-specific C++17 activation.
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
 	execute_process(
 		COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-	if ((GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8))
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	if ((GCC_VERSION VERSION_GREATER 7.5 OR GCC_VERSION VERSION_EQUAL 7.5))
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 	else ()
-		message(FATAL_ERROR "${PROJECT_NAME} requires g++ 4.8 or greater!")
+		message(FATAL_ERROR "${PROJECT_NAME} requires g++ 7.5 or greater!")
 	endif ()
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 	#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=c++11")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 else ()
-	message(FATAL_ERROR "Your C++ compiler does not support C++11.")
+	message(FATAL_ERROR "Your C++ compiler does not support C++17.")
 endif ()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPFAEDLE_PRECISION=${PFAEDLE_PRECISION}")
@@ -66,14 +67,6 @@ option(PFAEDLE_LINT "Run clang-tidy with the compiler." OFF)
 if(PFAEDLE_LINT)
 	# clang-tidy will be run on all targets defined hereafter
 	include(cmake/clang-tidy.cmake)
-endif()
-
-# Download submodules if needed
-
-if(NOT EXISTS ${CMAKE_SOURCE_DIR}/src/configparser/.git OR NOT EXISTS ${CMAKE_SOURCE_DIR}/src/cppgtfs/.git OR NOT EXISTS ${CMAKE_SOURCE_DIR}/src/xml/.git)
-    execute_process(
-        COMMAND git submodule update --init --recursive
-    )
 endif()
 
 add_subdirectory(src)

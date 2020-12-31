@@ -9,8 +9,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "ad/cppgtfs/gtfs/Route.h"
-#include "configparser/ConfigFileParser.h"
+#include "cppgtfs/gtfs/Route.h"
+#include "configparser/config_file_parser.h"
 #include "pfaedle/_config.h"
 #include "pfaedle/config/MotConfig.h"
 #include "pfaedle/osm/OsmBuilder.h"

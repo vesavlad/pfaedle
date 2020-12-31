@@ -9,8 +9,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "ad/cppgtfs/gtfs/Feed.h"
-#include "ad/cppgtfs/gtfs/Route.h"
+#include "cppgtfs/gtfs/Feed.h"
+#include "cppgtfs/gtfs/Route.h"
 #include "pfaedle/gtfs/Feed.h"
 #include "pfaedle/trgraph/Graph.h"
 #include "util/Nullable.h"

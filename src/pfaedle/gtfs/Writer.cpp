@@ -7,10 +7,10 @@
 #include <map>
 #include <string>
 #include <utility>
-#include "ad/cppgtfs/Parser.h"
-#include "ad/cppgtfs/Writer.h"
-#include "ad/cppgtfs/gtfs/flat/Agency.h"
-#include "ad/util/CsvWriter.h"
+#include "cppgtfs/Parser.h"
+#include "cppgtfs/Writer.h"
+#include "cppgtfs/gtfs/flat/Agency.h"
+#include "cppgtfs/util/CsvWriter.h"
 #include "pfaedle/gtfs/Writer.h"
 
 using ad::util::CsvWriter;

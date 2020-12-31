@@ -7,7 +7,7 @@
 
 #include <map>
 #include <string>
-#include "ad/cppgtfs/gtfs/Feed.h"
+#include "cppgtfs/gtfs/Feed.h"
 #include "util/geo/GeoGraph.h"
 
 using util::geograph::GeoNodePL;

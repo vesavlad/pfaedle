@@ -22,7 +22,7 @@
 #include "util/Misc.h"
 #include "util/Nullable.h"
 #include "util/log/Log.h"
-#include "xml/pfxml.h"
+#include "pfxml/pfxml.h"
 
 using ad::cppgtfs::gtfs::Stop;
 using pfaedle::osm::BlockSearch;
@@ -454,8 +454,8 @@ pfxml::parser_state OsmBuilder::readBBoxNds(pfxml::file* xml, OsmIdSet* nodes,
 
     if (inNodeBlock && xml->level() == 3 && curId &&
         strcmp(cur.name, "tag") == 0) {
-      if (filter.nohup(cur.attrs.find("k")->second,
-                       cur.attrs.find("v")->second)) {
+      if (filter.nohup(cur.attr("k"),
+                       cur.attr("v"))) {
         nohupNodes->add(curId);
       }
     }
@@ -466,11 +466,11 @@ pfxml::parser_state OsmBuilder::readBBoxNds(pfxml::file* xml, OsmIdSet* nodes,
     if (inNodeBlock) {
       // block ended
       if (strcmp(cur.name, "node")) return xml->state();
-      double y = util::atof(cur.attrs.find("lat")->second, 7);
-      double x = util::atof(cur.attrs.find("lon")->second, 7);
+      double y = util::atof(cur.attr("lat"), 7);
+      double x = util::atof(cur.attr("lon"), 7);
 
       if (bbox.contains(Point<double>(x, y))) {
-        curId = util::atoul(cur.attrs.find("id")->second);
+        curId = util::atoul(cur.attr("id"));
         nodes->add(curId);
       }
     }
@@ -489,16 +489,16 @@ OsmWay OsmBuilder::nextWayWithId(pfxml::file* xml, osmid wid,
     if (xml->level() == 2 || xml->level() == 0) {
       if (w.id || strcmp(cur.name, "way")) return w;
 
-      osmid id = util::atoul(cur.attrs.find("id")->second);
+      osmid id = util::atoul(cur.attr("id"));
       if (id == wid) w.id = id;
     }
 
     if (w.id && xml->level() == 3) {
       if (strcmp(cur.name, "nd") == 0) {
-        w.nodes.push_back(util::atoul(cur.attrs.find("ref")->second));
+        w.nodes.push_back(util::atoul(cur.attr("ref")));
       } else if (strcmp(cur.name, "tag") == 0) {
-        if (keepAttrs.count(cur.attrs.find("k")->second))
-          w.attrs[cur.attrs.find("k")->second] = cur.attrs.find("v")->second;
+        if (keepAttrs.count(cur.attr("k")))
+          w.attrs[cur.attr("k")] = cur.attr("v");
       }
     }
   } while (xml->next());
@@ -542,18 +542,18 @@ OsmWay OsmBuilder::nextWay(pfxml::file* xml, const RelMap& wayRels,
       if (keepWay(w, wayRels, filter, bBoxNodes, fl)) return w;
       if (strcmp(cur.name, "way")) return OsmWay();
 
-      w.id = util::atoul(cur.attrs.find("id")->second);
+      w.id = util::atoul(cur.attr("id"));
       w.nodes.clear();
       w.attrs.clear();
     }
 
     if (w.id && xml->level() == 3) {
       if (strcmp(cur.name, "nd") == 0) {
-        osmid nid = util::atoul(cur.attrs.find("ref")->second);
+        osmid nid = util::atoul(cur.attr("ref"));
         w.nodes.push_back(nid);
       } else if (strcmp(cur.name, "tag") == 0) {
-        if (keepAttrs.count(cur.attrs.find("k")->second))
-          w.attrs[cur.attrs.find("k")->second] = cur.attrs.find("v")->second;
+        if (keepAttrs.count(cur.attr("k")))
+          w.attrs[cur.attr("k")] = cur.attr("v");
       }
     }
   } while (xml->next());
@@ -692,14 +692,14 @@ OsmNode OsmBuilder::nextNode(pfxml::file* xml, NIdMap* nodes,
       if (strcmp(cur.name, "node")) return OsmNode();
 
       n.attrs.clear();
-      n.lat = util::atof(cur.attrs.find("lat")->second, 7);
-      n.lng = util::atof(cur.attrs.find("lon")->second, 7);
-      n.id = util::atoul(cur.attrs.find("id")->second);
+      n.lat = util::atof(cur.attr("lat"), 7);
+      n.lng = util::atof(cur.attr("lon"), 7);
+      n.id = util::atoul(cur.attr("id"));
     }
 
     if (xml->level() == 3 && n.id && strcmp(cur.name, "tag") == 0) {
-      if (keepAttrs.count(cur.attrs.find("k")->second))
-        n.attrs[cur.attrs.find("k")->second] = cur.attrs.find("v")->second;
+      if (keepAttrs.count(cur.attr("k")))
+        n.attrs[cur.attr("k")] = cur.attr("v");
     }
   } while (xml->next());
 
@@ -828,34 +828,40 @@ OsmRel OsmBuilder::nextRel(pfxml::file* xml, const OsmFilter& filter,
       rel.wayRoles.clear();
       rel.keepFlags = 0;
       rel.dropFlags = 0;
-      rel.id = util::atoul(cur.attrs.find("id")->second);
+      rel.id = util::atoul(cur.attr("id"));
     }
 
     if (xml->level() == 3 && rel.id) {
       if (strcmp(cur.name, "member") == 0) {
-        if (strcmp(cur.attrs.find("type")->second, "node") == 0) {
-          osmid id = util::atoul(cur.attrs.find("ref")->second);
+        if (strcmp(cur.attr("type"), "node") == 0) {
+          osmid id = util::atoul(cur.attr("ref"));
           // TODO(patrick): no need to push IDs that have been filtered out by
           // the bounding box!!!!
           rel.nodes.push_back(id);
-          if (cur.attrs.count("role")) {
-            rel.nodeRoles.push_back(cur.attrs.find("role")->second);
+          const auto count = std::count_if(std::begin(cur.attrs), std::end(cur.attrs), [](const auto& attr){
+              return attr.first == "role";
+          });
+          if (count) {
+            rel.nodeRoles.push_back(cur.attr("role"));
           } else {
             rel.nodeRoles.push_back("");
           }
         }
-        if (strcmp(cur.attrs.find("type")->second, "way") == 0) {
-          osmid id = util::atoul(cur.attrs.find("ref")->second);
+        if (strcmp(cur.attr("type"), "way") == 0) {
+          osmid id = util::atoul(cur.attr("ref"));
           rel.ways.push_back(id);
-          if (cur.attrs.count("role")) {
-            rel.wayRoles.push_back(cur.attrs.find("role")->second);
+          const auto count = std::count_if(std::begin(cur.attrs), std::end(cur.attrs), [](const auto& attr){
+              return attr.first == "role";
+          });
+          if (count) {
+            rel.wayRoles.push_back(cur.attr("role"));
           } else {
             rel.wayRoles.push_back("");
           }
         }
       } else if (strcmp(cur.name, "tag") == 0) {
-        if (keepAttrs.count(cur.attrs.find("k")->second))
-          rel.attrs[cur.attrs.find("k")->second] = cur.attrs.find("v")->second;
+        if (keepAttrs.count(cur.attr("k")))
+          rel.attrs[cur.attr("k")] = cur.attr("v");
       }
     }
   } while (xml->next());

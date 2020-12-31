@@ -8,7 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <set>
-#include "ad/cppgtfs/gtfs/Feed.h"
+#include "cppgtfs/gtfs/Feed.h"
 #include "pfaedle/router/Router.h"
 #include "pfaedle/trgraph/Graph.h"
 #include "pfaedle/trgraph/Normalizer.h"

@@ -8,7 +8,7 @@
 #include <map>
 #include <string>
 #include <unordered_map>
-#include "ad/cppgtfs/gtfs/Feed.h"
+#include "cppgtfs/gtfs/Feed.h"
 #include "pfaedle/Def.h"
 #include "pfaedle/trgraph/StatInfo.h"
 #include "util/geo/Geo.h"

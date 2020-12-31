@@ -8,7 +8,7 @@
 #include <set>
 #include <string>
 #include <vector>
-#include "ad/cppgtfs/gtfs/Feed.h"
+#include "cppgtfs/gtfs/Feed.h"
 #include "pfaedle/gtfs/Feed.h"
 #include "util/String.h"
 #include "util/geo/GeoGraph.h"

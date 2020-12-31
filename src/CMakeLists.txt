@@ -10,5 +10,3 @@ include_directories(
 
 add_subdirectory(util)
 add_subdirectory(pfaedle)
-add_subdirectory(cppgtfs)
-add_subdirectory(configparser)

@@ -10,12 +10,12 @@
 #include "Service.h"
 #include "ShapeContainer.h"
 #include "StopTime.h"
-#include "ad/cppgtfs/gtfs/ContContainer.h"
-#include "ad/cppgtfs/gtfs/Feed.h"
-#include "ad/cppgtfs/gtfs/NullContainer.h"
-#include "ad/cppgtfs/gtfs/Stop.h"
-#include "ad/cppgtfs/gtfs/StopTime.h"
-#include "ad/cppgtfs/gtfs/Trip.h"
+#include "cppgtfs/gtfs/ContContainer.h"
+#include "cppgtfs/gtfs/Feed.h"
+#include "cppgtfs/gtfs/NullContainer.h"
+#include "cppgtfs/gtfs/Stop.h"
+#include "cppgtfs/gtfs/StopTime.h"
+#include "cppgtfs/gtfs/Trip.h"
 
 namespace pfaedle {
 namespace gtfs {

@@ -11,7 +11,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "ad/cppgtfs/gtfs/Feed.h"
+#include "cppgtfs/gtfs/Feed.h"
 #include "pfaedle/gtfs/Feed.h"
 #include "pfaedle/Def.h"
 #include "pfaedle/eval/Result.h"

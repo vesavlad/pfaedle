@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include "ad/cppgtfs/gtfs/Feed.h"
+#include "cppgtfs/gtfs/Feed.h"
 #include "pfaedle/Def.h"
 #include "pfaedle/osm/BBoxIdx.h"
 #include "pfaedle/osm/OsmFilter.h"
@@ -25,7 +25,7 @@
 #include "util/Nullable.h"
 #include "util/geo/Geo.h"
 #include "util/xml/XmlWriter.h"
-#include "xml/pfxml.h"
+#include "pfxml/pfxml.h"
 
 namespace pfaedle {
 namespace osm {

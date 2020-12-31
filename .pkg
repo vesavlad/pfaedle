@@ -1,0 +1,12 @@
+[cppgtfs]
+	url=git@github.com:vesavlad/cppgtfs.git
+    branch=c++17
+    commit=2a6223e85bea2f09574dd1003f88bdf74923fd6b
+[xml]
+	url=git@github.com:vesavlad/pfxml.git
+    branch=feat/add-cmake-support
+    commit=2ad3712e0a8a8b8d14082dceaf84b24fa33654c4
+[configparser]
+    url=git@github.com:vesavlad/configparser.git
+    branch=master
+    commit=d77e55760c0370356c39ec2b033d5fe34fbfdab5

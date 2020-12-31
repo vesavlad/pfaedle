@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 #include <set>
-#include "ad/cppgtfs/gtfs/Route.h"
+#include "cppgtfs/gtfs/Route.h"
 
 namespace pfaedle {
 namespace config {

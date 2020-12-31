@@ -13,8 +13,9 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "ad/cppgtfs/Parser.h"
-#include "ad/cppgtfs/Writer.h"
+#include "cppgtfs/Parser.h"
+#include "cppgtfs/Writer.h"
+#include "configparser/parse_file_exception.h"
 #include "pfaedle/config/ConfigReader.h"
 #include "pfaedle/config/MotConfig.h"
 #include "pfaedle/config/MotConfigReader.h"
@@ -48,7 +49,7 @@ using pfaedle::osm::OsmBuilder;
 using pfaedle::config::MotConfig;
 using pfaedle::config::Config;
 using pfaedle::router::ShapeBuilder;
-using configparser::ParseFileExc;
+using configparser::parse_file_exception;
 using pfaedle::config::MotConfigReader;
 using pfaedle::config::ConfigReader;
 using pfaedle::eval::Collector;
@@ -91,7 +92,7 @@ int main(int argc, char** argv) {
 
   try {
     motCfgReader.parse(cfgPaths);
-  } catch (const configparser::ParseExc& ex) {
+  } catch (const configparser::parse_file_exception& ex) {
     LOG(ERROR) << "Could not parse MOT configurations, reason was:";
     std::cerr << ex.what() << std::endl;
     exit(static_cast<int>(RetCode::MOT_CFG_PARSE_ERR));
