@@ -2,16 +2,6 @@ cmake_minimum_required (VERSION 2.8)
 
 project (pfaedle)
 
-if (CMAKE_BUILD_TYPE)
-	string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE)
-endif()
-if (CMAKE_BUILD_TYPE STREQUAL "DEBUG")
-	set(CPPLINT "${CMAKE_SOURCE_DIR}/cpplint.py")
-	include(cmake/cpplint.cmake)
-endif()
-
-set(CPPLINT_PROJECT_ROOT "src")
-
 enable_testing()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
