@@ -4,18 +4,24 @@ set(pfaedle_main PfaedleMain.cpp)
 
 list(REMOVE_ITEM pfaedle_SRC ${pfaedle_main})
 
-include_directories(
-	${PFAEDLE_INCLUDE_DIR}
-)
-
-configure_file (
-  "_config.h.in"
-  "_config.h"
-)
+include_directories(${PFAEDLE_INCLUDE_DIR})
 
 add_executable(pfaedle ${pfaedle_main})
 add_library(pfaedle_dep ${pfaedle_SRC})
-target_link_libraries(pfaedle_dep util configparser cppgtfs pfxml)
+target_link_libraries(pfaedle_dep
+        PRIVATE pfaedle-generated
+        PUBLIC util
+        PUBLIC configparser
+        PUBLIC cppgtfs
+        PUBLIC pfxml)
 
-include_directories(pfaedle_dep PUBLIC ${PROJECT_SOURCE_DIR}/src/cppgtfs/src)
-target_link_libraries(pfaedle pfaedle_dep util configparser cppgtfs -lpthread)
+include_directories(pfaedle_dep PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../)
+
+
+target_link_libraries(pfaedle
+        PRIVATE pfaedle-generated
+        pfaedle_dep
+        util
+        configparser
+        cppgtfs
+        -lpthread)

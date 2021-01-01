@@ -8,7 +8,7 @@
 #include <iostream>
 #include <string>
 #include "pfaedle/Def.h"
-#include "pfaedle/_config.h"
+#include "pfaedle/config.h"
 #include "pfaedle/config/ConfigReader.h"
 #include "util/String.h"
 #include "util/log/Log.h"
@@ -27,7 +27,7 @@ static const char* AUTHORS = "Patrick Brosi <brosi@informatik.uni-freiburg.de>";
 // _____________________________________________________________________________
 void ConfigReader::help(const char* bin) {
   std::cout << std::setfill(' ') << std::left << "pfaedle GTFS map matcher "
-            << VERSION_FULL << "\n(built " << __DATE__ << " " << __TIME__
+            << pfaedle::long_version() << "\n(built " << __DATE__ << " " << __TIME__
             << " with geometry precision <" << PFAEDLE_PRECISION_STR << ">)\n\n"
             << "(C) " << YEAR << " " << COPY << "\n"
             << "Authors: " << AUTHORS << "\n\n"
@@ -179,10 +179,10 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) {
         cfg->outputPath = optarg;
         break;
       case 'i':
-        cfg->feedPaths.push_back(optarg);
+        cfg->feedPaths.emplace_back(optarg);
         break;
       case 'c':
-        cfg->configPaths.push_back(optarg);
+        cfg->configPaths.emplace_back(optarg);
         break;
       case 'x':
         cfg->osmPath = optarg;
@@ -212,7 +212,7 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) {
         cfg->inPlace = true;
         break;
       case 'v':
-        std::cout << "pfaedle " << VERSION_FULL << " (built " << __DATE__ << " "
+        std::cout << "pfaedle " << pfaedle::short_version() << " (built " << __DATE__ << " "
                   << __TIME__ << " with geometry precision <"
                   << PFAEDLE_PRECISION_STR << ">)\n"
                   << "(C) " << YEAR << " " << COPY << "\n"

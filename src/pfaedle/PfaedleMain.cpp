@@ -13,6 +13,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "pfaedle/config.h"
 #include "cppgtfs/Parser.h"
 #include "cppgtfs/Writer.h"
 #include "configparser/parse_file_exception.h"
@@ -333,7 +334,7 @@ std::vector<std::string> getCfgPaths(const Config& cfg) {
 
   // install prefix global configuration path, if available
   {
-    auto path = std::string(INSTALL_PREFIX) +
+    auto path = pfaedle::install_prefix_path() +
                 std::string(CFG_DIR) + "/" + "pfaedle" + "/" +
                 CFG_FILE_NAME;
     std::ifstream is(path);

@@ -42,21 +42,43 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
 		message(FATAL_ERROR "${PROJECT_NAME} requires g++ 7.5 or greater!")
 	endif ()
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-	#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=c++11")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=c++17")
 else ()
 	message(FATAL_ERROR "Your C++ compiler does not support C++17.")
 endif ()
 
-# http://brianmilco.blogspot.de/2012/11/cmake-automatically-use-git-tags-as.html
-include(GetGitRevisionDescription)
-git_get_tag(VERSION_GIT)
-get_git_is_dirty(VERSION_GIT_IS_DIRTY)
-if ("${VERSION_GIT_IS_DIRTY}" STREQUAL "")
-	set(VERSION_GIT_FULL "${VERSION_GIT}")
-else()
-	set(VERSION_GIT_FULL "${VERSION_GIT}-${VERSION_GIT_IS_DIRTY}")
-endif()
+add_library(pfaedle-generated INTERFACE)
+target_include_directories(pfaedle-generated INTERFACE ${CMAKE_BINARY_DIR}/generated)
+
+################################
+# PFAEDLE Version
+################################
+execute_process(
+        COMMAND git rev-parse --abbrev-ref HEAD
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        OUTPUT_VARIABLE pfaedle_git_branch
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+execute_process(
+        COMMAND git --no-pager log -1 --format=%h
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        OUTPUT_VARIABLE pfaedle_git_ref
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+execute_process(
+        COMMAND git describe --always --tags --dirty=-dirty
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        OUTPUT_VARIABLE pfaedle_git_tag
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+configure_file (
+        "src/pfaedle/config.h.in"
+        "${CMAKE_BINARY_DIR}/generated/pfaedle/config.h"
+)
+
 
 ################################
 # Linter

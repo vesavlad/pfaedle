@@ -1,0 +1,35 @@
+#pragma once
+
+#include <sstream>
+#include <string>
+
+#define PFAEDLE_GIT_REF "@pfaedle_git_ref@"
+#define PFAEDLE_GIT_TAG "@pfaedle_git_tag@"
+#define PFAEDLE_GIT_BRANCH "@pfaedle_git_branch@"
+#define INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX@"
+
+namespace pfaedle
+{
+
+static std::string short_version()
+{
+    return PFAEDLE_GIT_TAG;
+}
+
+static std::string long_version()
+{
+    std::stringstream ss;
+    ss << PFAEDLE_GIT_TAG
+       << " (git-ref: " << PFAEDLE_GIT_REF
+       << " on " << PFAEDLE_GIT_BRANCH << ")";
+    return ss.str();
+}
+
+static std::string install_prefix_path()
+{
+    std::stringstream ss;
+    ss << INSTALL_PREFIX;
+    return ss.str();
+}
+
+}  // namespace pfaedle
