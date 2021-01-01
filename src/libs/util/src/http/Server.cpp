@@ -19,10 +19,10 @@
 #ifdef ZLIB_FOUND
 #include <zlib.h>
 #endif
-#include <vector>
-#include "Server.h"
+#include "util/http/Server.h"
 #include "util/String.h"
 #include "util/log/Log.h"
+#include <vector>
 
 using util::http::Socket;
 using util::http::Queue;

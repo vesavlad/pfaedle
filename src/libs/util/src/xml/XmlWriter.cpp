@@ -2,12 +2,12 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
+#include "util/xml/XmlWriter.h"
 #include <algorithm>
 #include <map>
 #include <ostream>
 #include <stack>
 #include <string>
-#include "XmlWriter.h"
 
 using namespace util;
 using namespace xml;

@@ -2,9 +2,9 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include <iomanip>
-#include "Writer.h"
+#include "util/json/Writer.h"
 #include "util/String.h"
+#include <iomanip>
 using namespace util;
 using namespace json;
 

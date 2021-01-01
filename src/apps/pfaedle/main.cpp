@@ -2,14 +2,11 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include <limits.h>
+#include <climits>
 #include <pwd.h>
-#include <signal.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
-#include <fstream>
 #include <map>
 #include <string>
 #include <vector>
@@ -24,13 +21,11 @@
 #include "pfaedle/gtfs/Feed.h"
 #include "pfaedle/gtfs/Writer.h"
 #include "pfaedle/netgraph/Graph.h"
-#include "pfaedle/osm/OsmIdSet.h"
 #include "pfaedle/router/ShapeBuilder.h"
 #include "pfaedle/trgraph/Graph.h"
 #include "pfaedle/trgraph/StatGroup.h"
 #include "util/geo/output/GeoGraphJsonOutput.h"
 #include "util/geo/output/GeoJsonOutput.h"
-#include "util/json/Writer.h"
 #include "util/log/Log.h"
 #include "util/Misc.h"
 
