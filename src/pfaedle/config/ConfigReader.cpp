@@ -19,7 +19,7 @@ using std::string;
 using std::exception;
 using std::vector;
 
-static const char* YEAR = __DATE__ + 7;
+static const char* YEAR = static_cast<const char*>(__DATE__) + 7;
 static const char* COPY =
     "University of Freiburg - Chair of Algorithms and Data Structures";
 static const char* AUTHORS = "Patrick Brosi <brosi@informatik.uni-freiburg.de>";
