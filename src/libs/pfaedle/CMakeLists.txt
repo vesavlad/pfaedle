@@ -28,12 +28,12 @@ configure_file (
 )
 
 file(GLOB_RECURSE pfaedle_SRC *.cpp)
-add_library(pfaedle_dep ${pfaedle_SRC})
-target_link_libraries(pfaedle_dep
+add_library(pfaedle-lib ${pfaedle_SRC})
+target_link_libraries(pfaedle-lib
         PRIVATE pfaedle-generated
-        PUBLIC util
+        PUBLIC pfaedle-util
         PUBLIC configparser
         PUBLIC cppgtfs
         PUBLIC pfxml)
-target_include_directories(pfaedle_dep PUBLIC include)
+target_include_directories(pfaedle-lib PUBLIC include)
 

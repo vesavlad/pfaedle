@@ -4,12 +4,13 @@
 
 #include <climits>
 #include <pwd.h>
-#include <stdio.h>
+#include <cstdio>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <map>
 #include <string>
 #include <vector>
+
 #include "pfaedle/config.h"
 #include "cppgtfs/Parser.h"
 #include "cppgtfs/Writer.h"
