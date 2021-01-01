@@ -14,20 +14,14 @@
 
 #define __str_a(s) __str_b(s)
 #define __str_b(s) #s
-#define __str_c(s) s ## 1
-#define __str_d(s) __str_c(s)
 
-#if !defined(PFAEDLE_PRECISION) || (__str_d(PFAEDLE_PRECISION) == 1)
-#undef PFAEDLE_PRECISION
 #define PFAEDLE_PRECISION double
-#endif
-
 #define PFAEDLE_PRECISION_STR __str_a(PFAEDLE_PRECISION)
 
-#define POINT util::geo::Point<PFAEDLE_PRECISION>
-#define LINE util::geo::Line<PFAEDLE_PRECISION>
-#define BOX util::geo::Box<PFAEDLE_PRECISION>
-#define POLYLINE util::geo::PolyLine<PFAEDLE_PRECISION>
+using POINT = util::geo::Point<PFAEDLE_PRECISION>;
+using LINE = util::geo::Line<PFAEDLE_PRECISION>;
+using BOX = util::geo::Box<PFAEDLE_PRECISION>;
+using POLYLINE = util::geo::PolyLine<PFAEDLE_PRECISION>;
 
 #define BOX_PADDING 2500
 
