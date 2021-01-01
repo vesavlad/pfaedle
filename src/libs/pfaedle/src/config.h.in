@@ -32,4 +32,4 @@ static std::string install_prefix_path()
     return ss.str();
 }
 
-}  // namespace pfaedle
+}// namespace pfaedle

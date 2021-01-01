@@ -5,7 +5,7 @@
 #ifndef PFAEDLE_GTFS_ROUTE_H_
 #define PFAEDLE_GTFS_ROUTE_H_
 
-#include <stdint.h>
+#include <cstdint>
 #include <algorithm>
 #include <iomanip>
 #include <set>
@@ -14,9 +14,6 @@
 #include "cppgtfs/gtfs/Agency.h"
 #include "cppgtfs/gtfs/Route.h"
 #include "util/Misc.h"
-
-using std::exception;
-using std::string;
 
 namespace pfaedle {
 namespace gtfs {
@@ -28,9 +25,9 @@ class Route {
 
   Route() {}
 
-  Route(const string& id, ad::cppgtfs::gtfs::Agency* agency,
-        const string& short_name, const string& long_name, const string& desc,
-        ad::cppgtfs::gtfs::flat::Route::TYPE type, const string& url,
+  Route(const std::string& id, ad::cppgtfs::gtfs::Agency* agency,
+        const std::string& short_name, const std::string& long_name, const std::string& desc,
+        ad::cppgtfs::gtfs::flat::Route::TYPE type, const std::string& url,
         uint32_t color, uint32_t text_color)
       : _id(id), _short_name(short_name), _long_name(long_name), _type(type) {
     UNUSED(agency);

@@ -2,16 +2,16 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include <string>
-#include <unordered_map>
 #include "pfaedle/trgraph/NodePL.h"
 #include "pfaedle/trgraph/StatGroup.h"
 #include "pfaedle/trgraph/StatInfo.h"
 #include "util/String.h"
+#include <string>
+#include <unordered_map>
 
-using pfaedle::trgraph::StatInfo;
-using pfaedle::trgraph::NodePL;
 using pfaedle::trgraph::Component;
+using pfaedle::trgraph::NodePL;
+using pfaedle::trgraph::StatInfo;
 
 // we use the adress of this dummy station info as a special value
 // of this node, meaning "is a station block". Re-using the _si field here
@@ -21,71 +21,75 @@ StatInfo NodePL::_blockerSI = StatInfo();
 std::unordered_map<const Component*, size_t> NodePL::_comps;
 
 // _____________________________________________________________________________
-NodePL::NodePL()
-    : _geom(0, 0),
-      _si(0),
-      _component(0)
+NodePL::NodePL() :
+    _geom(0, 0),
+    _si(0),
+    _component(0)
 #ifdef PFAEDLE_DBG
-      ,
-      _vis(0)
+    ,
+    _vis(0)
 #endif
 {
 }
 
 // _____________________________________________________________________________
-NodePL::NodePL(const NodePL& pl)
-    : _geom(pl._geom),
-      _si(0),
-      _component(pl._component)
+NodePL::NodePL(const NodePL& pl) :
+    _geom(pl._geom),
+    _si(0),
+    _component(pl._component)
 #ifdef PFAEDLE_DBG
-      ,
-      _vis(pl._vis)
+    ,
+    _vis(pl._vis)
 #endif
 {
-  if (pl._si) setSI(*(pl._si));
+    if (pl._si) setSI(*(pl._si));
 }
 
 // _____________________________________________________________________________
-NodePL::NodePL(const POINT& geom)
-    : _geom(geom),
-      _si(0),
-      _component(0)
+NodePL::NodePL(const POINT& geom) :
+    _geom(geom),
+    _si(0),
+    _component(0)
 #ifdef PFAEDLE_DBG
-      ,
-      _vis(0)
+    ,
+    _vis(0)
 #endif
 {
 }
 
 // _____________________________________________________________________________
-NodePL::NodePL(const POINT& geom, const StatInfo& si)
-    : _geom(geom),
-      _si(0),
-      _component(0)
+NodePL::NodePL(const POINT& geom, const StatInfo& si) :
+    _geom(geom),
+    _si(0),
+    _component(0)
 #ifdef PFAEDLE_DBG
-      ,
-      _vis(0)
+    ,
+    _vis(0)
 #endif
 {
-  setSI(si);
+    setSI(si);
 }
 
 // _____________________________________________________________________________
-NodePL::~NodePL() {
-  if (getSI()) delete _si;
-  if (_component) {
-    _comps[_component]--;
-    if (_comps[_component] == 0) {
-      delete _component;
-      _comps.erase(_comps.find(_component));
+NodePL::~NodePL()
+{
+    if (getSI()) delete _si;
+    if (_component)
+    {
+        _comps[_component]--;
+        if (_comps[_component] == 0)
+        {
+            delete _component;
+            _comps.erase(_comps.find(_component));
+        }
     }
-  }
 }
 
 // _____________________________________________________________________________
-void NodePL::setVisited() const {
+void NodePL::setVisited() const
+{
 #ifdef PFAEDLE_DBG
-  _vis = true;
+    _vis = true;
 #endif
 }
 
@@ -96,15 +100,16 @@ void NodePL::setNoStat() { _si = 0; }
 const Component* NodePL::getComp() const { return _component; }
 
 // _____________________________________________________________________________
-void NodePL::setComp(const Component* c) {
-  if (_component == c) return;
-  _component = c;
+void NodePL::setComp(const Component* c)
+{
+    if (_component == c) return;
+    _component = c;
 
-  // NOT thread safe!
-  if (!_comps.count(c))
-    _comps[c] = 1;
-  else
-    _comps[c]++;
+    // NOT thread safe!
+    if (!_comps.count(c))
+        _comps[c] = 1;
+    else
+        _comps[c]++;
 }
 
 // _____________________________________________________________________________
@@ -114,52 +119,58 @@ const POINT* NodePL::getGeom() const { return &_geom; }
 void NodePL::setGeom(const POINT& geom) { _geom = geom; }
 
 // _____________________________________________________________________________
-util::json::Dict NodePL::getAttrs() const {
-  util::json::Dict obj;
-  obj["component"] = std::to_string(reinterpret_cast<size_t>(_component));
+util::json::Dict NodePL::getAttrs() const
+{
+    util::json::Dict obj;
+    obj["component"] = std::to_string(reinterpret_cast<size_t>(_component));
 #ifdef PFAEDLE_DBG
-  obj["dijkstra_vis"] = _vis ? "yes" : "no";
+    obj["dijkstra_vis"] = _vis ? "yes" : "no";
 #endif
-  if (getSI()) {
-    obj["station_info_ptr"] = util::toString(_si);
-    obj["station_name"] = _si->getName();
-    obj["station_alt_names"] = util::implode(_si->getAltNames(), ",");
-    obj["from_osm"] = _si->isFromOsm() ? "yes" : "no";
-    obj["station_platform"] = _si->getTrack();
-    obj["station_group"] =
-        std::to_string(reinterpret_cast<size_t>(_si->getGroup()));
+    if (getSI())
+    {
+        obj["station_info_ptr"] = util::toString(_si);
+        obj["station_name"] = _si->getName();
+        obj["station_alt_names"] = util::implode(_si->getAltNames(), ",");
+        obj["from_osm"] = _si->isFromOsm() ? "yes" : "no";
+        obj["station_platform"] = _si->getTrack();
+        obj["station_group"] =
+                std::to_string(reinterpret_cast<size_t>(_si->getGroup()));
 
 #ifdef PFAEDLE_STATION_IDS
-    // only print this in debug mode
-    obj["station_id"] = _si->getId();
+        // only print this in debug mode
+        obj["station_id"] = _si->getId();
 #endif
 
 
-    std::stringstream gtfsIds;
-    if (_si->getGroup()) {
-      for (auto* s : _si->getGroup()->getStops()) {
-        gtfsIds << s->getId() << " (" << s->getName() << "),";
-      }
-    }
+        std::stringstream gtfsIds;
+        if (_si->getGroup())
+        {
+            for (auto* s : _si->getGroup()->getStops())
+            {
+                gtfsIds << s->getId() << " (" << s->getName() << "),";
+            }
+        }
 
-    obj["station_group_stops"] = gtfsIds.str();
-  }
-  return obj;
+        obj["station_group_stops"] = gtfsIds.str();
+    }
+    return obj;
 }
 
 // _____________________________________________________________________________
 void NodePL::setSI(const StatInfo& si) { _si = new StatInfo(si); }
 
 // _____________________________________________________________________________
-const StatInfo* NodePL::getSI() const {
-  if (isBlocker()) return 0;
-  return _si;
+const StatInfo* NodePL::getSI() const
+{
+    if (isBlocker()) return 0;
+    return _si;
 }
 
 // _____________________________________________________________________________
-StatInfo* NodePL::getSI() {
-  if (isBlocker()) return 0;
-  return _si;
+StatInfo* NodePL::getSI()
+{
+    if (isBlocker()) return 0;
+    return _si;
 }
 
 // _____________________________________________________________________________
