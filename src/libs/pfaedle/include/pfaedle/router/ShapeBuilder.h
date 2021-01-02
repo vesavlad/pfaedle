@@ -71,7 +71,7 @@ class ShapeBuilder {
 
   static void getGtfsBox(const Feed* feed, const MOTs& mots,
                          const std::string& tid, bool dropShapes,
-                         osm::BBoxIdx* box);
+                         osm::BBoxIdx& box);
 
  private:
   Feed* _feed;

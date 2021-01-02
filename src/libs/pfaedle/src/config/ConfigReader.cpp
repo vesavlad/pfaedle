@@ -117,7 +117,7 @@ void ConfigReader::help(const char* bin)
 }
 
 // _____________________________________________________________________________
-void ConfigReader::read(Config* cfg, int argc, char** argv)
+void ConfigReader::read(Config& cfg, int argc, char** argv)
 {
     std::string motStr = "all";
     bool printOpts = false;
@@ -153,64 +153,64 @@ void ConfigReader::read(Config* cfg, int argc, char** argv)
         switch (c)
         {
             case 1:
-                cfg->writeGraph = true;
+                cfg.writeGraph = true;
                 break;
             case 2:
-                cfg->writeCombGraph = true;
+                cfg.writeCombGraph = true;
                 break;
             case 3:
-                cfg->evaluate = true;
+                cfg.evaluate = true;
                 break;
             case 4:
-                cfg->buildTransitGraph = true;
+                cfg.buildTransitGraph = true;
                 break;
             case 5:
-                cfg->solveMethod = optarg;
+                cfg.solveMethod = optarg;
                 break;
             case 6:
-                cfg->evalPath = optarg;
+                cfg.evalPath = optarg;
                 break;
             case 7:
-                cfg->evalDfBins = optarg;
+                cfg.evalDfBins = optarg;
                 break;
             case 8:
-                cfg->useCaching = true;
+                cfg.useCaching = true;
                 break;
             case 'o':
-                cfg->outputPath = optarg;
+                cfg.outputPath = optarg;
                 break;
             case 'i':
-                cfg->feedPaths.emplace_back(optarg);
+                cfg.feedPaths.emplace_back(optarg);
                 break;
             case 'c':
-                cfg->configPaths.emplace_back(optarg);
+                cfg.configPaths.emplace_back(optarg);
                 break;
             case 'x':
-                cfg->osmPath = optarg;
+                cfg.osmPath = optarg;
                 break;
             case 'D':
-                cfg->dropShapes = true;
+                cfg.dropShapes = true;
                 break;
             case 'm':
                 motStr = optarg;
                 break;
             case 'g':
-                cfg->gridSize = atof(optarg);
+                cfg.gridSize = atof(optarg);
                 break;
             case 'X':
-                cfg->writeOsm = optarg;
+                cfg.writeOsm = optarg;
                 break;
             case 'T':
-                cfg->shapeTripId = optarg;
+                cfg.shapeTripId = optarg;
                 break;
             case 'd':
-                cfg->dbgOutputPath = optarg;
+                cfg.dbgOutputPath = optarg;
                 break;
             case 'a':
-                cfg->writeOverpass = true;
+                cfg.writeOverpass = true;
                 break;
             case 9:
-                cfg->inPlace = true;
+                cfg.inPlace = true;
                 break;
             case 'v':
                 std::cout << "pfaedle " << pfaedle::short_version() << " (built " << __DATE__ << " "
@@ -242,17 +242,17 @@ void ConfigReader::read(Config* cfg, int argc, char** argv)
         }
     }
 
-    for (int i = optind; i < argc; i++) cfg->feedPaths.emplace_back(argv[i]);
+    for (int i = optind; i < argc; i++) cfg.feedPaths.emplace_back(argv[i]);
 
     auto v = util::split(motStr, ',');
     for (const auto& motStr : v)
     {
         const auto& mots =
                 ad::cppgtfs::gtfs::flat::Route::getTypesFromString(util::trim(motStr));
-        cfg->mots.insert(mots.begin(), mots.end());
+        cfg.mots.insert(mots.begin(), mots.end());
     }
 
     if (printOpts)
         std::cout << "\nConfigured options:\n\n"
-                  << cfg->toString() << std::endl;
+                  << cfg.to_string() << std::endl;
 }

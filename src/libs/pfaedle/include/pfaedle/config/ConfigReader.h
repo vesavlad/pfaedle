@@ -5,17 +5,17 @@
 #ifndef PFAEDLE_CONFIG_CONFIGREADER_H_
 #define PFAEDLE_CONFIG_CONFIGREADER_H_
 
-#include <vector>
 #include "pfaedle/config/PfaedleConfig.h"
+#include <vector>
 
-namespace pfaedle {
-namespace config {
+namespace pfaedle::config
+{
 
-class ConfigReader {
- public:
-  static void read(Config* targetConfig, int argc, char** argv);
-  static void help(const char* bin);
+class ConfigReader
+{
+public:
+    static void read(Config& cfg, int argc, char** argv);
+    static void help(const char* bin);
 };
-}
-}
-#endif  // PFAEDLE_CONFIG_CONFIGREADER_H_
+}  // namespace pfaedle::config
+#endif// PFAEDLE_CONFIG_CONFIGREADER_H_

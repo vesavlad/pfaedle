@@ -55,6 +55,7 @@ void configure_logging()
     syslog_sink->set_level(spdlog::level::warn);
 
     auto logger = std::shared_ptr<spdlog::logger>(new spdlog::logger("main", {console_sink, file_sink, syslog_sink}));
+    logger->set_level(spdlog::level::trace);
     spdlog::set_default_logger(logger);
 }
 void add_logger(const std::string& name)

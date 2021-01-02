@@ -11,6 +11,13 @@
 namespace pfaedle
 {
 
+#if defined (__clang__)
+# pragma clang diagnostic ignored "-Wunused-function"
+# pragma clang diagnostic push
+#elif defined (__GNUC__)
+# pragma GCC   diagnostic ignored "-Wunused-function"
+# pragma GCC   diagnostic push
+#endif
 static std::string short_version()
 {
     return PFAEDLE_GIT_TAG;
@@ -31,5 +38,10 @@ static std::string install_prefix_path()
     ss << INSTALL_PREFIX;
     return ss.str();
 }
+#if defined (__clang__)
+#pragma GCC diagnostic pop
+#elif defined (__clang__)
+#pragma clang diagnostic pop
+#endif
 
 }// namespace pfaedle

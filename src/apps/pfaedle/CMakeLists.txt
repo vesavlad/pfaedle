@@ -1,5 +1,6 @@
-set(pfaedle_main main.cpp)
-add_executable(pfaedle main.cpp)
+add_executable(pfaedle
+        main.cpp
+        app.cpp)
 
 target_link_libraries(pfaedle
         logging

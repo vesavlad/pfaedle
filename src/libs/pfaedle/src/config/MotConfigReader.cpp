@@ -662,3 +662,8 @@ DeepAttrRule MotConfigReader::getDeepAttrRule(const std::string& rule) const
         return osm::DeepAttrRule{rule, osm::FilterRule()};
     }
 }
+pfaedle::config::MotConfigReader::MotConfigReader(const std::vector<std::string>&& paths) :
+    MotConfigReader()
+{
+    parse(paths);
+}

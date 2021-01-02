@@ -495,7 +495,7 @@ const RoutingAttrs& ShapeBuilder::getRAttrs(const Trip* trip) const
 // _____________________________________________________________________________
 void ShapeBuilder::getGtfsBox(const Feed* feed, const MOTs& mots,
                               const std::string& tid, bool dropShapes,
-                              osm::BBoxIdx* box)
+                              osm::BBoxIdx& box)
 {
     for (const auto& t : feed->getTrips())
     {
@@ -511,7 +511,7 @@ void ShapeBuilder::getGtfsBox(const Feed* feed, const MOTs& mots,
                 cur = extendBox(DPoint(st.getStop()->getLng(), st.getStop()->getLat()),
                                 cur);
             }
-            box->add(cur);
+            box.add(cur);
         }
     }
 }

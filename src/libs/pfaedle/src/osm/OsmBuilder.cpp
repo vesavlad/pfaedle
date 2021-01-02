@@ -233,11 +233,11 @@ void OsmBuilder::overpassQryWrite(std::ostream* out,
                      std::to_string(box.getUpperRight().getY()) + ", " +
                      std::to_string(box.getUpperRight().getX()) + ")");
         wr.closeTag();
-        for (auto t : std::vector<std::string>{"way", "node", "relation"})
+        for (const auto& t : std::vector<std::string>{"way", "node", "relation"})
         {
-            for (auto r : filter.getKeepRules())
+            for (const auto& r : filter.getKeepRules())
             {
-                for (auto val : r.second)
+                for (const auto& val : r.second)
                 {
                     if (t == "way" && (val.second & OsmFilter::WAY)) continue;
                     if (t == "relation" && (val.second & OsmFilter::REL)) continue;
@@ -379,7 +379,7 @@ void OsmBuilder::readWriteRels(pfxml::file* i, util::xml::XmlWriter* o,
             }
         }
 
-        if (realNodes.size() || realWays.size())
+        if (!realNodes.empty() || !realWays.empty())
         {
             o->openTag("relation", "id", std::to_string(rel.id));
 
@@ -388,7 +388,8 @@ void OsmBuilder::readWriteRels(pfxml::file* i, util::xml::XmlWriter* o,
                 osmid nid = realNodes[j];
                 std::map<std::string, std::string> attrs;
                 attrs["type"] = "node";
-                if (strlen(realNodeRoles[j])) attrs["role"] = realNodeRoles[j];
+                if (strlen(realNodeRoles[j]))
+                    attrs["role"] = realNodeRoles[j];
                 attrs["ref"] = std::to_string(nid);
                 o->openTag("member", attrs);
                 o->closeTag();
@@ -499,7 +500,8 @@ pfxml::parser_state OsmBuilder::readBBoxNds(pfxml::file* xml, OsmIdSet* nodes,
         if (inNodeBlock)
         {
             // block ended
-            if (strcmp(cur.name, "node")) return xml->state();
+            if (strcmp(cur.name, "node") != 0)
+                return xml->state();
             double y = util::atof(cur.attr("lat"), 7);
             double x = util::atof(cur.attr("lon"), 7);
 
@@ -525,7 +527,8 @@ OsmWay OsmBuilder::nextWayWithId(pfxml::file* xml, osmid wid,
         const pfxml::tag& cur = xml->get();
         if (xml->level() == 2 || xml->level() == 0)
         {
-            if (w.id || strcmp(cur.name, "way")) return w;
+            if (w.id || strcmp(cur.name, "way") != 0)
+                return w;
 
             osmid id = util::atoul(cur.attr("id"));
             if (id == wid) w.id = id;
@@ -553,7 +556,7 @@ OsmWay OsmBuilder::nextWayWithId(pfxml::file* xml, osmid wid,
 // _____________________________________________________________________________
 void OsmBuilder::skipUntil(pfxml::file* xml, const std::string& s) const
 {
-    while (xml->next() && strcmp(xml->get().name, s.c_str()))
+    while (xml->next() && strcmp(xml->get().name, s.c_str()) != 0)
     {
     }
 }
@@ -589,7 +592,8 @@ OsmWay OsmBuilder::nextWay(pfxml::file* xml, const RelMap& wayRels,
         if (xml->level() == 2 || xml->level() == 0)
         {
             if (keepWay(w, wayRels, filter, bBoxNodes, fl)) return w;
-            if (strcmp(cur.name, "way")) return OsmWay();
+            if (strcmp(cur.name, "way") != 0)
+                return OsmWay();
 
             w.id = util::atoul(cur.attr("id"));
             w.nodes.clear();
@@ -648,7 +652,7 @@ void OsmBuilder::readEdges(pfxml::file* xml, const RelMap& wayRels,
         ret->push_back(w.id);
         for (auto n : w.nodes)
         {
-            (*nodes)[n] = 0;
+            (*nodes)[n] = nullptr;
         }
     }
 }
@@ -666,7 +670,7 @@ void OsmBuilder::readEdges(pfxml::file* xml, Graph* g, const RelLst& rels,
     OsmWay w;
     while ((w = nextWay(xml, wayRels, filter, bBoxNodes, keepAttrs, fl)).id)
     {
-        Node* last = 0;
+        Node* last = nullptr;
         std::vector<TransitEdgeLine*> lines;
         if (wayRels.count(w.id))
         {
@@ -679,7 +683,7 @@ void OsmBuilder::readEdges(pfxml::file* xml, Graph* g, const RelLst& rels,
         osmid lastnid = 0;
         for (osmid nid : w.nodes)
         {
-            Node* n = 0;
+            Node* n = nullptr;
             if (noHupNodes.has(nid))
             {
                 n = g->addNd();
@@ -773,7 +777,8 @@ OsmNode OsmBuilder::nextNode(pfxml::file* xml, NIdMap* nodes,
             if (keepNode(n, *nodes, *multNodes, nodeRels, bBoxNodes, filter, fl))
                 return n;
             // block ended
-            if (strcmp(cur.name, "node")) return OsmNode();
+            if (strcmp(cur.name, "node") != 0)
+                return OsmNode();
 
             n.attrs.clear();
             n.lat = util::atof(cur.attr("lat"), 7);
@@ -853,7 +858,7 @@ void OsmBuilder::readNodes(pfxml::file* xml, Graph* g, const RelLst& rels,
                           keepAttrs, fl))
                    .id)
     {
-        Node* n = 0;
+        Node* n = nullptr;
         auto pos = util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(nd.lat, nd.lng);
         if (nodes->count(nd.id))
         {
@@ -929,7 +934,8 @@ OsmRel OsmBuilder::nextRel(pfxml::file* xml, const OsmFilter& filter,
             }
 
             // block ended
-            if (strcmp(cur.name, "relation")) return OsmRel();
+            if (strcmp(cur.name, "relation") != 0)
+                return OsmRel();
 
             rel.attrs.clear();
             rel.nodes.clear();
@@ -956,11 +962,11 @@ OsmRel OsmBuilder::nextRel(pfxml::file* xml, const OsmFilter& filter,
                     });
                     if (count)
                     {
-                        rel.nodeRoles.push_back(cur.attr("role"));
+                        rel.nodeRoles.emplace_back(cur.attr("role"));
                     }
                     else
                     {
-                        rel.nodeRoles.push_back("");
+                        rel.nodeRoles.emplace_back("");
                     }
                 }
                 if (strcmp(cur.attr("type"), "way") == 0)
@@ -972,11 +978,11 @@ OsmRel OsmBuilder::nextRel(pfxml::file* xml, const OsmFilter& filter,
                     });
                     if (count)
                     {
-                        rel.wayRoles.push_back(cur.attr("role"));
+                        rel.wayRoles.emplace_back(cur.attr("role"));
                     }
                     else
                     {
-                        rel.wayRoles.push_back("");
+                        rel.wayRoles.emplace_back("");
                     }
                 }
             }
@@ -1124,13 +1130,13 @@ std::string OsmBuilder::getAttr(const DeepAttrRule& s, osmid id,
     {
         if (entRels.count(id))
         {
-            for (const auto& relId : entRels.find(id)->second)
+            for (const auto& rel_id : entRels.find(id)->second)
             {
-                if (OsmFilter::contained(rels.rels[relId], s.relRule.kv))
+                if (OsmFilter::contained(rels.rels[rel_id], s.relRule.kv))
                 {
-                    if (rels.rels[relId].count(s.attr))
+                    if (rels.rels[rel_id].count(s.attr))
                     {
-                        return rels.rels[relId].find(s.attr)->second;
+                        return rels.rels[rel_id].find(s.attr)->second;
                     }
                 }
             }
@@ -1155,7 +1161,8 @@ Nullable<StatInfo> OsmBuilder::getStatInfo(Node* node, osmid nid,
     platform = getAttrByFirstMatch(ops.statAttrRules.platformRule, nid, m,
                                    nodeRels, rels, ops.trackNormzer);
 
-    if (!names.size()) return Nullable<StatInfo>();
+    if (names.empty())
+        return Nullable<StatInfo>();
 
     auto ret = StatInfo(names[0], platform, true);
 
@@ -1166,24 +1173,24 @@ Nullable<StatInfo> OsmBuilder::getStatInfo(Node* node, osmid nid,
 
     for (size_t i = 1; i < names.size(); i++) ret.addAltName(names[i]);
 
-    bool groupFound = false;
+    bool group_found = false;
 
     for (const auto& rule : ops.statGroupNAttrRules)
     {
-        if (groupFound) break;
-        std::string ruleVal = getAttr(rule.attr, nid, m, nodeRels, rels);
-        if (!ruleVal.empty())
+        if (group_found) break;
+        std::string rule_val = getAttr(rule.attr, nid, m, nodeRels, rels);
+        if (!rule_val.empty())
         {
             // check if a matching group exists
-            for (auto* group : (*groups)[rule.attr.attr][ruleVal])
+            for (auto* group : (*groups)[rule.attr.attr][rule_val])
             {
-                if (groupFound) break;
+                if (group_found) break;
                 for (const auto* member : group->getNodes())
                 {
                     if (webMercMeterDist(*member->pl().getGeom(), pos) <= rule.maxDist)
                     {
                         // ok, group is matching
-                        groupFound = true;
+                        group_found = true;
                         if (node) group->addNode(node);
                         ret.setGroup(group);
                         break;
@@ -1193,18 +1200,19 @@ Nullable<StatInfo> OsmBuilder::getStatInfo(Node* node, osmid nid,
         }
     }
 
-    if (!groupFound)
+    if (!group_found)
     {
         for (const auto& rule : ops.statGroupNAttrRules)
         {
-            std::string ruleVal = getAttr(rule.attr, nid, m, nodeRels, rels);
-            if (!ruleVal.empty())
+            std::string rule_val = getAttr(rule.attr, nid, m, nodeRels, rels);
+            if (!rule_val.empty())
             {
                 // add new group
-                StatGroup* g = new StatGroup();
-                if (node) g->addNode(node);
+                auto* g = new StatGroup();
+                if (node)
+                    g->addNode(node);
                 ret.setGroup(g);
-                (*groups)[rule.attr.attr][ruleVal].push_back(g);
+                (*groups)[rule.attr.attr][rule_val].push_back(g);
                 break;
             }
         }
@@ -1242,7 +1250,7 @@ void OsmBuilder::writeGeoms(Graph* g)
 // _____________________________________________________________________________
 void OsmBuilder::fixGaps(Graph* g, NodeGrid* ng)
 {
-    double METER = 1;
+    double meter = 1;
     for (auto* n : *g->getNds())
     {
         if (n->getInDeg() + n->getOutDeg() == 1)
@@ -1251,12 +1259,12 @@ void OsmBuilder::fixGaps(Graph* g, NodeGrid* ng)
             std::set<Node*> ret;
             double distor = util::geo::webMercDistFactor(*n->pl().getGeom());
             ng->get(util::geo::pad(util::geo::getBoundingBox(*n->pl().getGeom()),
-                                   METER / distor),
+                                   meter / distor),
                     &ret);
             for (auto* nb : ret)
             {
                 if (nb != n && (nb->getInDeg() + nb->getOutDeg()) == 1 &&
-                    webMercDist(nb, n) <= METER / distor)
+                    webMercDist(nb, n) <= meter / distor)
                 {
                     // special case: both node are non-stations, move
                     // the end point nb to n and delete nb
@@ -1336,7 +1344,8 @@ Node* OsmBuilder::depthSearch(const Edge* e, const StatInfo* si, const POINT& p,
     // shortcuts
     double dFrom = webMercMeterDist(*e->getFrom()->pl().getGeom(), p);
     double dTo = webMercMeterDist(*e->getTo()->pl().getGeom(), p);
-    if (dFrom > maxD && dTo > maxD) return 0;
+    if (dFrom > maxD && dTo > maxD)
+        return nullptr;
 
     if (dFrom <= maxD && sfunc(e->getFrom(), si)) return e->getFrom();
     if (dTo <= maxD && sfunc(e->getTo(), si)) return e->getTo();
@@ -1400,7 +1409,7 @@ Node* OsmBuilder::depthSearch(const Edge* e, const StatInfo* si, const POINT& p,
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 // _____________________________________________________________________________
@@ -1470,17 +1479,17 @@ Node* OsmBuilder::getMatchingNd(const NodePL& s, NodeGrid* ng, double d)
     BOX box = util::geo::pad(util::geo::getBoundingBox(*s.getGeom()), d / distor);
     ng->get(box, &neighs);
 
-    Node* ret = 0;
-    double bestD = std::numeric_limits<double>::max();
+    Node* ret = nullptr;
+    double best_d = std::numeric_limits<double>::max();
 
     for (auto* n : neighs)
     {
         if (n->pl().getSI() && n->pl().getSI()->simi(s.getSI()) > 0.5)
         {
             double dist = webMercMeterDist(*n->pl().getGeom(), *s.getGeom());
-            if (dist < d && dist < bestD)
+            if (dist < d && dist < best_d)
             {
-                bestD = dist;
+                best_d = dist;
                 ret = n;
             }
         }
@@ -1526,7 +1535,7 @@ std::set<Node*> OsmBuilder::snapStation(Graph* g, NodePL* s, EdgeGrid* eg,
                 util::geo::projectOn(*e->getFrom()->pl().getGeom(), *s->getGeom(),
                                      *e->getTo()->pl().getGeom());
 
-        Node* eq = 0;
+        Node* eq = nullptr;
         if (!(eq = eqStatReach(e, s->getSI(), geom, 2 * d, 0,
                                opts.maxAngleSnapReach, orphSnap)))
         {
@@ -1606,9 +1615,10 @@ std::set<Node*> OsmBuilder::snapStation(Graph* g, NodePL* s, EdgeGrid* eg,
 // _____________________________________________________________________________
 StatGroup* OsmBuilder::groupStats(const NodeSet& s)
 {
-    if (!s.size()) return 0;
+    if (s.empty())
+        return 0;
     // reference group
-    StatGroup* ret = new StatGroup();
+    auto* ret = new StatGroup();
     bool used = false;
 
     for (auto* n : s)
@@ -1630,7 +1640,7 @@ StatGroup* OsmBuilder::groupStats(const NodeSet& s)
     if (!used)
     {
         delete ret;
-        return 0;
+        return nullptr;
     }
 
     return ret;
@@ -1867,8 +1877,8 @@ void OsmBuilder::getKeptAttrKeys(const OsmReadOpts& opts,
 // _____________________________________________________________________________
 void OsmBuilder::deleteOrphEdgs(Graph* g, const OsmReadOpts& opts)
 {
-    size_t ROUNDS = 3;
-    for (size_t c = 0; c < ROUNDS; c++)
+    const size_t rounds = 3;
+    for (size_t c = 0; c < rounds; c++)
     {
         for (auto i = g->getNds()->begin(); i != g->getNds()->end();)
         {
@@ -1932,7 +1942,7 @@ bool OsmBuilder::edgesSim(const Edge* a, const Edge* b)
 // _____________________________________________________________________________
 const EdgePL& OsmBuilder::mergeEdgePL(Edge* a, Edge* b)
 {
-    const Node* n = 0;
+    const Node* n = nullptr;
     if (a->getFrom() == b->getFrom())
         n = a->getFrom();
     else if (a->getFrom() == b->getTo())
@@ -2037,7 +2047,7 @@ void OsmBuilder::simplifyGeoms(Graph* g)
 // _____________________________________________________________________________
 uint32_t OsmBuilder::writeComps(Graph* g)
 {
-    Component* comp = new Component{7};
+    auto* comp = new Component{7};
     uint32_t numC = 0;
 
     for (auto* n : *g->getNds())
@@ -2138,8 +2148,8 @@ bool OsmBuilder::keepFullTurn(const trgraph::Node* n, double ang)
 
     if (other->getInDeg() + other->getOutDeg() == 3)
     {
-        const trgraph::Edge* a = 0;
-        const trgraph::Edge* b = 0;
+        const trgraph::Edge* a = nullptr;
+        const trgraph::Edge* b = nullptr;
         for (auto f : other->getAdjListIn())
         {
             if (f != e && !a)
@@ -2279,13 +2289,13 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts, Graph* g,
             // finally give up
 
             // add a group with only this stop in it
-            StatGroup* dummyGroup = new StatGroup();
-            Node* dummyNode = g->addNd(pl);
+            auto* dummy_group = new StatGroup();
+            auto* dummy_node = g->addNd(pl);
 
-            dummyNode->pl().getSI()->setGroup(dummyGroup);
-            dummyGroup->addNode(dummyNode);
-            dummyGroup->addStop(s);
-            (*fs)[s] = dummyNode;
+            dummy_node->pl().getSI()->setGroup(dummy_group);
+            dummy_group->addNode(dummy_node);
+            dummy_group->addStop(s);
+            (*fs)[s] = dummy_node;
             if (!bbox.contains(*pl.getGeom()))
             {
                 LOG(TRACE) << "Could not snap station "
