@@ -228,9 +228,9 @@ Router::Router(size_t numThreads, bool caching) :
 // _____________________________________________________________________________
 Router::~Router()
 {
-    for (size_t i = 0; i < _cache.size(); i++)
+    for (auto & i : _cache)
     {
-        delete _cache[i];
+        delete i;
     }
 }
 
@@ -258,12 +258,12 @@ HopBand Router::getHopBand(const EdgeCandGroup& a, const EdgeCandGroup& b,
     assert(b.size());
 
     double pend = 0;
-    for (size_t i = 0; i < a.size(); i++)
+    for (auto i : a)
     {
-        for (size_t j = 0; j < b.size(); j++)
+        for (auto j : b)
         {
-            double d = webMercMeterDist(*a[i].e->getFrom()->pl().getGeom(),
-                                        *b[j].e->getFrom()->pl().getGeom());
+            double d = webMercMeterDist(*i.e->getFrom()->pl().getGeom(),
+                                        *j.e->getFrom()->pl().getGeom());
             if (d > pend) pend = d;
         }
     }
@@ -446,16 +446,16 @@ EdgeListHops Router::route(const EdgeCandRoute& route,
     CombNodeMap nodes;
     CombNodeMap nextNodes;
 
-    for (size_t i = 0; i < route[0].size(); i++)
+    for (auto i : route[0])
     {
-        auto e = route[0][i].e;
+        auto e = i.e;
         // we can be sure that each edge is exactly assigned to only one
         // node because the transitgraph is directed
-        nodes[e] = cgraph->addNd(route[0][i].e->getFrom());
+        nodes[e] = cgraph->addNd(i.e->getFrom());
         cgraph->addEdg(source, nodes[e])
                 ->pl()
                 .setCost(EdgeCost(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                  route[0][i].pen, nullptr));
+                                  i.pen, nullptr));
     }
 
     size_t iters = EDijkstra::ITERS;

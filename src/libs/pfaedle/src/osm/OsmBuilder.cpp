@@ -44,7 +44,6 @@ using pfaedle::trgraph::StatGroup;
 using pfaedle::trgraph::StatInfo;
 using pfaedle::trgraph::TransitEdgeLine;
 using util::Nullable;
-using util::geo::Box;
 using util::geo::webMercMeterDist;
 
 // _____________________________________________________________________________

@@ -153,9 +153,9 @@ bool HttpServer::gzipSupport(const Req& req)
             for (const auto& encoding : split(kv.second, ','))
             {
                 std::vector<std::string> parts = split(encoding, ';');
-                for (size_t i = 0; i < parts.size(); i++)
+                for (auto & part : parts)
                 {
-                    parts[i] = trim(parts[i]);
+                    part = trim(part);
                 }
                 if (parts[0] == "*" && ((parts.size() == 1) || parts[1] != "q=0"))
                     accepts = true;

@@ -14,7 +14,6 @@
 #include <string>
 #include <utility>
 
-using util::geo::PolyLine;
 
 using ad::cppgtfs::gtfs::Shape;
 using pfaedle::eval::Collector;
@@ -297,12 +296,12 @@ void Collector::printHisto(std::ostream* os, const std::set<Result>& result,
     std::vector<const Trip*> examples;
     size_t maxC = 0;
 
-    for (size_t i = 0; i < bins.size(); i++)
+    for (double bin : bins)
     {
         size_t c = 0;
         const Trip* trip = nullptr;
 
-        while (it != result.end() && it->getDist() <= (bins[i] + 0.001))
+        while (it != result.end() && it->getDist() <= (bin + 0.001))
         {
             if (!trip) trip = it->getTrip();
             c++;
@@ -312,7 +311,7 @@ void Collector::printHisto(std::ostream* os, const std::set<Result>& result,
         if (c > maxC) maxC = c;
 
         examples.push_back(trip);
-        res.push_back(std::pair<double, size_t>(bins[i], c));
+        res.push_back(std::pair<double, size_t>(bin, c));
     }
 
     size_t j = 0;
@@ -357,19 +356,19 @@ void Collector::printCsv(std::ostream* os, const std::set<Result>& result,
     auto it = result.begin();
     std::vector<std::pair<double, size_t>> res;
 
-    for (size_t i = 0; i < bins.size(); i++)
+    for (double bin : bins)
     {
         size_t c = 0;
         const Trip* trip = nullptr;
 
-        while (it != result.end() && it->getDist() <= (bins[i] + 0.001))
+        while (it != result.end() && it->getDist() <= (bin + 0.001))
         {
             if (!trip) trip = it->getTrip();
             c++;
             it++;
         }
 
-        res.push_back(std::pair<double, size_t>(bins[i], c));
+        res.push_back(std::pair<double, size_t>(bin, c));
     }
 
     (*os) << "range, count\n";

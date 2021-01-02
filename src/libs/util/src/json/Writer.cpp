@@ -8,7 +8,6 @@
 using namespace util;
 using namespace json;
 
-using std::map;
 using std::ostream;
 using std::string;
 

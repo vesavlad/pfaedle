@@ -33,7 +33,6 @@
 using util::geo::DBox;
 using util::geo::DPoint;
 using util::geo::extendBox;
-using util::geo::minbox;
 
 using ad::cppgtfs::gtfs::ShapePoint;
 using ad::cppgtfs::gtfs::Stop;
@@ -69,9 +68,9 @@ ShapeBuilder::ShapeBuilder(Feed* feed, ad::cppgtfs::gtfs::Feed* evalFeed,
     _crouter(omp_get_num_procs(), cfg.useCaching),
     _stops(fStops),
     _curShpCnt(0),
+    _numThreads{_crouter.getCacheNumber()},
     _restr(restr)
 {
-    _numThreads = _crouter.getCacheNumber();
 }
 
 // _____________________________________________________________________________
@@ -585,11 +584,11 @@ Clusters ShapeBuilder::clusterTrips(Feed* f, MOTs mots)
                               trip.getStopTimes().rbegin()->getStop());
         const auto& c = clusterIdx[spair];
 
-        for (size_t i = 0; i < c.size(); i++)
+        for (auto i : c)
         {
-            if (routingEqual(ret[c[i]][0], &trip))
+            if (routingEqual(ret[i][0], &trip))
             {
-                ret[c[i]].push_back(&trip);
+                ret[i].push_back(&trip);
                 found = true;
                 break;
             }
@@ -657,7 +656,7 @@ const pfaedle::trgraph::Graph* ShapeBuilder::getGraph() const { return _g; }
 void ShapeBuilder::writeTransitGraph(const Shape& shp, TrGraphEdgs* edgs,
                                      const Cluster& cluster) const
 {
-    for (auto hop : shp.hops)
+    for (const auto& hop : shp.hops)
     {
         for (const auto* e : hop.edges)
         {
@@ -673,7 +672,7 @@ void ShapeBuilder::buildTrGraph(TrGraphEdgs* edgs,
 {
     std::unordered_map<trgraph::Node*, pfaedle::netgraph::Node*> nodes;
 
-    for (auto ep : *edgs)
+    for (const auto& ep : *edgs)
     {
         auto e = ep.first;
         pfaedle::netgraph::Node* from = nullptr;
