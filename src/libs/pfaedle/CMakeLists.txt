@@ -30,6 +30,7 @@ configure_file (
 file(GLOB_RECURSE pfaedle_SRC *.cpp)
 add_library(pfaedle-lib ${pfaedle_SRC})
 target_link_libraries(pfaedle-lib
+        PUBLIC logging
         PRIVATE pfaedle-generated
         PUBLIC pfaedle-util
         PUBLIC configparser

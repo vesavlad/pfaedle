@@ -3,7 +3,7 @@
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
 #include "pfaedle/osm/Restrictor.h"
-#include "util/log/Log.h"
+#include <logging/logger.h>
 
 using pfaedle::osm::Restrictor;
 

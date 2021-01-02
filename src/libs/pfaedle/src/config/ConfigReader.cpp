@@ -6,7 +6,7 @@
 #include "pfaedle/Def.h"
 #include "pfaedle/config.h"
 #include "util/String.h"
-#include "util/log/Log.h"
+#include <logging/logger.h>
 #include <exception>
 #include <getopt.h>
 #include <iostream>

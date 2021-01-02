@@ -15,7 +15,7 @@
 #include "util/geo/output/GeoGraphJsonOutput.h"
 #include "util/graph/Dijkstra.h"
 #include "util/graph/EDijkstra.h"
-#include "util/log/Log.h"
+#include <logging/logger.h>
 #include <algorithm>
 #include <fstream>
 #include <limits>
@@ -268,7 +268,7 @@ HopBand Router::getHopBand(const EdgeCandGroup& a, const EdgeCandGroup& b,
         }
     }
 
-    LOG(VDEBUG) << "Pending max hop distance is " << pend << " meters";
+    LOG(TRACE) << "Pending max hop distance is " << pend << " meters";
 
     const trgraph::StatGroup* tgGrpTo = 0;
 
@@ -282,7 +282,7 @@ HopBand Router::getHopBand(const EdgeCandGroup& a, const EdgeCandGroup& b,
     for (auto e : a) from.insert(e.e);
     for (auto e : b) to.insert(e.e);
 
-    LOG(VDEBUG) << "Doing pilot run between " << from.size() << "->" << to.size()
+    LOG(TRACE) << "Doing pilot run between " << from.size() << "->" << to.size()
                 << " edge candidates";
 
     EdgeList el;
@@ -294,7 +294,7 @@ HopBand Router::getHopBand(const EdgeCandGroup& a, const EdgeCandGroup& b,
 
     if (el.size() < 2 && costF.inf() <= ret)
     {
-        LOG(VDEBUG) << "Pilot run: no connection between candidate groups,"
+        LOG(TRACE) << "Pilot run: no connection between candidate groups,"
                     << " setting max distance to 1";
         return HopBand{0, 1, 0, 0};
     }
@@ -319,7 +319,7 @@ HopBand Router::getHopBand(const EdgeCandGroup& a, const EdgeCandGroup& b,
                   rOpts.fullTurnPunishFac + rOpts.platformUnmatchedPen;
     double minD = ret.getValue();
 
-    LOG(VDEBUG) << "Pilot run: min distance between two groups is "
+    LOG(TRACE) << "Pilot run: min distance between two groups is "
                 << ret.getValue() << " (between nodes " << na << " and " << nb
                 << "), using a max routing distance of " << maxD << ". The max"
                 << " straight line distance from the pilot target to any other "
@@ -518,7 +518,7 @@ EdgeListHops Router::route(const EdgeCandRoute& route,
             n++;
             itPerSecTot += itPerSec;
 
-            LOG(VDEBUG) << "from " << eFr << ": 1-" << tos.size() << " ("
+            LOG(TRACE) << "from " << eFr << ": 1-" << tos.size() << " ("
                         << route[i + 1].size() << " nodes) hop took "
                         << EDijkstra::ITERS - iters << " iterations, "
                         << TOOK(t1, TIME()) << "ms (tput: " << itPerSec << " its/ms)";
@@ -544,7 +544,7 @@ EdgeListHops Router::route(const EdgeCandRoute& route,
         std::swap(nodes, nextNodes);
     }
 
-    LOG(VDEBUG) << "Hops took " << EDijkstra::ITERS - iters << " iterations,"
+    LOG(TRACE) << "Hops took " << EDijkstra::ITERS - iters << " iterations,"
                 << " average tput was " << (itPerSecTot / n) << " its/ms";
 
     iters = EDijkstra::ITERS;
@@ -552,7 +552,7 @@ EdgeListHops Router::route(const EdgeCandRoute& route,
     EDijkstra::shortestPath(source, sink, ccost, &res);
     size_t j = 0;
 
-    LOG(VDEBUG) << "Optim graph solve took " << EDijkstra::ITERS - iters
+    LOG(TRACE) << "Optim graph solve took " << EDijkstra::ITERS - iters
                 << " iterations.";
 
     for (auto i = res.rbegin(); i != res.rend(); i++)
@@ -631,7 +631,7 @@ void Router::hops(trgraph::Edge* from, const std::set<trgraph::Edge*>& froms,
         }
     }
 
-    LOG(VDEBUG) << "From cache: " << tos.size() - rem.size()
+    LOG(TRACE) << "From cache: " << tos.size() - rem.size()
                 << ", have to cal: " << rem.size();
 
     if (rem.size())

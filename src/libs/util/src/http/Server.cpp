@@ -21,7 +21,7 @@
 #endif
 #include "util/String.h"
 #include "util/http/Server.h"
-#include "util/log/Log.h"
+#include <logging/logger.h>
 #include <vector>
 
 using util::http::HeaderState;

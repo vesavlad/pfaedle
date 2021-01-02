@@ -12,7 +12,7 @@
 #include "pfxml/pfxml.h"
 #include "util/Misc.h"
 #include "util/Nullable.h"
-#include "util/log/Log.h"
+#include <logging/logger.h>
 #include <algorithm>
 #include <exception>
 #include <float.h>
@@ -104,75 +104,75 @@ void OsmBuilder::read(const std::string& path, const OsmReadOpts& opts,
         //    * match the filter criteria
         //    * have been used in a way in pass 3
 
-        LOG(VDEBUG) << "Reading bounding box nodes...";
+        LOG(TRACE) << "Reading bounding box nodes...";
         skipUntil(&xml, "node");
         pfxml::parser_state nodeBeg = xml.state();
         pfxml::parser_state edgesBeg =
                 readBBoxNds(&xml, &bboxNodes, &noHupNodes, filter, bbox);
 
-        LOG(VDEBUG) << "Reading relations...";
+        LOG(TRACE) << "Reading relations...";
         skipUntil(&xml, "relation");
         readRels(&xml, &intmRels, &nodeRels, &wayRels, filter, attrKeys[2],
                  &rawRests);
 
-        LOG(VDEBUG) << "Reading edges...";
+        LOG(TRACE) << "Reading edges...";
         xml.set_state(edgesBeg);
         readEdges(&xml, g, intmRels, wayRels, filter, bboxNodes, &nodes, &multNodes,
                   noHupNodes, attrKeys[1], rawRests, res, intmRels.flat, &eTracks,
                   opts);
 
-        LOG(VDEBUG) << "Reading kept nodes...";
+        LOG(TRACE) << "Reading kept nodes...";
         xml.set_state(nodeBeg);
         readNodes(&xml, g, intmRels, nodeRels, filter, bboxNodes, &nodes,
                   &multNodes, &orphanStations, attrKeys[0], intmRels.flat, opts);
     }
 
-    LOG(VDEBUG) << "OSM ID set lookups: " << osm::OsmIdSet::LOOKUPS
+    LOG(TRACE) << "OSM ID set lookups: " << osm::OsmIdSet::LOOKUPS
                 << ", file lookups: " << osm::OsmIdSet::FLOOKUPS;
 
-    LOG(VDEBUG) << "Applying edge track numbers...";
+    LOG(TRACE) << "Applying edge track numbers...";
     writeEdgeTracks(eTracks);
     eTracks.clear();
 
     {
-        LOG(VDEBUG) << "Fixing gaps...";
+        LOG(TRACE) << "Fixing gaps...";
         NodeGrid ng = buildNodeIdx(g, gridSize, bbox.getFullWebMercBox(), false);
         fixGaps(g, &ng);
     }
 
-    LOG(VDEBUG) << "Writing edge geoms...";
+    LOG(TRACE) << "Writing edge geoms...";
     writeGeoms(g);
 
-    LOG(VDEBUG) << "Snapping stations...";
+    LOG(TRACE) << "Snapping stations...";
     snapStats(opts, g, bbox, gridSize, fs, res, orphanStations);
 
-    LOG(VDEBUG) << "Deleting orphan nodes...";
+    LOG(TRACE) << "Deleting orphan nodes...";
     deleteOrphNds(g);
 
-    LOG(VDEBUG) << "Deleting orphan edges...";
+    LOG(TRACE) << "Deleting orphan edges...";
     deleteOrphEdgs(g, opts);
 
-    LOG(VDEBUG) << "Collapsing edges...";
+    LOG(TRACE) << "Collapsing edges...";
     collapseEdges(g);
 
-    LOG(VDEBUG) << "Deleting orphan nodes...";
+    LOG(TRACE) << "Deleting orphan nodes...";
     deleteOrphNds(g);
 
-    LOG(VDEBUG) << "Deleting orphan edges...";
+    LOG(TRACE) << "Deleting orphan edges...";
     deleteOrphEdgs(g, opts);
 
-    LOG(VDEBUG) << "Writing graph components...";
+    LOG(TRACE) << "Writing graph components...";
     // the restrictor is needed here to prevent connections in the graph
     // which are not possible in reality
     uint32_t comps = writeComps(g);
 
-    LOG(VDEBUG) << "Simplifying geometries...";
+    LOG(TRACE) << "Simplifying geometries...";
     simplifyGeoms(g);
 
-    LOG(VDEBUG) << "Writing other-direction edges...";
+    LOG(TRACE) << "Writing other-direction edges...";
     writeODirEdgs(g, res);
 
-    LOG(VDEBUG) << "Write dummy node self-edges...";
+    LOG(TRACE) << "Write dummy node self-edges...";
     writeSelfEdgs(g);
 
     size_t numEdges = 0;
@@ -2226,13 +2226,13 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts, Graph* g,
         }
         if (!snapped)
         {
-            LOG(VDEBUG) << "Could not snap station "
+            LOG(TRACE) << "Could not snap station "
                         << "(" << pl.getSI()->getName() << ")"
                         << " (" << s.first->getLat() << "," << s.first->getLng()
                         << ") in normal run, trying again later in orphan mode.";
             if (!bbox.contains(*pl.getGeom()))
             {
-                LOG(VDEBUG) << "Note: '" << pl.getSI()->getName()
+                LOG(TRACE) << "Note: '" << pl.getSI()->getName()
                             << "' does not lie within the bounds for this graph and "
                                "may be a stray station";
             }
@@ -2241,7 +2241,7 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts, Graph* g,
     }
 
     if (notSnapped.size())
-        LOG(VDEBUG) << notSnapped.size()
+        LOG(TRACE) << notSnapped.size()
                     << " stations could not be snapped in "
                        "normal run, trying again in orphan "
                        "mode.";
@@ -2288,10 +2288,10 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts, Graph* g,
             (*fs)[s] = dummyNode;
             if (!bbox.contains(*pl.getGeom()))
             {
-                LOG(VDEBUG) << "Could not snap station "
+                LOG(TRACE) << "Could not snap station "
                             << "(" << pl.getSI()->getName() << ")"
                             << " (" << s->getLat() << "," << s->getLng() << ")";
-                LOG(VDEBUG) << "Note: '" << pl.getSI()->getName()
+                LOG(TRACE) << "Note: '" << pl.getSI()->getName()
                             << "' does not lie within the bounds for this graph and "
                                "may be a stray station";
             }

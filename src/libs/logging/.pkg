@@ -1,0 +1,4 @@
+[spdlog]
+  url=git@github.com:gabime/spdlog.git
+  branch=master
+  commit=cbe9448650176797739dbab13961ef4c07f4290f

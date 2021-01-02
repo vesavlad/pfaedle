@@ -6,7 +6,7 @@
 #include "configparser/parse_exception.h"
 #include "util/Misc.h"
 #include "util/String.h"
-#include "util/log/Log.h"
+#include <logging/logger.h>
 #include <set>
 #include <string>
 

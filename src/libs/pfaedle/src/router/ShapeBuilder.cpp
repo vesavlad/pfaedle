@@ -21,7 +21,7 @@
 #include "util/geo/output/GeoGraphJsonOutput.h"
 #include "util/geo/output/GeoJsonOutput.h"
 #include "util/graph/EDijkstra.h"
-#include "util/log/Log.h"
+#include <logging/logger.h>
 #include <exception>
 #include <map>
 #include <mutex>
@@ -172,7 +172,7 @@ EdgeListHops ShapeBuilder::route(const router::NodeCandRoute& ncr,
 // _____________________________________________________________________________
 pfaedle::router::Shape ShapeBuilder::shape(Trip* trip) const
 {
-    LOG(VDEBUG) << "Map-matching shape for trip #" << trip->getId() << " of mot "
+    LOG(TRACE) << "Map-matching shape for trip #" << trip->getId() << " of mot "
                 << trip->getRoute()->getType() << "(sn=" << trip->getShortname()
                 << ", rsn=" << trip->getRoute()->getShortName()
                 << ", rln=" << trip->getRoute()->getLongName() << ")";
@@ -180,7 +180,7 @@ pfaedle::router::Shape ShapeBuilder::shape(Trip* trip) const
     ret.hops = route(getNCR(trip), getRAttrs(trip));
     ret.avgHopDist = avgHopDist(trip);
 
-    LOG(VDEBUG) << "Finished map-matching for #" << trip->getId();
+    LOG(TRACE) << "Finished map-matching for #" << trip->getId();
 
     return ret;
 }
@@ -188,7 +188,7 @@ pfaedle::router::Shape ShapeBuilder::shape(Trip* trip) const
 // _____________________________________________________________________________
 pfaedle::router::Shape ShapeBuilder::shape(Trip* trip)
 {
-    LOG(VDEBUG) << "Map-matching shape for trip #" << trip->getId() << " of mot "
+    LOG(TRACE) << "Map-matching shape for trip #" << trip->getId() << " of mot "
                 << trip->getRoute()->getType() << "(sn=" << trip->getShortname()
                 << ", rsn=" << trip->getRoute()->getShortName()
                 << ", rln=" << trip->getRoute()->getLongName() << ")";
@@ -197,7 +197,7 @@ pfaedle::router::Shape ShapeBuilder::shape(Trip* trip)
     ret.hops = route(getNCR(trip), getRAttrs(trip));
     ret.avgHopDist = avgHopDist(trip);
 
-    LOG(VDEBUG) << "Finished map-matching for #" << trip->getId();
+    LOG(TRACE) << "Finished map-matching for #" << trip->getId();
 
     return ret;
 }
@@ -270,7 +270,7 @@ void ShapeBuilder::shape(pfaedle::netgraph::Graph* ng)
         const ad::cppgtfs::gtfs::Shape& shp =
                 getGtfsShape(cshp, clusters[i][0], &distances);
 
-        LOG(VDEBUG) << "Took " << EDijkstra::ITERS - iters << " iterations.";
+        LOG(TRACE) << "Took " << EDijkstra::ITERS - iters << " iterations.";
         iters = EDijkstra::ITERS;
 
         totNumTrips += clusters[i].size();

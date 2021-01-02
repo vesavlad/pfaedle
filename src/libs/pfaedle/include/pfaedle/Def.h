@@ -7,7 +7,7 @@
 
 #include <unistd.h>
 #include <string>
-#include "util/log/Log.h"
+#include <logging/logger.h>
 #include "util/Misc.h"
 #include "util/geo/Geo.h"
 #include "util/geo/PolyLine.h"
@@ -41,7 +41,7 @@ inline std::string getTmpFName(std::string dir, std::string postf) {
     c++;
     if (c > 10000) {
       // giving up...
-      LOG(ERROR) << "Could not find temporary file name!";
+      LOG_ERROR() << "Could not find temporary file name!";
       exit(1);
     }
     std::stringstream ss;

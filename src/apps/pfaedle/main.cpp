@@ -27,7 +27,7 @@
 #include "pfaedle/trgraph/StatGroup.h"
 #include "util/geo/output/GeoGraphJsonOutput.h"
 #include "util/geo/output/GeoJsonOutput.h"
-#include "util/log/Log.h"
+#include <logging/logger.h>
 #include "util/Misc.h"
 
 #ifndef CFG_HOME_SUFFIX
@@ -69,6 +69,7 @@ std::vector<std::string> getCfgPaths(const Config& cfg);
 
 // _____________________________________________________________________________
 int main(int argc, char** argv) {
+    logging::configure_logging();
   // disable output buffering for standard output
   setbuf(stdout, NULL);
 

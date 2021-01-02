@@ -10,3 +10,8 @@
     url=git@github.com:vesavlad/configparser.git
     branch=master
     commit=d77e55760c0370356c39ec2b033d5fe34fbfdab5
+
+[spdlog]
+    url=git@github.com:gabime/spdlog.git
+    branch=master
+    commit=cbe9448650176797739dbab13961ef4c07f4290f

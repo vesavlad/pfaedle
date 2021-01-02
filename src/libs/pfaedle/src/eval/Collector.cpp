@@ -8,7 +8,7 @@
 #include "pfaedle/eval/Result.h"
 #include "util/geo/Geo.h"
 #include "util/geo/output/GeoJsonOutput.h"
-#include "util/log/Log.h"
+#include <logging/logger.h>
 #include <csignal>
 #include <set>
 #include <string>

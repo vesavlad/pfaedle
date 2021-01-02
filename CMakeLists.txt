@@ -24,10 +24,10 @@ else()
 	message(WARNING "Configuring without OpenMP!")
 	set(CMAKE_CXX_FLAGS            "-Ofast -fno-signed-zeros -fno-trapping-math -Wall -Wno-format-extra-args -Wextra -Wformat-nonliteral -Wformat-security -Wformat=2 -Wextra -Wno-implicit-fallthrough -pedantic")
 endif()
-set(CMAKE_CXX_FLAGS_DEBUG          "-Og -g -DLOGLEVEL=3 -DPFAEDLE_DBG=1")
-set(CMAKE_CXX_FLAGS_MINSIZEREL     "${CMAKE_CXX_FLAGS} -DLOGLEVEL=2")
-set(CMAKE_CXX_FLAGS_RELEASE        "${CMAKE_CXX_FLAGS} -DLOGLEVEL=2")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -g -DLOGLEVEL=3")
+set(CMAKE_CXX_FLAGS_DEBUG          "-Og -g -DPFAEDLE_DBG=1")
+set(CMAKE_CXX_FLAGS_MINSIZEREL     "${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS_RELEASE        "${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -g")
 
 # export compile commands to tools like clang
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -49,35 +49,6 @@ endif ()
 
 add_library(pfaedle-generated INTERFACE)
 target_include_directories(pfaedle-generated INTERFACE ${CMAKE_BINARY_DIR}/generated)
-
-################################
-# PFAEDLE Version
-################################
-execute_process(
-        COMMAND git rev-parse --abbrev-ref HEAD
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        OUTPUT_VARIABLE pfaedle_git_branch
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-execute_process(
-        COMMAND git --no-pager log -1 --format=%h
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        OUTPUT_VARIABLE pfaedle_git_ref
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-execute_process(
-        COMMAND git describe --always --tags --dirty=-dirty
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        OUTPUT_VARIABLE pfaedle_git_tag
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-configure_file (
-        "src/pfaedle/config.h.in"
-        "${CMAKE_BINARY_DIR}/generated/pfaedle/config.h"
-)
 
 
 ################################
