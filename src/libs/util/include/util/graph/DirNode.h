@@ -19,28 +19,28 @@ class DirNode : public Node<N, E> {
  public:
   DirNode();
   DirNode(const N& pl);
-  ~DirNode();
+  ~DirNode() override;
 
-  const std::vector<Edge<N, E>*>& getAdjList() const;
-  const std::vector<Edge<N, E>*>& getAdjListIn() const;
-  const std::vector<Edge<N, E>*>& getAdjListOut() const;
+  const std::vector<Edge<N, E>*>& getAdjList() const override;
+  const std::vector<Edge<N, E>*>& getAdjListIn() const override;
+  const std::vector<Edge<N, E>*>& getAdjListOut() const override;
 
-  size_t getDeg() const;
-  size_t getInDeg() const;
-  size_t getOutDeg() const;
+  size_t getDeg() const override;
+  size_t getInDeg() const override;
+  size_t getOutDeg() const override;
 
-  bool hasEdgeIn(const Edge<N, E>* e) const;
-  bool hasEdgeOut(const Edge<N, E>* e) const;
-  bool hasEdge(const Edge<N, E>* e) const;
+  bool hasEdgeIn(const Edge<N, E>* e) const override;
+  bool hasEdgeOut(const Edge<N, E>* e) const override;
+  bool hasEdge(const Edge<N, E>* e) const override;
 
   // add edge to this node's adjacency lists
-  void addEdge(Edge<N, E>* e);
+  void addEdge(Edge<N, E>* e) override;
 
   // remove edge from this node's adjacency lists
-  void removeEdge(Edge<N, E>* e);
+  void removeEdge(Edge<N, E>* e) override;
 
-  N& pl();
-  const N& pl() const;
+  N& pl() override;
+  const N& pl() const override;
 
  private:
   std::vector<Edge<N, E>*> _adjListIn;

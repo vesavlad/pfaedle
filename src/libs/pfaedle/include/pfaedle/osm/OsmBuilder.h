@@ -61,11 +61,11 @@ struct EqSearch : public SearchFunc {
   explicit EqSearch(bool orphanSnap) : orphanSnap(orphanSnap) {}
   double minSimi = 0.9;
   bool orphanSnap;
-  bool operator()(const Node* cand, const StatInfo* si) const;
+  bool operator()(const Node* cand, const StatInfo* si) const override;
 };
 
 struct BlockSearch : public SearchFunc {
-  bool operator()(const Node* n, const StatInfo* si) const {
+  bool operator()(const Node* n, const StatInfo* si) const override {
     if (n->pl().getSI() && n->pl().getSI()->simi(si) < 0.5) return true;
     return n->pl().isBlocker();
   }

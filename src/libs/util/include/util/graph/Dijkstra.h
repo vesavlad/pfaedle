@@ -57,7 +57,7 @@ class Dijkstra : public ShortestPath<Dijkstra> {
   template <typename N, typename E, typename C>
   struct CostFunc : public ShortestPath::CostFunc<N, E, C> {
     C operator()(const Edge<N, E>* from, const Node<N, E>* n,
-                 const Edge<N, E>* to) const {
+                 const Edge<N, E>* to) const override {
       UNUSED(from);
       UNUSED(n);
       UNUSED(to);
@@ -68,7 +68,7 @@ class Dijkstra : public ShortestPath<Dijkstra> {
   template <typename N, typename E, typename C>
   struct HeurFunc : public ShortestPath::HeurFunc<N, E, C> {
     C operator()(const Edge<N, E>* from,
-                 const std::set<Edge<N, E>*>& to) const {
+                 const std::set<Edge<N, E>*>& to) const override {
       UNUSED(from);
       UNUSED(to);
       return C();

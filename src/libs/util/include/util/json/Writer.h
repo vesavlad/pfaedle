@@ -17,9 +17,9 @@ namespace json {
 class WriterException : public std::exception {
  public:
   WriterException(std::string msg) : _msg(msg) {}
-  ~WriterException() throw() {}
+  ~WriterException() throw() override {}
 
-  virtual const char* what() const throw() { return _msg.c_str(); };
+  const char* what() const throw() override { return _msg.c_str(); };
 
  private:
   std::string _msg;

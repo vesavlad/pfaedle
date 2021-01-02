@@ -52,12 +52,12 @@ class ShortestPath {
 
   template <typename N, typename E, typename C>
   struct ZeroHeurFunc : public HeurFunc<N, E, C> {
-    C operator()(const Node<N, E>* a, const std::set<Node<N, E>*>& b) const {
+    C operator()(const Node<N, E>* a, const std::set<Node<N, E>*>& b) const override {
       UNUSED(a);
       UNUSED(b);
       return C();
     }
-    C operator()(const Edge<N, E>* a, const std::set<Edge<N, E>*>& b) const {
+    C operator()(const Edge<N, E>* a, const std::set<Edge<N, E>*>& b) const override {
       UNUSED(a);
       UNUSED(b);
       return C();

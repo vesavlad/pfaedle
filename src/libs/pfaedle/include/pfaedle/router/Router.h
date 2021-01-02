@@ -63,8 +63,8 @@ struct CostFunc
   EdgeCost _inf;
 
   EdgeCost operator()(const trgraph::Edge* from, const trgraph::Node* n,
-                      const trgraph::Edge* to) const;
-  EdgeCost inf() const { return _inf; }
+                      const trgraph::Edge* to) const override;
+  EdgeCost inf() const override { return _inf; }
 
   double transitLineCmp(const trgraph::EdgePL& e) const;
 };
@@ -87,8 +87,8 @@ struct NCostFunc
   EdgeCost _inf;
 
   EdgeCost operator()(const trgraph::Node* from, const trgraph::Edge* e,
-                      const trgraph::Node* to) const;
-  EdgeCost inf() const { return _inf; }
+                      const trgraph::Node* to) const override;
+  EdgeCost inf() const override { return _inf; }
 
   double transitLineCmp(const trgraph::EdgePL& e) const;
 };
@@ -103,7 +103,7 @@ struct DistHeur
   POINT _center;
   double _maxCentD;
   EdgeCost operator()(const trgraph::Edge* a,
-                      const std::set<trgraph::Edge*>& b) const;
+                      const std::set<trgraph::Edge*>& b) const override;
 };
 
 struct NDistHeur
@@ -114,7 +114,7 @@ struct NDistHeur
   POINT _center;
   double _maxCentD;
   EdgeCost operator()(const trgraph::Node* a,
-                      const std::set<trgraph::Node*>& b) const;
+                      const std::set<trgraph::Node*>& b) const override;
 };
 
 struct CombCostFunc
@@ -124,8 +124,8 @@ struct CombCostFunc
   const RoutingOpts& _rOpts;
 
   double operator()(const router::Edge* from, const router::Node* n,
-                    const router::Edge* to) const;
-  double inf() const { return std::numeric_limits<double>::infinity(); }
+                    const router::Edge* to) const override;
+  double inf() const override { return std::numeric_limits<double>::infinity(); }
 };
 
 /*

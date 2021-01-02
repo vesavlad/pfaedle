@@ -50,7 +50,7 @@ class EDijkstra : public ShortestPath<EDijkstra> {
   template <typename N, typename E, typename C>
   struct CostFunc : public ShortestPath::CostFunc<N, E, C> {
     C operator()(const Node<N, E>* from, const Edge<N, E>* e,
-                 const Node<N, E>* to) const {
+                 const Node<N, E>* to) const override {
       UNUSED(from);
       UNUSED(e);
       UNUSED(to);
@@ -61,7 +61,7 @@ class EDijkstra : public ShortestPath<EDijkstra> {
   template <typename N, typename E, typename C>
   struct HeurFunc : public ShortestPath::HeurFunc<N, E, C> {
     C operator()(const Node<N, E>* from,
-                 const std::set<Node<N, E>*>& to) const {
+                 const std::set<Node<N, E>*>& to) const override {
       UNUSED(from);
       UNUSED(to);
       return C();

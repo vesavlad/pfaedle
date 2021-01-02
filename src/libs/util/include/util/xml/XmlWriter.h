@@ -16,9 +16,9 @@ namespace xml {
 class XmlWriterException : public std::exception {
  public:
   XmlWriterException(std::string msg) : _msg(msg) {}
-  ~XmlWriterException() throw() {}
+  ~XmlWriterException() throw() override {}
 
-  virtual const char* what() const throw() { return _msg.c_str(); };
+  const char* what() const throw() override { return _msg.c_str(); };
 
  private:
   std::string _msg;
