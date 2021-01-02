@@ -189,7 +189,7 @@ class ShortestPath {
     if (to->getInDeg() == 0) return costFunc.inf();
     std::set<Node<N, E>*> tos;
     tos.insert(to);
-    NList<N, E>* nl = 0;
+    NList<N, E>* nl = nullptr;
     return shortestPath(from, tos, costFunc, resEdges, nl);
   }
 
@@ -322,7 +322,7 @@ class ShortestPath {
                         const std::set<Edge<N, E>*>& to,
                         const CostFunc<N, E, C>& costFunc,
                         const HeurFunc<N, E, C>& heurFunc, EList<N, E>* el) {
-    NList<N, E>* nl = 0;
+    NList<N, E>* nl = nullptr;
     return D::shortestPathImpl(from, to, costFunc, heurFunc, el, nl);
   }
 

@@ -58,7 +58,7 @@ double Collector::add(const Trip* t, const Shape* oldS, const Shape& newS,
     std::ofstream fstr(_evalOutPath + "/trip-" + t->getId() + ".json");
     GeoJsonOutput gjout(fstr);
 
-    auto oldSegs = segmentize(t, oldL, oldDists, 0);
+    auto oldSegs = segmentize(t, oldL, oldDists, nullptr);
     auto newSegs = segmentize(t, newL, newDists, &newTripDists);
 
     // cut both result at the beginning and end to clear evaluation from
@@ -251,7 +251,7 @@ std::vector<LINE> Collector::segmentize(
 // _____________________________________________________________________________
 LINE Collector::getWebMercLine(const Shape* s, double from, double t)
 {
-    return getWebMercLine(s, from, t, 0);
+    return getWebMercLine(s, from, t, nullptr);
 }
 
 // _____________________________________________________________________________
@@ -300,7 +300,7 @@ void Collector::printHisto(std::ostream* os, const std::set<Result>& result,
     for (size_t i = 0; i < bins.size(); i++)
     {
         size_t c = 0;
-        const Trip* trip = 0;
+        const Trip* trip = nullptr;
 
         while (it != result.end() && it->getDist() <= (bins[i] + 0.001))
         {
@@ -360,7 +360,7 @@ void Collector::printCsv(std::ostream* os, const std::set<Result>& result,
     for (size_t i = 0; i < bins.size(); i++)
     {
         size_t c = 0;
-        const Trip* trip = 0;
+        const Trip* trip = nullptr;
 
         while (it != result.end() && it->getDist() <= (bins[i] + 0.001))
         {

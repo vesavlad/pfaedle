@@ -54,7 +54,7 @@ struct CostFunc
         _rOpts(rOpts),
         _res(res),
         _tgGrp(tgGrp),
-        _inf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, max, 0) {}
+        _inf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, max, nullptr) {}
 
   const RoutingAttrs& _rAttrs;
   const RoutingOpts& _rOpts;
@@ -78,7 +78,7 @@ struct NCostFunc
         _res(res),
         _tgGrp(tgGrp),
         _inf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-             std::numeric_limits<double>::infinity(), 0) {}
+             std::numeric_limits<double>::infinity(), nullptr) {}
 
   const RoutingAttrs& _rAttrs;
   const RoutingOpts& _rOpts;

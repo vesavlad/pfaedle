@@ -185,9 +185,9 @@ inline pfaedle::router::FeedStops writeMotStops(const pfaedle::gtfs::Feed* feed,
         if (st.getStop()->getLocationType() ==
                 ad::cppgtfs::gtfs::flat::Stop::STATION_ENTRANCE &&
             st.getStop()->getParentStation()) {
-          ret[st.getStop()->getParentStation()] = 0;
+          ret[st.getStop()->getParentStation()] = nullptr;
         } else {
-          ret[st.getStop()] = 0;
+          ret[st.getStop()] = nullptr;
         }
       }
     }

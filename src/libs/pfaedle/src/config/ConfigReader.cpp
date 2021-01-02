@@ -122,32 +122,32 @@ void ConfigReader::read(Config& cfg, int argc, char** argv)
     std::string motStr = "all";
     bool printOpts = false;
 
-    struct option ops[] = {{"output", required_argument, 0, 'o'},
-                           {"input", required_argument, 0, 'i'},
-                           {"config", required_argument, 0, 'c'},
-                           {"osm-file", required_argument, 0, 'x'},
-                           {"drop-shapes", required_argument, 0, 'D'},
-                           {"mots", required_argument, NULL, 'm'},
-                           {"grid-size", required_argument, 0, 'g'},
-                           {"overpass", no_argument, 0, 'a'},
-                           {"osm-out", required_argument, 0, 'X'},
-                           {"trip-id", required_argument, 0, 'T'},
-                           {"write-graph", no_argument, 0, 1},
-                           {"write-cgraph", no_argument, 0, 2},
-                           {"write-trgraph", no_argument, 0, 4},
-                           {"method", required_argument, 0, 5},
-                           {"eval", no_argument, 0, 3},
-                           {"eval-path", required_argument, 0, 6},
-                           {"eval-df-bins", required_argument, 0, 7},
-                           {"dbg-path", required_argument, 0, 'd'},
-                           {"version", no_argument, 0, 'v'},
-                           {"help", no_argument, 0, 'h'},
-                           {"inplace", no_argument, 0, 9},
-                           {"use-route-cache", no_argument, 0, 8},
-                           {0, 0, 0, 0}};
+    struct option ops[] = {{"output", required_argument, nullptr, 'o'},
+                           {"input", required_argument, nullptr, 'i'},
+                           {"config", required_argument, nullptr, 'c'},
+                           {"osm-file", required_argument, nullptr, 'x'},
+                           {"drop-shapes", required_argument, nullptr, 'D'},
+                           {"mots", required_argument, nullptr, 'm'},
+                           {"grid-size", required_argument, nullptr, 'g'},
+                           {"overpass", no_argument, nullptr, 'a'},
+                           {"osm-out", required_argument, nullptr, 'X'},
+                           {"trip-id", required_argument, nullptr, 'T'},
+                           {"write-graph", no_argument, nullptr, 1},
+                           {"write-cgraph", no_argument, nullptr, 2},
+                           {"write-trgraph", no_argument, nullptr, 4},
+                           {"method", required_argument, nullptr, 5},
+                           {"eval", no_argument, nullptr, 3},
+                           {"eval-path", required_argument, nullptr, 6},
+                           {"eval-df-bins", required_argument, nullptr, 7},
+                           {"dbg-path", required_argument, nullptr, 'd'},
+                           {"version", no_argument, nullptr, 'v'},
+                           {"help", no_argument, nullptr, 'h'},
+                           {"inplace", no_argument, nullptr, 9},
+                           {"use-route-cache", no_argument, nullptr, 8},
+                           {nullptr, 0, nullptr, 0}};
 
     char c;
-    while ((c = getopt_long(argc, argv, ":o:hvi:c:x:Dm:g:X:T:d:p", ops, 0)) !=
+    while ((c = getopt_long(argc, argv, ":o:hvi:c:x:Dm:g:X:T:d:p", ops, nullptr)) !=
            -1)
     {
         switch (c)

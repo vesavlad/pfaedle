@@ -175,9 +175,9 @@ Req HttpServer::getReq(int connection)
     int64_t curRcvd = 0;
     HeaderState state = NONE;
     Req ret;
-    char* tmp = 0;
-    char* tmp2 = 0;
-    char* brk = 0;
+    char* tmp = nullptr;
+    char* tmp2 = nullptr;
+    char* brk = nullptr;
 
     while ((curRcvd = read(connection, buf + rcvd, BSIZE - rcvd)))
     {

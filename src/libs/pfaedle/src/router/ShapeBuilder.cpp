@@ -77,7 +77,7 @@ ShapeBuilder::ShapeBuilder(Feed* feed, ad::cppgtfs::gtfs::Feed* evalFeed,
 // _____________________________________________________________________________
 const NodeCandGroup& ShapeBuilder::getNodeCands(const Stop* s) const
 {
-    if (_stops->find(s) == _stops->end() || _stops->at(s) == 0) return _emptyNCG;
+    if (_stops->find(s) == _stops->end() || _stops->at(s) == nullptr) return _emptyNCG;
     return _stops->at(s)->pl().getSI()->getGroup()->getNodeCands(s);
 }
 
@@ -543,7 +543,7 @@ double ShapeBuilder::avgHopDist(Trip* trip) const
     size_t i = 0;
     double sum = 0;
 
-    const Stop* prev = 0;
+    const Stop* prev = nullptr;
 
     for (const auto& st : trip->getStopTimes())
     {
@@ -676,8 +676,8 @@ void ShapeBuilder::buildTrGraph(TrGraphEdgs* edgs,
     for (auto ep : *edgs)
     {
         auto e = ep.first;
-        pfaedle::netgraph::Node* from = 0;
-        pfaedle::netgraph::Node* to = 0;
+        pfaedle::netgraph::Node* from = nullptr;
+        pfaedle::netgraph::Node* to = nullptr;
         if (nodes.count(e->getFrom())) from = nodes[e->getFrom()];
         if (nodes.count(e->getTo())) to = nodes[e->getTo()];
         if (!from)

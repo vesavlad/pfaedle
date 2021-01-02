@@ -21,7 +21,7 @@ inline std::string urlDecode(const std::string& encoded) {
     char c = encoded[i];
     if (c == '%') {
       std::string ah = encoded.substr(i + 1, 2);
-      char* nonProced = 0;
+      char* nonProced = nullptr;
       char hexVal = strtol(ah.c_str(), &nonProced, 16);
 
       if (ah.find_first_of("+-") > 1 && ah.size() - strlen(nonProced) == 2) {

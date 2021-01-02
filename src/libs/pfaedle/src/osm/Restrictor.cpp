@@ -39,7 +39,7 @@ void Restrictor::relax(osmid wid, const trgraph::Node* n,
 void Restrictor::add(const trgraph::Edge* from, osmid to,
                      const trgraph::Node* via, bool pos)
 {
-    const trgraph::Edge* toE = 0;
+    const trgraph::Edge* toE = nullptr;
     if (_rlx.count(NodeOsmIdP(via, to)))
         toE = _rlx.find(NodeOsmIdP(via, to))->second;
     if (pos)

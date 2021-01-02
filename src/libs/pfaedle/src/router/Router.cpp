@@ -193,7 +193,7 @@ EdgeCost DistHeur::operator()(const trgraph::Edge* a,
     double cur = webMercMeterDist(*a->getFrom()->pl().getGeom(), _center) *
                  _rOpts.levelPunish[_lvl];
 
-    return EdgeCost(cur - _maxCentD, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    return EdgeCost(cur - _maxCentD, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, nullptr);
 }
 
 // _____________________________________________________________________________
@@ -203,7 +203,7 @@ EdgeCost NDistHeur::operator()(const trgraph::Node* a,
     UNUSED(b);
     double cur = webMercMeterDist(*a->pl().getGeom(), _center);
 
-    return EdgeCost(cur - _maxCentD, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    return EdgeCost(cur - _maxCentD, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, nullptr);
 }
 
 // _____________________________________________________________________________
@@ -270,7 +270,7 @@ HopBand Router::getHopBand(const EdgeCandGroup& a, const EdgeCandGroup& b,
 
     LOG(TRACE) << "Pending max hop distance is " << pend << " meters";
 
-    const trgraph::StatGroup* tgGrpTo = 0;
+    const trgraph::StatGroup* tgGrpTo = nullptr;
 
     if (b.begin()->e->getFrom()->pl().getSI())
         tgGrpTo = b.begin()->e->getFrom()->pl().getSI()->getGroup();
@@ -296,7 +296,7 @@ HopBand Router::getHopBand(const EdgeCandGroup& a, const EdgeCandGroup& b,
     {
         LOG(TRACE) << "Pilot run: no connection between candidate groups,"
                     << " setting max distance to 1";
-        return HopBand{0, 1, 0, 0};
+        return HopBand{0, 1, nullptr, 0};
     }
 
     // cache the found path, will save a few dijkstra iterations
@@ -340,7 +340,7 @@ EdgeListHops Router::routeGreedy(const NodeCandRoute& route,
 
     for (size_t i = 0; i < route.size() - 1; i++)
     {
-        const trgraph::StatGroup* tgGrp = 0;
+        const trgraph::StatGroup* tgGrp = nullptr;
         std::set<trgraph::Node*> from, to;
         for (auto c : route[i]) from.insert(c.nd);
         for (auto c : route[i + 1]) to.insert(c.nd);
@@ -384,7 +384,7 @@ EdgeListHops Router::routeGreedy2(const NodeCandRoute& route,
 
     for (size_t i = 0; i < route.size() - 1; i++)
     {
-        const trgraph::StatGroup* tgGrp = 0;
+        const trgraph::StatGroup* tgGrp = nullptr;
         std::set<trgraph::Node*> from, to;
 
         if (i == 0)
@@ -455,7 +455,7 @@ EdgeListHops Router::route(const EdgeCandRoute& route,
         cgraph->addEdg(source, nodes[e])
                 ->pl()
                 .setCost(EdgeCost(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                  route[0][i].pen, 0));
+                                  route[0][i].pen, nullptr));
     }
 
     size_t iters = EDijkstra::ITERS;
@@ -466,7 +466,7 @@ EdgeListHops Router::route(const EdgeCandRoute& route,
         nextNodes.clear();
         HopBand hopBand = getHopBand(route[i], route[i + 1], rAttrs, rOpts, rest);
 
-        const trgraph::StatGroup* tgGrp = 0;
+        const trgraph::StatGroup* tgGrp = nullptr;
         if (route[i + 1].begin()->e->getFrom()->pl().getSI())
             tgGrp = route[i + 1].begin()->e->getFrom()->pl().getSI()->getGroup();
 
@@ -525,7 +525,7 @@ EdgeListHops Router::route(const EdgeCandRoute& route,
             for (auto& kv : edges)
             {
                 kv.second->pl().setCost(
-                        EdgeCost(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, pens[kv.first], 0) +
+                        EdgeCost(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, pens[kv.first], nullptr) +
                         costs[kv.first]);
 
                 if (rOpts.popReachEdge && kv.second->pl().getEdges()->size())
@@ -672,7 +672,7 @@ void Router::nestedCache(const EdgeList* el,
 
         if (froms.count(*i))
         {
-            EdgeCost startC = cost(0, 0, *i) + curCost;
+            EdgeCost startC = cost(nullptr, nullptr, *i) + curCost;
             cache(*i, el->front(), startC, &curEdges, rAttrs);
             j++;
         }

@@ -42,7 +42,7 @@ const Node* EdgePL::frontNode() const { return _start; }
 // _____________________________________________________________________________
 const LINE* EdgePL::getGeom() const
 {
-    if (!_edges.size()) return 0;
+    if (!_edges.size()) return nullptr;
     if (!_geom.size())
     {
         const trgraph::Node* l = _start;

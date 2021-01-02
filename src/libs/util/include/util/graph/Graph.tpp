@@ -62,7 +62,7 @@ Edge<N, E>* Graph<N, E>::getEdg(Node<N, E>* from, Node<N, E>* to) {
     if (e->getOtherNd(from) == to) return e;
   }
 
-  return 0;
+  return nullptr;
 }
 
 // _____________________________________________________________________________

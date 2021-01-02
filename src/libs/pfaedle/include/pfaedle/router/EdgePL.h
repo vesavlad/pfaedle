@@ -19,7 +19,7 @@ namespace router {
 
 class EdgePL {
  public:
-  EdgePL() : _cost(), _start(0), _end(0), _startE(0), _endE(0) {}
+  EdgePL() : _cost(), _start(nullptr), _end(nullptr), _startE(nullptr), _endE(nullptr) {}
   const LINE* getGeom() const;
   util::json::Dict getAttrs() const;
   router::EdgeList* getEdges();

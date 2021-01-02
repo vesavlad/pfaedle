@@ -43,7 +43,7 @@ bool ShapeContainer<T>::remove(const std::string& id) {
 // ____________________________________________________________________________
 template <typename T>
 T* ShapeContainer<T>::get(const std::string& id) {
-  if (!has(id)) return 0;
+  if (!has(id)) return nullptr;
   return reinterpret_cast<T*>(1);
 }
 

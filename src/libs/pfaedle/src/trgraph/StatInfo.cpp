@@ -13,7 +13,7 @@ std::unordered_map<const StatGroup*, size_t> StatInfo::_groups;
 
 // _____________________________________________________________________________
 StatInfo::StatInfo() :
-    _name(""), _track(""), _fromOsm(false), _group(0) {}
+    _name(""), _track(""), _fromOsm(false), _group(nullptr) {}
 
 // _____________________________________________________________________________
 StatInfo::StatInfo(const StatInfo& si) :
@@ -21,7 +21,7 @@ StatInfo::StatInfo(const StatInfo& si) :
     _altNames(si._altNames),
     _track(si._track),
     _fromOsm(si._fromOsm),
-    _group(0)
+    _group(nullptr)
 {
     setGroup(si._group);
 #ifdef PFAEDLE_STATION_IDS
@@ -33,7 +33,7 @@ StatInfo::StatInfo(const StatInfo& si) :
 StatInfo::StatInfo(const std::string& name, const std::string& track,
                    bool fromOsm) :
     _name(name),
-    _track(track), _fromOsm(fromOsm), _group(0) {}
+    _track(track), _fromOsm(fromOsm), _group(nullptr) {}
 
 // _____________________________________________________________________________
 StatInfo::~StatInfo() { unRefGroup(_group); }

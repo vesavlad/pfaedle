@@ -61,9 +61,9 @@ C EDijkstra::shortestPathImpl(const std::set<Edge<N, E>*> from,
   // at the beginning, put all edges on the priority queue,
   // init them with their own cost
   for (auto e : from) {
-    C c = costFunc(0, 0, e);
+    C c = costFunc(nullptr, nullptr, e);
     C h = heurFunc(e, to);
-    pq.emplace(e, (Edge<N, E>*)0, (Node<N, E>*)0, c, c + h);
+    pq.emplace(e, (Edge<N, E>*)nullptr, (Node<N, E>*)nullptr, c, c + h);
   }
 
   RouteEdge<N, E, C> cur;
@@ -158,9 +158,9 @@ std::unordered_map<Edge<N, E>*, C> EDijkstra::shortestPathImpl(
 
   size_t found = 0;
 
-  C c = costFunc(0, 0, from);
+  C c = costFunc(nullptr, nullptr, from);
   C h = heurFunc(from, to);
-  pq.emplace(from, (Edge<N, E>*)0, (Node<N, E>*)0, c, c + h);
+  pq.emplace(from, (Edge<N, E>*)nullptr, (Node<N, E>*)nullptr, c, c + h);
 
   RouteEdge<N, E, C> cur;
 

@@ -513,7 +513,7 @@ bool Writer::writeStopTimes(gtfs::Feed* sourceFeed, std::ostream* os) const
     auto flds = Parser::getStopTimeFlds(&csvp);
 
     std::string curTripId;
-    Trip* cur = 0;
+    Trip* cur = nullptr;
 
     while (p.nextStopTime(&csvp, &st, flds))
     {

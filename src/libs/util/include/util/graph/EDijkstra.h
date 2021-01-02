@@ -27,7 +27,7 @@ class EDijkstra : public ShortestPath<EDijkstra> {
  public:
   template <typename N, typename E, typename C>
   struct RouteEdge {
-    RouteEdge() : e(0), parent(0), d(), h(), n(0) {}
+    RouteEdge() : e(nullptr), parent(nullptr), d(), h(), n(nullptr) {}
     RouteEdge(Edge<N, E>* e) : e(e), parent(0), d(), h(), n(0) {}
     RouteEdge(Edge<N, E>* e, Edge<N, E>* parent, Node<N, E>* n, C d)
         : e(e), parent(parent), d(d), h(), n(n) {}

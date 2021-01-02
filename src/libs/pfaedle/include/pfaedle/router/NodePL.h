@@ -20,11 +20,11 @@ namespace router {
 
 class NodePL {
  public:
-  NodePL() : _n(0) {}
+  NodePL() : _n(nullptr) {}
   NodePL(const pfaedle::trgraph::Node* n) : _n(n) {}  // NOLINT
 
   const POINT* getGeom() const {
-    return !_n ? 0 : _n->pl().getGeom();
+    return !_n ? nullptr : _n->pl().getGeom();
   }
   util::json::Dict getAttrs() const {
     if (_n) return _n->pl().getAttrs();

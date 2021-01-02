@@ -103,7 +103,7 @@ inline std::string getHomeDir() {
 
     if (bufsize == static_cast<size_t>(-1)) bufsize = 0x4000;
     buf = static_cast<char*>(malloc(bufsize));
-    if (buf != 0) {
+    if (buf != nullptr) {
       getpwuid_r(getuid(), &pwd, buf, bufsize, &result);
       if (result != nullptr) homedir = result->pw_dir;
     }

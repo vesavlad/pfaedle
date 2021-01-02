@@ -829,7 +829,7 @@ void OsmBuilder::readWriteNds(pfxml::file* i, util::xml::XmlWriter* o,
     while (
             (nd = nextNode(i, nds, &empt, nRels, filter, bBoxNds, keepAttrs, f)).id)
     {
-        (*nds)[nd.id] = 0;
+        (*nds)[nd.id] = nullptr;
         o->openTag("node", {{"id", std::to_string(nd.id)},
                             {"lat", std::to_string(nd.lat)},
                             {"lon", std::to_string(nd.lng)}});
@@ -1616,7 +1616,7 @@ std::set<Node*> OsmBuilder::snapStation(Graph* g, NodePL* s, EdgeGrid* eg,
 StatGroup* OsmBuilder::groupStats(const NodeSet& s)
 {
     if (s.empty())
-        return 0;
+        return nullptr;
     // reference group
     auto* ret = new StatGroup();
     bool used = false;
@@ -1654,7 +1654,7 @@ std::vector<TransitEdgeLine*> OsmBuilder::getLines(
     std::vector<TransitEdgeLine*> ret;
     for (size_t relId : edgeRels)
     {
-        TransitEdgeLine* elp = 0;
+        TransitEdgeLine* elp = nullptr;
 
         if (_relLines.count(relId))
         {
@@ -2138,7 +2138,7 @@ bool OsmBuilder::keepFullTurn(const trgraph::Node* n, double ang)
 {
     if (n->getInDeg() + n->getOutDeg() != 1) return false;
 
-    const trgraph::Edge* e = 0;
+    const trgraph::Edge* e = nullptr;
     if (n->getOutDeg())
         e = n->getAdjListOut().front();
     else

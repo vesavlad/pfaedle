@@ -23,8 +23,8 @@ std::unordered_map<const Component*, size_t> NodePL::_comps;
 // _____________________________________________________________________________
 NodePL::NodePL() :
     _geom(0, 0),
-    _si(0),
-    _component(0)
+    _si(nullptr),
+    _component(nullptr)
 #ifdef PFAEDLE_DBG
     ,
     _vis(0)
@@ -35,7 +35,7 @@ NodePL::NodePL() :
 // _____________________________________________________________________________
 NodePL::NodePL(const NodePL& pl) :
     _geom(pl._geom),
-    _si(0),
+    _si(nullptr),
     _component(pl._component)
 #ifdef PFAEDLE_DBG
     ,
@@ -48,8 +48,8 @@ NodePL::NodePL(const NodePL& pl) :
 // _____________________________________________________________________________
 NodePL::NodePL(const POINT& geom) :
     _geom(geom),
-    _si(0),
-    _component(0)
+    _si(nullptr),
+    _component(nullptr)
 #ifdef PFAEDLE_DBG
     ,
     _vis(0)
@@ -60,8 +60,8 @@ NodePL::NodePL(const POINT& geom) :
 // _____________________________________________________________________________
 NodePL::NodePL(const POINT& geom, const StatInfo& si) :
     _geom(geom),
-    _si(0),
-    _component(0)
+    _si(nullptr),
+    _component(nullptr)
 #ifdef PFAEDLE_DBG
     ,
     _vis(0)
@@ -94,7 +94,7 @@ void NodePL::setVisited() const
 }
 
 // _____________________________________________________________________________
-void NodePL::setNoStat() { _si = 0; }
+void NodePL::setNoStat() { _si = nullptr; }
 
 // _____________________________________________________________________________
 const Component* NodePL::getComp() const { return _component; }
@@ -162,14 +162,14 @@ void NodePL::setSI(const StatInfo& si) { _si = new StatInfo(si); }
 // _____________________________________________________________________________
 const StatInfo* NodePL::getSI() const
 {
-    if (isBlocker()) return 0;
+    if (isBlocker()) return nullptr;
     return _si;
 }
 
 // _____________________________________________________________________________
 StatInfo* NodePL::getSI()
 {
-    if (isBlocker()) return 0;
+    if (isBlocker()) return nullptr;
     return _si;
 }
 
