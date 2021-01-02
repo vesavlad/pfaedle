@@ -41,8 +41,8 @@ inline std::string jsonStringEscape(const std::string& unesc) {
   // modified code from
   // http://stackoverflow.com/questions/7724448/simple-json-string-escape-for-c
   std::ostringstream o;
-  for (auto c = unesc.cbegin(); c != unesc.cend(); c++) {
-    switch (*c) {
+  for (const char& c : unesc) {
+    switch (c) {
       case '"':
         o << "\\\"";
         break;
@@ -65,11 +65,11 @@ inline std::string jsonStringEscape(const std::string& unesc) {
         o << "\\t";
         break;
       default:
-        if ('\x00' <= *c && *c <= '\x1f') {
+        if ('\x00' <= c && c <= '\x1f') {
           o << "\\u" << std::hex << std::setw(4) << std::setfill('0')
-            << static_cast<int>(*c);
+            << static_cast<int>(c);
         } else {
-          o << *c;
+          o << c;
         }
     }
   }
@@ -124,7 +124,7 @@ inline std::vector<std::string> split(std::string in, char sep) {
   std::stringstream ss(in);
   std::vector<std::string> ret(1);
   while (std::getline(ss, ret.back(), sep)) {
-    ret.push_back("");
+    ret.emplace_back("");
   }
   ret.pop_back();
   return ret;
@@ -235,8 +235,8 @@ inline std::string implode(Iter begin, const Iter& end, const char* del) {
 inline std::string normalizeWhiteSpace(const std::string& input) {
   std::string ret;
   bool ws = false;
-  for (size_t i = 0; i < input.size(); i++) {
-    if (std::isspace(input[i])) {
+  for (char i : input) {
+    if (std::isspace(i)) {
       if (!ws) {
         ret += " ";
         ws = true;
@@ -244,7 +244,7 @@ inline std::string normalizeWhiteSpace(const std::string& input) {
       continue;
     } else {
       ws = false;
-      ret += input[i];
+      ret += i;
     }
   }
   return ret;

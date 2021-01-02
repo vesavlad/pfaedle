@@ -19,7 +19,7 @@ GeoJsonOutput::GeoJsonOutput(std::ostream& str) :
 }
 
 // _____________________________________________________________________________
-GeoJsonOutput::GeoJsonOutput(std::ostream& str, json::Val attrs) :
+GeoJsonOutput::GeoJsonOutput(std::ostream& str, const json::Val& attrs) :
     _wr(&str, 10, true)
 {
     _wr.obj();

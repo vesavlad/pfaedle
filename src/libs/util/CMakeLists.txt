@@ -1,6 +1,8 @@
-file(GLOB_RECURSE util_SRC src/*.cpp)
+file(GLOB_RECURSE pfaedle-util-files
+        src/*.cpp
+        include/*)
 
-add_library(pfaedle-util ${util_SRC})
+add_library(pfaedle-util ${pfaedle-util-files})
 target_include_directories(pfaedle-util PUBLIC include)
 
 find_package( ZLIB )

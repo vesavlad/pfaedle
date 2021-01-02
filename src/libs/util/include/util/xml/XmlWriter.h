@@ -30,7 +30,7 @@ class XmlWriter {
   explicit XmlWriter(std::ostream* out);
   XmlWriter(std::ostream* out, bool pretty);
   XmlWriter(std::ostream* out, bool pretty, size_t indent);
-  ~XmlWriter(){};
+  ~XmlWriter()= default;
 
   // open tag without attributes
   void openTag(const std::string& tag);

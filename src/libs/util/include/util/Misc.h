@@ -92,20 +92,20 @@ inline double atof(const char* p) { return atof(p, 38); }
 // _____________________________________________________________________________
 inline std::string getHomeDir() {
   // parse implicit paths
-  const char* homedir = 0;
-  char* buf = 0;
+  const char* homedir;
+  char* buf = nullptr;
 
-  if ((homedir = getenv("HOME")) == 0) {
+  if ((homedir = getenv("HOME")) == nullptr) {
     homedir = "";
-    struct passwd pwd;
-    struct passwd* result;
-    size_t bufsize;
-    bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+    struct passwd pwd{};
+    struct passwd* result = nullptr;
+    size_t bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+
     if (bufsize == static_cast<size_t>(-1)) bufsize = 0x4000;
     buf = static_cast<char*>(malloc(bufsize));
     if (buf != 0) {
       getpwuid_r(getuid(), &pwd, buf, bufsize, &result);
-      if (result != NULL) homedir = result->pw_dir;
+      if (result != nullptr) homedir = result->pw_dir;
     }
   }
 
