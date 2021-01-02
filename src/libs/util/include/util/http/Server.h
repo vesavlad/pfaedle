@@ -42,9 +42,9 @@ enum HeaderState { NONE, I_COM, I_URL, I_VER, A_KEY, I_KEY, A_VAL, I_VAL };
 class HttpErr : public std::exception {
  public:
   HttpErr(std::string msg) : _msg(msg) {}
-  ~HttpErr() throw() override {}
+  ~HttpErr() noexcept override {}
 
-  const char* what() const throw() override { return _msg.c_str(); }
+  const char* what() const noexcept override { return _msg.c_str(); }
 
  private:
   std::string _msg;
