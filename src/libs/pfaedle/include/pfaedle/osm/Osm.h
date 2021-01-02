@@ -14,11 +14,11 @@
 namespace pfaedle {
 namespace osm {
 
-typedef uint64_t osmid;
+using osmid = uint64_t;
 
 typedef std::unordered_map<std::string, std::string> AttrMap;
 typedef std::pair<std::string, std::string> Attr;
-typedef std::vector<osmid> OsmIdList;
+using OsmIdList = std::vector<osmid>;
 
 struct OsmRel {
   OsmRel() : id(0) {}

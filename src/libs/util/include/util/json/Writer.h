@@ -47,11 +47,11 @@ struct Val {
   Val(bool fC) { i = fC, type = BOOL; }
 };
 
-typedef int Int;
-typedef double Float;
-typedef bool Bool;
-typedef std::string String;
-typedef std::vector<Val> Array;
+using Int = int;
+using Float = double;
+using Bool = bool;
+using String = std::string;
+using Array = std::vector<Val>;
 typedef std::map<std::string, Val> Dict;
 
 // simple JSON writer class without much overhead

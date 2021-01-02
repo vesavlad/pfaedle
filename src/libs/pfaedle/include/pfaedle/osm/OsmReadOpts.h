@@ -20,21 +20,21 @@
 namespace pfaedle {
 namespace osm {
 
-typedef std::unordered_set<std::string> AttrKeySet;
+using AttrKeySet = std::unordered_set<std::string>;
 typedef std::unordered_map<osmid, trgraph::Node*> NIdMap;
 typedef std::unordered_map<osmid, std::set<trgraph::Node*>> NIdMultMap;
 typedef std::pair<double, trgraph::Edge*> EdgeCand;
-typedef std::priority_queue<EdgeCand> EdgeCandPQ;
+using EdgeCandPQ = std::priority_queue<EdgeCand>;
 typedef std::unordered_map<osmid, std::vector<size_t>> RelMap;
-typedef std::vector<AttrMap> RelVec;
-typedef std::vector<std::string> AttrLst;
+using RelVec = std::vector<AttrMap>;
+using AttrLst = std::vector<std::string>;
 
 typedef std::pair<std::string, uint64_t> AttrFlagPair;
 typedef std::unordered_map<std::string, std::map<std::string, uint64_t>>
     MultAttrMap;
 
 typedef std::pair<std::string, std::string> KeyVal;
-typedef std::set<size_t> FlatRels;
+using FlatRels = std::set<size_t>;
 
 typedef std::unordered_map<const trgraph::Edge*, std::string> EdgTracks;
 
@@ -71,7 +71,7 @@ inline bool operator==(const DeepAttrRule& a, const DeepAttrRule& b) {
   return a.attr == b.attr && a.relRule == b.relRule;
 }
 
-typedef std::vector<DeepAttrRule> DeepAttrLst;
+using DeepAttrLst = std::vector<DeepAttrRule>;
 
 struct RelLineRules {
   AttrLst sNameRule;

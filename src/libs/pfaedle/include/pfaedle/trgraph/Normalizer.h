@@ -16,10 +16,10 @@ namespace pfaedle {
 namespace trgraph {
 
 typedef std::pair<std::string, std::string> ReplRule;
-typedef std::vector<ReplRule> ReplRules;
+using ReplRules = std::vector<ReplRule>;
 
 typedef std::pair<std::regex, std::string> ReplRuleComp;
-typedef std::vector<ReplRuleComp> ReplRulesComp;
+using ReplRulesComp = std::vector<ReplRuleComp>;
 
 /*
  * A class for normalizing station names

@@ -139,18 +139,18 @@ inline bool angSmaller(const Point<F>& f, const Point<F>& m, const Point<F>& t,
   return 0;
 }
 
-typedef std::set<trgraph::Node*> NodeSet;
-typedef std::set<trgraph::Edge*> EdgeSet;
+using NodeSet = std::set<trgraph::Node *>;
+using EdgeSet = std::set<trgraph::Edge *>;
 typedef std::unordered_map<const Stop*, trgraph::Node*> FeedStops;
 
-typedef std::vector<NodeCand> NodeCandGroup;
-typedef std::vector<NodeCandGroup> NodeCandRoute;
+using NodeCandGroup = std::vector<NodeCand>;
+using NodeCandRoute = std::vector<NodeCandGroup>;
 
-typedef std::vector<EdgeCand> EdgeCandGroup;
-typedef std::vector<EdgeCandGroup> EdgeCandRoute;
+using EdgeCandGroup = std::vector<EdgeCand>;
+using EdgeCandRoute = std::vector<EdgeCandGroup>;
 
-typedef std::vector<trgraph::Edge*> EdgeList;
-typedef std::vector<trgraph::Node*> NodeList;
+using EdgeList = std::vector<trgraph::Edge *>;
+using NodeList = std::vector<trgraph::Node *>;
 
 struct EdgeListHop {
   EdgeList edges;
@@ -158,9 +158,9 @@ struct EdgeListHop {
   const trgraph::Node* end;
 };
 
-typedef std::vector<EdgeListHop> EdgeListHops;
+using EdgeListHops = std::vector<EdgeListHop>;
 
-typedef std::set<Route::TYPE> MOTs;
+using MOTs = std::set<Route::TYPE>;
 
 // _____________________________________________________________________________
 inline MOTs motISect(const MOTs& a, const MOTs& b) {

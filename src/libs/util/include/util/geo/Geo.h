@@ -29,25 +29,25 @@ namespace geo {
 
 // convenience aliases
 
-typedef Point<double> DPoint;
-typedef Point<float> FPoint;
-typedef Point<int> IPoint;
+using DPoint = Point<double>;
+using FPoint = Point<float>;
+using IPoint = Point<int>;
 
-typedef LineSegment<double> DLineSegment;
-typedef LineSegment<float> FLineSegment;
-typedef LineSegment<int> ILineSegment;
+using DLineSegment = LineSegment<double>;
+using FLineSegment = LineSegment<float>;
+using ILineSegment = LineSegment<int>;
 
-typedef Line<double> DLine;
-typedef Line<float> FLine;
-typedef Line<int> ILine;
+using DLine = Line<double>;
+using FLine = Line<float>;
+using ILine = Line<int>;
 
-typedef Box<double> DBox;
-typedef Box<float> FBox;
-typedef Box<int> IBox;
+using DBox = Box<double>;
+using FBox = Box<float>;
+using IBox = Box<int>;
 
-typedef Polygon<double> DPolygon;
-typedef Polygon<float> FPolygon;
-typedef Polygon<int> IPolygon;
+using DPolygon = Polygon<double>;
+using FPolygon = Polygon<float>;
+using IPolygon = Polygon<int>;
 
 const static double EPSILON = 0.00001;
 const static double RAD = 0.017453292519943295;  // PI/180

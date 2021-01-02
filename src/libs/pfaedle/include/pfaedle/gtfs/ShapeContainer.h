@@ -21,7 +21,7 @@ namespace gtfs {
 
 struct Shape {
   explicit Shape(const std::string& id) : id(id) {}
-  typedef std::string Ref;
+  using Ref = std::string;
   static std::string getId(Ref r) { return r; }
 
   template <typename T>

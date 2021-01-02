@@ -14,7 +14,7 @@ namespace gtfs {
 
 class Service {
  public:
-  typedef std::string Ref;
+  using Ref = std::string;
   static std::string getId(Ref r) { return r; }
 
   explicit Service(const string& id) : _id(id) {}

@@ -16,7 +16,7 @@ namespace pfaedle {
 namespace osm {
 
 typedef std::pair<const trgraph::Edge*, const trgraph::Edge*> RulePair;
-typedef std::vector<RulePair> RuleVec;
+using RuleVec = std::vector<RulePair>;
 typedef std::pair<const trgraph::Node*, size_t> DanglPath;
 // very seldom, there are more than a handful of rules for a node. Use a
 // vector here, should have lesser overhead and be faster for such small

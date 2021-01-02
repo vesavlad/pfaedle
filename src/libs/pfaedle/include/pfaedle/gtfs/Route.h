@@ -20,7 +20,7 @@ namespace gtfs {
 
 class Route {
  public:
-  typedef Route* Ref;
+  using Ref = Route *;
   static std::string getId(Ref r) { return r->getId(); }
 
   Route() {}

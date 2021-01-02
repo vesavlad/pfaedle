@@ -75,7 +75,7 @@ inline bool operator<(const NodeCand& a, const NodeCand& b) {
   return a.fullTurns > b.fullTurns || a.dist > b.dist;
 }
 
-typedef std::priority_queue<NodeCand> NodeCandPQ;
+using NodeCandPQ = std::priority_queue<NodeCand>;
 
 /*
  * Builds a physical transit network graph from OSM data

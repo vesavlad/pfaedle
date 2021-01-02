@@ -36,8 +36,8 @@ struct Shape {
   double avgHopDist;
 };
 
-typedef std::vector<Trip*> Cluster;
-typedef std::vector<Cluster> Clusters;
+using Cluster = std::vector<Trip *>;
+using Clusters = std::vector<Cluster>;
 typedef std::pair<const Stop*, const Stop*> StopPair;
 typedef std::unordered_map<const Trip*, router::RoutingAttrs> TripRAttrs;
 typedef std::unordered_map<const trgraph::Edge*, std::set<const Trip*>>
