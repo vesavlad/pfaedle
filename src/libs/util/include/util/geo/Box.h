@@ -5,7 +5,7 @@
 #ifndef UTIL_GEO_BOX_H_
 #define UTIL_GEO_BOX_H_
 
-#include "./Point.h"
+#include "util/geo/Point.h"
 
 namespace util {
 namespace geo {
