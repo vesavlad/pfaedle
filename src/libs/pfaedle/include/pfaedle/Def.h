@@ -29,9 +29,9 @@ namespace pfaedle {
 
 // _____________________________________________________________________________
 inline std::string getTmpFName(std::string dir, std::string postf) {
-  if (postf.size()) postf = "-" + postf;
-  if (!dir.size()) dir = util::getTmpDir();
-  if (dir.size() && dir.back() != '/') dir = dir + "/";
+  if (!postf.empty()) postf = "-" + postf;
+  if (dir.empty()) dir = util::getTmpDir();
+  if (!dir.empty() && dir.back() != '/') dir = dir + "/";
 
   std::string f = dir + ".pfaedle-tmp" + postf;
 

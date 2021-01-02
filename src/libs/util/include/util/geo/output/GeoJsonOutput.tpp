@@ -25,7 +25,7 @@ void GeoJsonOutput::print(const Point<T>& p, json::Val attrs) {
 // _____________________________________________________________________________
 template <typename T>
 void GeoJsonOutput::print(const Line<T>& line, json::Val attrs) {
-  if (!line.size()) return;
+  if (line.empty()) return;
   _wr.obj();
   _wr.keyVal("type", "Feature");
 

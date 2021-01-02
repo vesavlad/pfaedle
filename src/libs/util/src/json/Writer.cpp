@@ -35,7 +35,7 @@ void Writer::obj()
         throw WriterException("Object not allowed as key");
     if (!_stack.empty() && _stack.top().type == KEY) _stack.pop();
     if (!_stack.empty() && _stack.top().type == ARR) valCheck();
-    if (_stack.size() && _stack.top().type == ARR) prettor();
+    if (!_stack.empty() && _stack.top().type == ARR) prettor();
     *_out << "{";
     _stack.push({OBJ, 1});
 }

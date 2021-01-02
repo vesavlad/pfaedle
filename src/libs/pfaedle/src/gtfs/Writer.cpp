@@ -489,7 +489,7 @@ bool Writer::writeTrips(gtfs::Feed* sourceFeed, std::ostream* os) const
 
     for (auto t : sourceFeed->getTrips())
     {
-        if (t.getFrequencies().size()) hasFreqs = true;
+        if (!t.getFrequencies().empty()) hasFreqs = true;
         w.writeTrip(t.getFlat(), &csvw);
     }
 

@@ -391,7 +391,7 @@ void Collector::printStats(std::ostream* os) const
     (*os) << std::setw(30) << "  # of trips without input shapes: " << _noOrigShp
           << "\n";
 
-    if (_results.size())
+    if (!_results.empty())
     {
         (*os) << std::setw(30) << "  highest distance to input shapes: "
               << (--_results.end())->getDist() << " (on trip #"
@@ -405,7 +405,7 @@ void Collector::printStats(std::ostream* os) const
         std::vector<double> dfBins = getBins(
                 (_results.begin())->getDist(), (--_results.end())->getDist(), buckets);
 
-        if (_dfBins.size()) dfBins = _dfBins;
+        if (!_dfBins.empty()) dfBins = _dfBins;
 
         (*os) << "\n  -- Histogram of d_f for this run -- " << std::endl;
         printHisto(os, _results, dfBins);

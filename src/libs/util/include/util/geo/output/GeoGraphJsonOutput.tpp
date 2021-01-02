@@ -63,7 +63,7 @@ void GeoGraphJsonOutput::printImpl(const util::graph::Graph<N, E>& outG,
       auto addProps = e->pl().getAttrs();
       props.insert(addProps.begin(), addProps.end());
 
-      if (!e->pl().getGeom() || !e->pl().getGeom()->size()) {
+      if (!e->pl().getGeom() || e->pl().getGeom()->empty()) {
         if (e->getFrom()->pl().getGeom()) {
           auto a = *e->getFrom()->pl().getGeom();
           if (e->getTo()->pl().getGeom()) {

@@ -528,10 +528,10 @@ EdgeListHops Router::route(const EdgeCandRoute& route,
                         EdgeCost(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, pens[kv.first], nullptr) +
                         costs[kv.first]);
 
-                if (rOpts.popReachEdge && kv.second->pl().getEdges()->size())
+                if (rOpts.popReachEdge && !kv.second->pl().getEdges()->empty())
                 {
                     if (kv.second->pl().getEdges() &&
-                        kv.second->pl().getEdges()->size())
+                        !kv.second->pl().getEdges()->empty())
                     {
                         // the reach edge is included, but we dont want it in the geometry
                         kv.second->pl().getEdges()->erase(
@@ -634,7 +634,7 @@ void Router::hops(trgraph::Edge* from, const std::set<trgraph::Edge*>& froms,
     LOG(TRACE) << "From cache: " << tos.size() - rem.size()
                 << ", have to cal: " << rem.size();
 
-    if (rem.size())
+    if (!rem.empty())
     {
         DistHeur dist(from->getFrom()->pl().getComp()->minEdgeLvl, rOpts, rem);
         const auto& ret = EDijkstra::shortestPath(from, rem, cost, dist, edgesRet);
@@ -654,7 +654,7 @@ void Router::nestedCache(const EdgeList* el,
                          const RoutingAttrs& rAttrs) const
 {
     if (!_caching) return;
-    if (el->size() == 0) return;
+    if (el->empty()) return;
     // iterate over result edges backwards
     EdgeList curEdges;
     EdgeCost curCost;
@@ -663,7 +663,7 @@ void Router::nestedCache(const EdgeList* el,
 
     for (auto i = el->begin(); i < el->end(); i++)
     {
-        if (curEdges.size())
+        if (!curEdges.empty())
         {
             curCost = curCost + cost(*i, (*i)->getTo(), curEdges.back());
         }

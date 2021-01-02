@@ -92,7 +92,7 @@ void StatGroup::writePens(const trgraph::Normalizer& platformNorm,
                           double trackPen, double distPenFac,
                           double nonOsmPen)
 {
-    if (_stopNodePens.size()) return;// already written
+    if (!_stopNodePens.empty()) return;// already written
     for (auto* s : _stops)
     {
         for (auto* n : _nodes)

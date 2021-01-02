@@ -93,7 +93,7 @@ LINE ShapeBuilder::shapeL(const router::NodeCandRoute& ncr,
         for (const auto& hop : res)
         {
             const trgraph::Node* last = hop.start;
-            if (hop.edges.size() == 0)
+            if (hop.edges.empty())
             {
                 l.push_back(*hop.start->pl().getGeom());
                 l.push_back(*hop.end->pl().getGeom());
@@ -352,7 +352,7 @@ ad::cppgtfs::gtfs::Shape ShapeBuilder::getGtfsShape(
     for (const auto& hop : shp.hops)
     {
         const trgraph::Node* l = hop.start;
-        if (hop.edges.size() == 0)
+        if (hop.edges.empty())
         {
             POINT ll = webMercToLatLng<PFAEDLE_PRECISION>(
                     hop.start->pl().getGeom()->getX(), hop.start->pl().getGeom()->getY());
@@ -441,7 +441,7 @@ std::string ShapeBuilder::getFreeShapeId(Trip* trip)
 {
     std::string ret;
     std::lock_guard<std::mutex> guard(_shpMutex);
-    while (!ret.size() || _feed->getShapes().get(ret))
+    while (ret.empty() || _feed->getShapes().get(ret))
     {
         _curShpCnt++;
         ret = "shp_";
@@ -526,7 +526,7 @@ NodeCandRoute ShapeBuilder::getNCR(Trip* trip) const
     for (const auto& st : trip->getStopTimes())
     {
         ncr[i] = getNodeCands(st.getStop());
-        if (ncr[i].size() == 0)
+        if (ncr[i].empty())
         {
             throw std::runtime_error("No node candidate found for station '" +
                                      st.getStop()->getName() + "' on trip '" +

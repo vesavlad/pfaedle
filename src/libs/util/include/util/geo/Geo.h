@@ -1484,7 +1484,7 @@ inline RotatedBox<T> getOrientedEnvelopeAvg(MultiLine<T> ml) {
 // _____________________________________________________________________________
 template <typename T>
 inline Line<T> densify(const Line<T>& l, double d) {
-  if (!l.size()) return l;
+  if (l.empty()) return l;
 
   Line<T> ret;
   ret.reserve(l.size());

@@ -52,7 +52,7 @@ bool EqSearch::operator()(const Node* cand, const StatInfo* si) const
 {
     if (orphanSnap && cand->pl().getSI() &&
         (!cand->pl().getSI()->getGroup() ||
-         cand->pl().getSI()->getGroup()->getStops().size() == 0))
+         cand->pl().getSI()->getGroup()->getStops().empty()))
     {
         return true;
     }
@@ -924,7 +924,7 @@ OsmRel OsmBuilder::nextRel(pfxml::file* xml, const OsmFilter& filter,
         {
             uint64_t keepFlags = 0;
             uint64_t dropFlags = 0;
-            if (rel.id && rel.attrs.size() &&
+            if (rel.id && !rel.attrs.empty() &&
                 (keepFlags = filter.keep(rel.attrs, OsmFilter::REL)) &&
                 !(dropFlags = filter.drop(rel.attrs, OsmFilter::REL)))
             {
@@ -997,7 +997,7 @@ OsmRel OsmBuilder::nextRel(pfxml::file* xml, const OsmFilter& filter,
     // dont forget last relation
     uint64_t keepFlags = 0;
     uint64_t dropFlags = 0;
-    if (rel.id && rel.attrs.size() &&
+    if (rel.id && !rel.attrs.empty() &&
         (keepFlags = filter.keep(rel.attrs, OsmFilter::REL)) &&
         !(dropFlags = filter.drop(rel.attrs, OsmFilter::REL)))
     {
@@ -1709,7 +1709,7 @@ std::vector<TransitEdgeLine*> OsmBuilder::getLines(
                 if (found) break;
             }
 
-            if (!el.shortName.size() && !el.fromStr.size() && !el.toStr.size())
+            if (el.shortName.empty() && el.fromStr.empty() && el.toStr.empty())
                 continue;
 
             if (_lines.count(el))
@@ -2126,7 +2126,7 @@ void OsmBuilder::writeSelfEdgs(Graph* g)
 {
     for (auto* n : *g->getNds())
     {
-        if (n->pl().getSI() && n->getAdjListOut().size() == 0)
+        if (n->pl().getSI() && n->getAdjListOut().empty())
         {
             g->addEdg(n, n);
         }
@@ -2250,7 +2250,7 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts, Graph* g,
         }
     }
 
-    if (notSnapped.size())
+    if (!notSnapped.empty())
         LOG(TRACE) << notSnapped.size()
                     << " stations could not be snapped in "
                        "normal run, trying again in orphan "

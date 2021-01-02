@@ -22,14 +22,14 @@ const EdgeList& EdgePL::getEdges() const { return _edges; }
 // _____________________________________________________________________________
 const POINT& EdgePL::frontHop() const
 {
-    if (!_edges.size()) return *_end->pl().getGeom();
+    if (_edges.empty()) return *_end->pl().getGeom();
     return _edges.back()->pl().frontHop();
 }
 
 // _____________________________________________________________________________
 const POINT& EdgePL::backHop() const
 {
-    if (!_edges.size()) return *_start->pl().getGeom();
+    if (_edges.empty()) return *_start->pl().getGeom();
     return _edges.front()->pl().backHop();
 }
 
@@ -42,8 +42,8 @@ const Node* EdgePL::frontNode() const { return _start; }
 // _____________________________________________________________________________
 const LINE* EdgePL::getGeom() const
 {
-    if (!_edges.size()) return nullptr;
-    if (!_geom.size())
+    if (_edges.empty()) return nullptr;
+    if (_geom.empty())
     {
         const trgraph::Node* l = _start;
         for (auto i = _edges.rbegin(); i != _edges.rend(); i++)
@@ -91,7 +91,7 @@ util::json::Dict EdgePL::getAttrs() const
     obj["cost"] = std::to_string(_cost.getValue());
     obj["from_edge"] = util::toString(_startE);
     obj["to_edge"] = util::toString(_endE);
-    obj["dummy"] = _edges.size() ? "no" : "yes";
+    obj["dummy"] = !_edges.empty() ? "no" : "yes";
 
     return obj;
 }

@@ -52,7 +52,7 @@ C EDijkstra::shortestPathImpl(const std::set<Edge<N, E>*> from,
                               const ShortestPath::CostFunc<N, E, C>& costFunc,
                               const ShortestPath::HeurFunc<N, E, C>& heurFunc,
                               EList<N, E>* resEdges, NList<N, E>* resNodes) {
-  if (from.size() == 0 || to.size() == 0) return costFunc.inf();
+  if (from.empty() || to.empty()) return costFunc.inf();
 
   Settled<N, E, C> settled;
   PQ<N, E, C> pq;
@@ -148,7 +148,7 @@ std::unordered_map<Edge<N, E>*, C> EDijkstra::shortestPathImpl(
     std::unordered_map<Edge<N, E>*, EList<N, E>*> resEdges,
     std::unordered_map<Edge<N, E>*, NList<N, E>*> resNodes) {
   std::unordered_map<Edge<N, E>*, C> costs;
-  if (to.size() == 0) return costs;
+  if (to.empty()) return costs;
 
   // init costs with inf
   for (auto e : to) costs[e] = costFunc.inf();

@@ -56,7 +56,7 @@ std::vector<util::geo::Box<double>> BBoxIdx::getLeafs() const
 void BBoxIdx::getLeafsRec(const BBoxIdxNd& nd,
                           std::vector<util::geo::Box<double>>* ret) const
 {
-    if (!nd.childs.size())
+    if (nd.childs.empty())
     {
         ret->push_back(nd.box);
         return;
@@ -73,7 +73,7 @@ void BBoxIdx::getLeafsRec(const BBoxIdxNd& nd,
 // _____________________________________________________________________________
 bool BBoxIdx::treeHas(const Point<double>& p, const BBoxIdxNd& nd) const
 {
-    if (!nd.childs.size()) return util::geo::contains(p, nd.box);
+    if (nd.childs.empty()) return util::geo::contains(p, nd.box);
     for (const auto& child : nd.childs)
     {
         if (util::geo::contains(p, child.box)) return treeHas(p, child);

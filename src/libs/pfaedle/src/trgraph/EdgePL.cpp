@@ -143,7 +143,7 @@ util::json::Dict EdgePL::getAttrs() const
     {
         if (first) ss << ",";
         ss << l->shortName;
-        if (l->fromStr.size() || l->toStr.size())
+        if (!l->fromStr.empty() || !l->toStr.empty())
         {
             ss << "(" << l->fromStr;
             ss << "->" << l->toStr << ")";
