@@ -59,7 +59,7 @@ std::string Normalizer::norm(const std::string& sn) const
     if (i != _cache.end()) return i->second;
 
     std::string ret = sn;
-    for (auto rule : _rules)
+    for (const auto& rule : _rules)
     {
         std::string tmp;
         std::regex_replace(std::back_inserter(tmp), ret.begin(), ret.end(),
@@ -84,7 +84,7 @@ bool Normalizer::operator==(const Normalizer& b) const
 // _____________________________________________________________________________
 void Normalizer::buildRules(const ReplRules& rules)
 {
-    for (auto rule : rules)
+    for (const auto& rule : rules)
     {
         try
         {

@@ -42,7 +42,7 @@ void XmlWriter::openTag(const string& tag, const map<string, string>& attrs)
 
     *_out << "<" << tag;
 
-    for (auto kv : attrs)
+    for (const auto& kv : attrs)
     {
         *_out << " ";
         putEsced(_out, kv.first, '"');

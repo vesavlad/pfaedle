@@ -156,7 +156,7 @@ double Collector::add(const Trip* t, const Shape* oldS, const Shape& newS,
     }
 
     double totL = 0;
-    for (auto l : oldSegs) totL += util::geo::len(l) * fac;
+    for (const auto& l : oldSegs) totL += util::geo::len(l) * fac;
 
     // filter out shapes with a lenght of under 5 meters - they are most likely
     // artifacts

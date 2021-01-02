@@ -550,7 +550,7 @@ ReplRules MotConfigReader::getNormRules(
 {
     trgraph::ReplRules ret;
 
-    for (auto a : arr)
+    for (const auto& a : arr)
     {
         size_t p = a.find(" -> ");
         if (p == std::string::npos) continue;
