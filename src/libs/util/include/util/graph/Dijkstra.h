@@ -104,13 +104,17 @@ public:
                               EList<N, E>* resEdges, NList<N, E>* resNodes);
 
     template<typename N, typename E, typename C>
-    static void relax(RouteNode<N, E, C>& cur, const std::set<Node<N, E>*>& to,
+    static void relax(RouteNode<N, E, C>& cur,
+                      const std::set<Node<N, E>*>& to,
                       const ShortestPath::CostFunc<N, E, C>& costFunc,
-                      const ShortestPath::HeurFunc<N, E, C>& heurFunc, PQ<N, E, C>& pq);
+                      const ShortestPath::HeurFunc<N, E, C>& heurFunc,
+                      PQ<N, E, C>& pq);
 
     template<typename N, typename E, typename C>
-    static void buildPath(Node<N, E>* curN, Settled<N, E, C>& settled,
-                          NList<N, E>* resNodes, EList<N, E>* resEdges);
+    static void buildPath(Node<N, E>* curN,
+                          Settled<N, E, C>& settled,
+                          NList<N, E>* resNodes,
+                          EList<N, E>* resEdges);
 
     static size_t ITERS;
 };

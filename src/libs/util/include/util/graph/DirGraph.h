@@ -36,8 +36,7 @@ public:
 
 // _____________________________________________________________________________
 template<typename N, typename E>
-DirGraph<N, E>::DirGraph()
-{}
+DirGraph<N, E>::DirGraph() = default;
 
 // _____________________________________________________________________________
 template<typename N, typename E>

@@ -22,9 +22,6 @@ public:
 
     Node<N, E>* getOtherNd(const Node<N, E>* notNode) const;
 
-    void setFrom(Node<N, E>* from);
-    void setTo(Node<N, E>* to);
-
     E& pl();
     const E& pl() const;
 
