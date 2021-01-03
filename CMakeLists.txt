@@ -43,7 +43,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
 	endif ()
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=c++17")
-else ()
+elseif (NOT MSVC)
 	message(FATAL_ERROR "Your C++ compiler does not support C++17.")
 endif ()
 
