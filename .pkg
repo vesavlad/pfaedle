@@ -1,7 +1,7 @@
 [cppgtfs]
 	url=git@github.com:vesavlad/cppgtfs.git
     branch=c++17
-    commit=2a6223e85bea2f09574dd1003f88bdf74923fd6b
+    commit=0f1003bb4984b0f10c37e12c008b1dc85e22eb66
 
 [pugixml]
     url=git@github.com:zeux/pugixml.git
@@ -11,7 +11,7 @@
 [configparser]
     url=git@github.com:vesavlad/configparser.git
     branch=master
-    commit=d77e55760c0370356c39ec2b033d5fe34fbfdab5
+    commit=0afd7c99a0536835178ef9c818cb1a80333bbb39
 
 [spdlog]
     url=git@github.com:gabime/spdlog.git
