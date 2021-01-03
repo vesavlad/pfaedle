@@ -35,19 +35,8 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -g")
 
 # export compile commands to tools like clang
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-# Compiler-specific C++17 activation.
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-	if ((CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.5 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 7.5))
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-	else ()
-		message(FATAL_ERROR "${PROJECT_NAME} requires g++ 7.5 or greater!")
-	endif ()
-elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=c++17")
-elseif (NOT MSVC)
-	message(FATAL_ERROR "Your C++ compiler does not support C++17.")
-endif ()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_EXTENSIONS ON)
 
 add_library(pfaedle-generated INTERFACE)
 target_include_directories(pfaedle-generated INTERFACE ${CMAKE_BINARY_DIR}/generated)
