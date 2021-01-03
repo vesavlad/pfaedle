@@ -6,8 +6,12 @@
 #include <logging/logger.h>
 #include <logging/scoped_timer.h>
 
+#include <exceptions/exception_handler_if.h>
+#include <exceptions/factory.h>
+
 int main(int argc, char* argv[])
 {
+    auto handler = exceptions::factory::create_exceptions_handler();
     logging::configure_logging();
     logging::scoped_timer master_timer("application");
 

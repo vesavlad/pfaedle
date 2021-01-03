@@ -3,6 +3,7 @@ add_executable(pfaedle
         app.cpp)
 
 target_link_libraries(pfaedle
+        exceptions
         logging
         pfaedle-generated
         pfaedle-lib
@@ -10,3 +11,4 @@ target_link_libraries(pfaedle
         configparser
         cppgtfs
         -lpthread)
+

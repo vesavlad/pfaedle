@@ -17,3 +17,14 @@
     url=git@github.com:gabime/spdlog.git
     branch=master
     commit=cbe9448650176797739dbab13961ef4c07f4290f
+
+[fmt]
+    url=git@github.com:motis-project/fmt.git
+    branch=master
+    commit=34d0435ad07feb55dabd64d99482dd5d28972584
+
+
+[stacktrace]
+    url=git@github.com:MarkusJx/stacktrace.git
+    branch=master
+    commit=fb5837d1770d966379ac0750263fa8e5ebb13912
