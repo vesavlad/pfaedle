@@ -64,3 +64,7 @@ endif ()
 target_link_libraries(exceptions
         PRIVATE logging
         PRIVATE fmt)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+target_link_libraries(exceptions PRIVATE stdc++fs)
+endif()
