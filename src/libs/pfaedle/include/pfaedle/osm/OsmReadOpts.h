@@ -5,6 +5,10 @@
 #ifndef PFAEDLE_OSM_OSMREADOPTS_H_
 #define PFAEDLE_OSM_OSMREADOPTS_H_
 
+#include "pfaedle/osm/Osm.h"
+#include "pfaedle/trgraph/Graph.h"
+#include "pfaedle/trgraph/Normalizer.h"
+
 #include <queue>
 #include <unordered_set>
 #include <string>
@@ -13,9 +17,6 @@
 #include <utility>
 #include <vector>
 #include <set>
-#include "pfaedle/osm/Osm.h"
-#include "pfaedle/trgraph/Graph.h"
-#include "pfaedle/trgraph/Normalizer.h"
 
 namespace pfaedle::osm
 {
@@ -41,7 +42,7 @@ struct RelLst
 {
     RelVec rels;
     FlatRels flat;
-};
+} __attribute__((aligned(64)));
 
 enum FilterFlags : uint64_t
 {
@@ -56,10 +57,11 @@ enum FilterFlags : uint64_t
 struct FilterRule
 {
     FilterRule() :
-        kv(KeyVal("", "")) {}
+        kv(KeyVal("", ""))
+    {}
     KeyVal kv;
     std::set<std::string> flags;
-};
+} __attribute__((aligned(128)));
 
 inline bool operator==(const FilterRule& a, const FilterRule& b)
 {
@@ -84,7 +86,7 @@ struct RelLineRules
     AttrLst sNameRule;
     AttrLst fromNameRule;
     AttrLst toNameRule;
-};
+} __attribute__((aligned(128)));
 
 inline bool operator==(const RelLineRules& a, const RelLineRules& b)
 {
@@ -97,7 +99,7 @@ struct StationAttrRules
     DeepAttrLst nameRule;
     DeepAttrLst platformRule;
     DeepAttrLst idRule;
-};
+} __attribute__((aligned(128)));
 
 inline bool operator==(const StationAttrRules& a, const StationAttrRules& b)
 {
@@ -108,7 +110,7 @@ struct StatGroupNAttrRule
 {
     DeepAttrRule attr;
     double maxDist;
-};
+} __attribute__((packed));
 
 inline bool operator==(const StatGroupNAttrRule& a,
                        const StatGroupNAttrRule& b)
@@ -116,14 +118,11 @@ inline bool operator==(const StatGroupNAttrRule& a,
     return a.attr == b.attr && a.maxDist == b.maxDist;
 }
 
-typedef std::unordered_map<
-        std::string,
-        std::unordered_map<std::string, std::vector<trgraph::StatGroup*>>>
-        StAttrGroups;
+using StAttrGroups = std::unordered_map<std::string, std::unordered_map<std::string, std::vector<trgraph::StatGroup *>>>;
 
 struct OsmReadOpts
 {
-    OsmReadOpts() {}
+    OsmReadOpts() = default;
 
     MultAttrMap noHupFilter;
     MultAttrMap keepFilter;
@@ -210,5 +209,5 @@ inline bool operator==(const OsmReadOpts& a, const OsmReadOpts& b)
            a.restrNegRestr == b.restrNegRestr &&
            a.noRestrFilter == b.noRestrFilter;
 }
-}  // namespace pfaedle
+}  // namespace pfaedle::osm
 #endif  // PFAEDLE_OSM_OSMREADOPTS_H_

@@ -23,8 +23,9 @@
     branch=master
     commit=34d0435ad07feb55dabd64d99482dd5d28972584
 
-
-[stacktrace]
-    url=git@github.com:MarkusJx/stacktrace.git
+[cxxopts]
+    url=git@github.com:jarro2783/cxxopts.git
     branch=master
-    commit=fb5837d1770d966379ac0750263fa8e5ebb13912
+    commit=302302b30839505703d37fb82f536c53cf9172fa
+
+

@@ -11,51 +11,32 @@
 #include <string>
 #include <vector>
 
-namespace pfaedle
+namespace pfaedle::config
 {
-namespace config
-{
-
-using ad::cppgtfs::gtfs::Route;
 
 struct Config
 {
-    Config() :
-        dbgOutputPath("."),
-        solveMethod("global"),
-        evalPath("."),
-        outputPath("gtfs-out"),
-        dropShapes(false),
-        useHMM(false),
-        writeGraph(false),
-        writeCombGraph(false),
-        evaluate(false),
-        buildTransitGraph(false),
-        useCaching(false),
-        writeOverpass(false),
-        inPlace(false),
-        gridSize(2000) {}
-    std::string dbgOutputPath;
-    std::string solveMethod;
-    std::string evalPath;
+    std::string dbgOutputPath {"."};
+    std::string solveMethod{"global"};
+    std::string evalPath{"."};
     std::string shapeTripId;
-    std::string outputPath;
+    std::string outputPath{"gtfs-out"};
     std::string writeOsm;
     std::string osmPath;
     std::string evalDfBins;
     std::vector<std::string> feedPaths;
     std::vector<std::string> configPaths;
-    std::set<Route::TYPE> mots;
-    bool dropShapes;
-    bool useHMM;
-    bool writeGraph;
-    bool writeCombGraph;
-    bool evaluate;
-    bool buildTransitGraph;
-    bool useCaching;
-    bool writeOverpass;
-    bool inPlace;
-    double gridSize;
+    std::set<ad::cppgtfs::gtfs::Route::TYPE> mots;
+    bool dropShapes{false};
+    bool useHMM{false};
+    bool writeGraph{false};
+    bool writeCombGraph{false};
+    bool evaluate{false};
+    bool buildTransitGraph{false};
+    bool useCaching{false};
+    bool writeOverpass{false};
+    bool inPlace{false};
+    double gridSize{2000};
 
     std::string to_string()
     {
@@ -99,7 +80,6 @@ struct Config
     }
 };
 
-}// namespace config
 }// namespace pfaedle
 
 #endif// PFAEDLE_CONFIG_PFAEDLECONFIG_H_

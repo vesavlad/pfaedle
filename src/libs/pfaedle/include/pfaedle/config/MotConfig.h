@@ -10,9 +10,7 @@
 #include <map>
 #include <string>
 
-namespace pfaedle
-{
-namespace config
+namespace pfaedle::config
 {
 
 struct MotConfig
@@ -25,21 +23,21 @@ struct MotConfig
 
 inline bool operator==(const MotConfig& a, const MotConfig& b)
 {
-    bool unprocedEq = a.unproced.size() == b.unproced.size();
+    bool unproced_eq = a.unproced.size() == b.unproced.size();
+
+    if(!unproced_eq) return unproced_eq;
+
     for (const auto& kv : a.unproced)
     {
-        if (!b.unproced.count(kv.first) ||
-            b.unproced.find(kv.first)->second != kv.second)
+        if (!b.unproced.count(kv.first) || b.unproced.find(kv.first)->second != kv.second)
         {
-            unprocedEq = false;
+            unproced_eq = false;
             break;
         }
     }
-    return a.osmBuildOpts == b.osmBuildOpts && a.routingOpts == b.routingOpts &&
-           unprocedEq;
+    return a.osmBuildOpts == b.osmBuildOpts && a.routingOpts == b.routingOpts && unproced_eq;
 }
 
-}// namespace config
-}// namespace pfaedle
+}  // namespace pfaedle::config
 
 #endif// PFAEDLE_CONFIG_MOTCONFIG_H_

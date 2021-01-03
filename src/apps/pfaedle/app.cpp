@@ -97,7 +97,8 @@ std::vector<std::string> get_cfg_paths(const pfaedle::config::Config& cfg)
 
 bool read_config(pfaedle::config::Config& cfg, int argc, char** argv)
 {
-    pfaedle::config::ConfigReader::read(cfg, argc, argv);
+    pfaedle::config::ConfigReader reader(cfg);
+    reader.read(argc, argv);
     return true;
 }
 }  // namespace
@@ -109,25 +110,8 @@ app::app(int argc, char** argv) :
     feeds_{cfg_.feedPaths.size()},
     mot_cfg_reader_{get_cfg_paths(cfg_)}
 {
-
-
-
-
-
-//    try
-//    {
-//        mot_cfg_reader_.parse(get_cfg_paths(cfg_));
-//    }
-//    catch (const configparser::parse_file_exception& ex)
-//    {
-//        LOG(ERROR) << "Could not parse MOT configurations, reason was:";
-//        std::cerr << ex.what() << std::endl;
-//        exit(static_cast<int>(ret_code::MOT_CFG_PARSE_ERR));
-//    }
-
-
-
 }
+
 int app::run()
 {
     // feed containing the shapes in memory for evaluation
@@ -150,21 +134,21 @@ int app::run()
     {
         if (cfg_.inPlace)
         {
-            cfg_.outputPath = cfg_.feedPaths[0];
+            cfg_.outputPath = cfg_.feedPaths.front();
         }
         if (!cfg_.writeOverpass)
         {
-            LOG(INFO) << "Reading " << cfg_.feedPaths[0] << " ...";
+            LOG(INFO) << "Reading " << cfg_.feedPaths.front() << " ...";
         }
 
         try
         {
             ad::cppgtfs::Parser p;
-            p.parse(&feeds_[0], cfg_.feedPaths[0]);
+            p.parse(&feeds_.front(), cfg_.feedPaths.front());
             if (cfg_.evaluate)
             {
                 // read the shapes and store them in memory
-                p.parseShapes(&eval_feed, cfg_.feedPaths[0]);
+                p.parseShapes(&eval_feed, cfg_.feedPaths.front());
             }
         }
         catch (const ad::cppgtfs::ParserException& ex)
@@ -219,7 +203,7 @@ int app::run()
             std::cout << "No input feed specified, see --help" << std::endl;
             exit(static_cast<int>(ret_code::NO_INPUT_FEED));
         }
-        single_trip = feeds_[0].getTrips().get(cfg_.shapeTripId);
+        single_trip = feeds_.front().getTrips().get(cfg_.shapeTripId);
         if (!single_trip)
         {
             LOG(ERROR) << "Trip #" << cfg_.shapeTripId << " not found.";
@@ -233,7 +217,7 @@ int app::run()
         pfaedle::osm::BBoxIdx box(BOX_PADDING);
         for (size_t i = 0; i < cfg_.feedPaths.size(); i++)
         {
-            pfaedle::router::ShapeBuilder::getGtfsBox(&feeds_[i], cmd_cfg_mots, cfg_.shapeTripId, true, box);
+            pfaedle::router::ShapeBuilder::getGtfsBox(feeds_[i], cmd_cfg_mots, cfg_.shapeTripId, true, box);
         }
         pfaedle::osm::OsmBuilder osm_builder;
         std::vector<pfaedle::osm::OsmReadOpts> opts;
@@ -247,16 +231,7 @@ int app::run()
                 opts.push_back(o.osmBuildOpts);
             }
         }
-//        try
-//        {
-            osm_builder.filterWrite(cfg_.osmPath, cfg_.writeOsm, opts, box);
-//        }
-//        catch (const pfxml::parse_exc& ex)
-//        {
-//            LOG(ERROR) << "Could not parse OSM data, reason was:";
-//            std::cerr << ex.what() << std::endl;
-//            exit(static_cast<int>(ret_code::OSM_PARSE_ERR));
-//        }
+        osm_builder.filterWrite(cfg_.osmPath, cfg_.writeOsm, opts, box);
         exit(static_cast<int>(ret_code::SUCCESS));
     }
     else if (cfg_.writeOverpass)
@@ -264,7 +239,7 @@ int app::run()
         pfaedle::osm::BBoxIdx box(BOX_PADDING);
         for (size_t i = 0; i < cfg_.feedPaths.size(); i++)
         {
-            pfaedle::router::ShapeBuilder::getGtfsBox(&feeds_[i], cmd_cfg_mots, cfg_.shapeTripId, true, box);
+            pfaedle::router::ShapeBuilder::getGtfsBox(feeds_[i], cmd_cfg_mots, cfg_.shapeTripId, true, box);
         }
         pfaedle::osm::OsmBuilder osm_builder;
         std::vector<pfaedle::osm::OsmReadOpts> opts;
@@ -309,92 +284,90 @@ int app::run()
         const std::string mot_str = pfaedle::router::getMotStr(used_mots);
         LOG(INFO) << "Calculating shapes for mots " << mot_str;
 
-//        try
-//        {
-            pfaedle::router::FeedStops f_stops =
-                    pfaedle::router::writeMotStops(&feeds_[0], used_mots, cfg_.shapeTripId);
+        pfaedle::router::FeedStops f_stops =
+                pfaedle::router::writeMotStops(&feeds_.front(), used_mots, cfg_.shapeTripId);
 
-            pfaedle::osm::Restrictor restr;
-            pfaedle::trgraph::Graph graph;
-            pfaedle::osm::OsmBuilder osm_builder;
+        pfaedle::osm::Restrictor restr;
+        pfaedle::trgraph::Graph graph;
+        pfaedle::osm::OsmBuilder osm_builder;
 
-            pfaedle::osm::BBoxIdx box(BOX_PADDING);
-            pfaedle::router::ShapeBuilder::getGtfsBox(&feeds_[0], cmd_cfg_mots, cfg_.shapeTripId, cfg_.dropShapes, box);
+        pfaedle::osm::BBoxIdx box(BOX_PADDING);
+        pfaedle::router::ShapeBuilder::getGtfsBox(feeds_.front(), cmd_cfg_mots, cfg_.shapeTripId, cfg_.dropShapes, box);
 
-            if (!f_stops.empty())
+        if (!f_stops.empty())
+        {
+            osm_builder.read(cfg_.osmPath,
+                             mot_cfg.osmBuildOpts,
+                             graph,
+                             box,
+                             cfg_.gridSize,
+                             f_stops,
+                             restr);
+        }
+
+        // TODO(patrick): move this somewhere else
+        for (auto& feed_stop : f_stops)
+        {
+            if (feed_stop.second)
             {
-                osm_builder.read(cfg_.osmPath,
-                                 mot_cfg.osmBuildOpts,
-                                 graph,
-                                 box,
-                                 cfg_.gridSize,
-                                 f_stops,
-                                 restr);
+                feed_stop.second->pl().getSI()->getGroup()->writePens(
+                        mot_cfg.osmBuildOpts.trackNormzer,
+                        mot_cfg.routingOpts.platformUnmatchedPen,
+                        mot_cfg.routingOpts.stationDistPenFactor,
+                        mot_cfg.routingOpts.nonOsmPen);
             }
+        }
 
-            // TODO(patrick): move this somewhere else
-            for (auto& feed_stop : f_stops)
-            {
-                if (feed_stop.second)
-                {
-                    feed_stop.second->pl().getSI()->getGroup()->writePens(
-                            mot_cfg.osmBuildOpts.trackNormzer,
-                            mot_cfg.routingOpts.platformUnmatchedPen,
-                            mot_cfg.routingOpts.stationDistPenFactor,
-                            mot_cfg.routingOpts.nonOsmPen);
-                }
-            }
+        pfaedle::router::ShapeBuilder shape_builder(feeds_.front(),
+                                                    eval_feed,
+                                                    cmd_cfg_mots,
+                                                    mot_cfg,
+                                                    ecoll,
+                                                    graph,
+                                                    f_stops,
+                                                    restr,
+                                                    cfg_);
 
-            pfaedle::router::ShapeBuilder shape_builder(&feeds_[0], &eval_feed, cmd_cfg_mots, mot_cfg, &ecoll,
-                                                        &graph, &f_stops, &restr, cfg_);
+        if (cfg_.writeGraph)
+        {
+            LOG(INFO) << "Outputting graph.json...";
+            util::geo::output::GeoGraphJsonOutput out;
+            mkdir(cfg_.dbgOutputPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            std::ofstream fstr(cfg_.dbgOutputPath + "/graph.json");
+            out.printLatLng(shape_builder.getGraph(), fstr);
+            fstr.close();
+        }
 
-            if (cfg_.writeGraph)
-            {
-                LOG(INFO) << "Outputting graph.json...";
-                util::geo::output::GeoGraphJsonOutput out;
-                mkdir(cfg_.dbgOutputPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-                std::ofstream fstr(cfg_.dbgOutputPath + "/graph.json");
-                out.printLatLng(*shape_builder.getGraph(), fstr);
-                fstr.close();
-            }
+        if (single_trip)
+        {
+            LOG(INFO) << "Outputting path.json...";
+            mkdir(cfg_.dbgOutputPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            std::ofstream pstr(cfg_.dbgOutputPath + "/path.json");
+            util::geo::output::GeoJsonOutput o(pstr);
 
-            if (single_trip)
-            {
-                LOG(INFO) << "Outputting path.json...";
-                mkdir(cfg_.dbgOutputPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-                std::ofstream pstr(cfg_.dbgOutputPath + "/path.json");
-                util::geo::output::GeoJsonOutput o(pstr);
+            auto l = shape_builder.shapeL(*single_trip);
 
-                auto l = shape_builder.shapeL(single_trip);
+            // reproject to WGS84 to match RFC 7946
+            o.printLatLng(l, {});
 
-                // reproject to WGS84 to match RFC 7946
-                o.printLatLng(l, {});
+            o.flush();
+            pstr.close();
 
-                o.flush();
-                pstr.close();
+            exit(static_cast<int>(ret_code::SUCCESS));
+        }
 
-                exit(static_cast<int>(ret_code::SUCCESS));
-            }
+        pfaedle::netgraph::Graph ng;
+        shape_builder.shape(ng);
 
-            pfaedle::netgraph::Graph ng;
-            shape_builder.shape(&ng);
-
-            if (cfg_.buildTransitGraph)
-            {
-                util::geo::output::GeoGraphJsonOutput out;
-                LOG(INFO) << "Outputting trgraph" + file_post + ".json...";
-                mkdir(cfg_.dbgOutputPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-                std::ofstream fstr(cfg_.dbgOutputPath + "/trgraph" + file_post + ".json");
-                out.printLatLng(ng, fstr);
-                fstr.close();
-            }
-//        }
-//        catch (const pfxml::parse_exc& ex)
-//        {
-//            LOG(ERROR) << "Could not parse OSM data, reason was:";
-//            LOG(ERROR) << ex.what();
-//            exit(static_cast<int>(ret_code::OSM_PARSE_ERR));
-//        }
+        if (cfg_.buildTransitGraph)
+        {
+            util::geo::output::GeoGraphJsonOutput out;
+            LOG(INFO) << "Outputting trgraph" + file_post + ".json...";
+            mkdir(cfg_.dbgOutputPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            std::ofstream fstr(cfg_.dbgOutputPath + "/trgraph" + file_post + ".json");
+            out.printLatLng(ng, fstr);
+            fstr.close();
+        }
     }
 
     if (cfg_.evaluate)

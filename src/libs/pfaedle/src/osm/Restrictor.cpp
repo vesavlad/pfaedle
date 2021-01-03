@@ -167,23 +167,24 @@ void Restrictor::duplicateEdge(const trgraph::Edge* old,
 }
 
 // _____________________________________________________________________________
-void Restrictor::replaceEdge(const trgraph::Edge* old, const trgraph::Node* via,
+void Restrictor::replaceEdge(const trgraph::Edge* old,
+                             const trgraph::Node* via,
                              const trgraph::Edge* newE)
 {
-    auto posI = _pos.find(via);
-    auto negI = _neg.find(via);
+    const auto& pos_iterator = _pos.find(via);
+    const auto& neg_iterator = _neg.find(via);
 
-    if (posI != _pos.end())
+    if (pos_iterator != _pos.end())
     {
-        for (auto& r : posI->second)
+        for (auto& r : pos_iterator->second)
         {
             if (r.first == old) r.first = newE;
             if (r.second == old) r.second = newE;
         }
     }
-    if (negI != _neg.end())
+    if (neg_iterator != _neg.end())
     {
-        for (auto& r : negI->second)
+        for (auto& r : neg_iterator->second)
         {
             if (r.first == old) r.first = newE;
             if (r.second == old) r.second = newE;

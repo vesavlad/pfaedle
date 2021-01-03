@@ -2,7 +2,7 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include "pfaedle/trgraph/NodePL.h"
+#include "pfaedle/trgraph/NodePayload.h"
 #include "pfaedle/trgraph/StatGroup.h"
 #include "pfaedle/trgraph/StatInfo.h"
 #include "util/String.h"
@@ -10,18 +10,18 @@
 #include <unordered_map>
 
 using pfaedle::trgraph::Component;
-using pfaedle::trgraph::NodePL;
+using pfaedle::trgraph::NodePayload;
 using pfaedle::trgraph::StatInfo;
 
 // we use the adress of this dummy station info as a special value
 // of this node, meaning "is a station block". Re-using the _si field here
 // saves some memory
-StatInfo NodePL::_blockerSI = StatInfo();
+StatInfo NodePayload::_blockerSI = StatInfo();
 
-std::unordered_map<const Component*, size_t> NodePL::_comps;
+std::unordered_map<const Component*, size_t> NodePayload::_comps;
 
 // _____________________________________________________________________________
-NodePL::NodePL() :
+NodePayload::NodePayload() :
     _geom(0, 0),
     _si(nullptr),
     _component(nullptr)
@@ -33,7 +33,7 @@ NodePL::NodePL() :
 }
 
 // _____________________________________________________________________________
-NodePL::NodePL(const NodePL& pl) :
+NodePayload::NodePayload(const NodePayload& pl) :
     _geom(pl._geom),
     _si(nullptr),
     _component(pl._component)
@@ -46,7 +46,7 @@ NodePL::NodePL(const NodePL& pl) :
 }
 
 // _____________________________________________________________________________
-NodePL::NodePL(const POINT& geom) :
+NodePayload::NodePayload(const POINT& geom) :
     _geom(geom),
     _si(nullptr),
     _component(nullptr)
@@ -58,7 +58,7 @@ NodePL::NodePL(const POINT& geom) :
 }
 
 // _____________________________________________________________________________
-NodePL::NodePL(const POINT& geom, const StatInfo& si) :
+NodePayload::NodePayload(const POINT& geom, const StatInfo& si) :
     _geom(geom),
     _si(nullptr),
     _component(nullptr)
@@ -71,7 +71,7 @@ NodePL::NodePL(const POINT& geom, const StatInfo& si) :
 }
 
 // _____________________________________________________________________________
-NodePL::~NodePL()
+NodePayload::~NodePayload()
 {
     if (getSI()) delete _si;
     if (_component)
@@ -86,7 +86,7 @@ NodePL::~NodePL()
 }
 
 // _____________________________________________________________________________
-void NodePL::setVisited() const
+void NodePayload::setVisited() const
 {
 #ifdef PFAEDLE_DBG
     _vis = true;
@@ -94,13 +94,13 @@ void NodePL::setVisited() const
 }
 
 // _____________________________________________________________________________
-void NodePL::setNoStat() { _si = nullptr; }
+void NodePayload::setNoStat() { _si = nullptr; }
 
 // _____________________________________________________________________________
-const Component* NodePL::getComp() const { return _component; }
+const Component* NodePayload::getComp() const { return _component; }
 
 // _____________________________________________________________________________
-void NodePL::setComp(const Component* c)
+void NodePayload::setComp(const Component* c)
 {
     if (_component == c) return;
     _component = c;
@@ -113,13 +113,13 @@ void NodePL::setComp(const Component* c)
 }
 
 // _____________________________________________________________________________
-const POINT* NodePL::getGeom() const { return &_geom; }
+const POINT* NodePayload::getGeom() const { return &_geom; }
 
 // _____________________________________________________________________________
-void NodePL::setGeom(const POINT& geom) { _geom = geom; }
+void NodePayload::setGeom(const POINT& geom) { _geom = geom; }
 
 // _____________________________________________________________________________
-util::json::Dict NodePL::getAttrs() const
+util::json::Dict NodePayload::getAttrs() const
 {
     util::json::Dict obj;
     obj["component"] = std::to_string(reinterpret_cast<size_t>(_component));
@@ -157,24 +157,24 @@ util::json::Dict NodePL::getAttrs() const
 }
 
 // _____________________________________________________________________________
-void NodePL::setSI(const StatInfo& si) { _si = new StatInfo(si); }
+void NodePayload::setSI(const StatInfo& si) { _si = new StatInfo(si); }
 
 // _____________________________________________________________________________
-const StatInfo* NodePL::getSI() const
+const StatInfo* NodePayload::getSI() const
 {
     if (isBlocker()) return nullptr;
     return _si;
 }
 
 // _____________________________________________________________________________
-StatInfo* NodePL::getSI()
+StatInfo* NodePayload::getSI()
 {
     if (isBlocker()) return nullptr;
     return _si;
 }
 
 // _____________________________________________________________________________
-void NodePL::setBlocker() { _si = &_blockerSI; }
+void NodePayload::setBlocker() { _si = &_blockerSI; }
 
 // _____________________________________________________________________________
-bool NodePL::isBlocker() const { return _si == &_blockerSI; }
+bool NodePayload::isBlocker() const { return _si == &_blockerSI; }

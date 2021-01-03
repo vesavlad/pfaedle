@@ -5,12 +5,13 @@
 #ifndef PFAEDLE_OSM_RESTRICTOR_H_
 #define PFAEDLE_OSM_RESTRICTOR_H_
 
-#include <unordered_map>
+#include "pfaedle/osm/Osm.h"
+#include "pfaedle/trgraph/Graph.h"
+
 #include <map>
 #include <vector>
 #include <utility>
-#include "pfaedle/osm/Osm.h"
-#include "pfaedle/trgraph/Graph.h"
+#include <unordered_map>
 
 namespace pfaedle::osm
 {
@@ -51,6 +52,10 @@ public:
                        const trgraph::Edge* newE);
 
 private:
+    void replaceEdge(const trgraph::Edge* old,
+                     const trgraph::Node* via,
+                     const trgraph::Edge* newE);
+
     Rules _pos;
     Rules _neg;
 
@@ -59,10 +64,7 @@ private:
     std::map<NodeOsmIdP, std::vector<DanglPath>> _posDangling;
     std::map<NodeOsmIdP, std::vector<DanglPath>> _negDangling;
 
-    void replaceEdge(const trgraph::Edge* old,
-                     const trgraph::Node* via,
-                     const trgraph::Edge* newE);
 };
-}  // namespace pfaedle
+}  // namespace pfaedle::osm
 
 #endif  // PFAEDLE_OSM_RESTRICTOR_H_

@@ -16,6 +16,7 @@
 #include "pfaedle/trgraph/Graph.h"
 #include "pfaedle/trgraph/Normalizer.h"
 #include "pfaedle/trgraph/StatInfo.h"
+#include "pfaedle/trgraph/NodePayload.h"
 #include "util/Nullable.h"
 #include "util/geo/Geo.h"
 #include "util/xml/XmlWriter.h"
@@ -28,10 +29,11 @@
 #include <unordered_set>
 #include <vector>
 
-namespace pugi{
+namespace pugi
+{
 class xml_document;
 class xml_node;
-}
+}  // namespace pugi
 
 namespace pfaedle::osm
 {
@@ -41,9 +43,9 @@ using pfaedle::trgraph::NodeGrid;
 using pfaedle::trgraph::Normalizer;
 using pfaedle::trgraph::Graph;
 using pfaedle::trgraph::Node;
-using pfaedle::trgraph::NodePL;
+using pfaedle::trgraph::NodePayload;
 using pfaedle::trgraph::Edge;
-using pfaedle::trgraph::EdgePL;
+using pfaedle::trgraph::EdgePayload;
 using pfaedle::trgraph::TransitEdgeLine;
 using pfaedle::trgraph::StatInfo;
 using pfaedle::trgraph::StatGroup;
@@ -110,14 +112,17 @@ public:
 
     // Based on the list of options, output an overpass XML query for getting
     // the data needed for routing
-    void overpassQryWrite(std::ostream* out, const std::vector<OsmReadOpts>& opts,
+    void overpassQryWrite(std::ostream* out,
+                          const std::vector<OsmReadOpts>& opts,
                           const BBoxIdx& latLngBox) const;
 
     // Based on the list of options, read an OSM file from in and output an
     // OSM file to out which contains exactly the entities that are needed
     // from the file at in
-    void filterWrite(const std::string& in, const std::string& out,
-                     const std::vector<OsmReadOpts>& opts, const BBoxIdx& box);
+    void filterWrite(const std::string& in,
+                     const std::string& out,
+                     const std::vector<OsmReadOpts>& opts,
+                     const BBoxIdx& box);
 
 private:
     int filter_nodes(pugi::xml_document& xml, OsmIdSet* nodes,
@@ -234,16 +239,15 @@ private:
     static void simplifyGeoms(Graph& g);
     static uint32_t writeComps(Graph& g);
     static bool edgesSim(const Edge* a, const Edge* b);
-    static const EdgePL& mergeEdgePL(Edge* a, Edge* b);
-    static void getEdgCands(const POINT& s, EdgeCandPQ* ret, EdgeGrid* eg,
-                            double d);
+    static const EdgePayload& mergeEdgePL(Edge* a, Edge* b);
+    static void getEdgCands(const POINT& s, EdgeCandPQ& ret, EdgeGrid& eg, double d);
 
-    static std::set<Node*> getMatchingNds(const NodePL& s, NodeGrid* ng,
+    static std::set<Node*> getMatchingNds(const NodePayload& s, NodeGrid* ng,
                                           double d);
 
-    static Node* getMatchingNd(const NodePL& s, NodeGrid* ng, double d);
+    static Node* getMatchingNd(const NodePayload& s, NodeGrid& ng, double d);
 
-    static NodeSet snapStation(Graph& g, NodePL* s, EdgeGrid* eg, NodeGrid* sng,
+    static NodeSet snapStation(Graph& g, NodePayload& s, EdgeGrid& eg, NodeGrid& sng,
                                const OsmReadOpts& opts, Restrictor& restor,
                                bool surHeur, bool orphSnap, double maxD);
 
@@ -264,7 +268,7 @@ private:
 
     static StatGroup* groupStats(const NodeSet& s);
 
-    static NodePL plFromGtfs(const Stop* s, const OsmReadOpts& ops);
+    static NodePayload plFromGtfs(const Stop* s, const OsmReadOpts& ops);
 
     std::vector<TransitEdgeLine*> getLines(const std::vector<size_t>& edgeRels,
                                            const RelLst& rels,
@@ -295,5 +299,5 @@ private:
     std::map<TransitEdgeLine, TransitEdgeLine*> _lines;
     std::map<size_t, TransitEdgeLine*> _relLines;
 };
-}  // namespace pfaedle
+}  // namespace pfaedle::osm
 #endif  // PFAEDLE_OSM_OSMBUILDER_H_

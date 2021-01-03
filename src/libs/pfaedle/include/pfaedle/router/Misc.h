@@ -141,7 +141,7 @@ inline bool angSmaller(const Point<F>& f, const Point<F>& m, const Point<F>& t,
 
 using NodeSet = std::set<trgraph::Node *>;
 using EdgeSet = std::set<trgraph::Edge *>;
-typedef std::unordered_map<const Stop*, trgraph::Node*> FeedStops;
+using FeedStops = std::unordered_map<const Stop *, trgraph::Node *>;
 
 using NodeCandGroup = std::vector<NodeCand>;
 using NodeCandRoute = std::vector<NodeCandGroup>;

@@ -115,7 +115,7 @@ EdgeCost CostFunc::operator()(const trgraph::Edge* from, const trgraph::Node* n,
 }
 
 // _____________________________________________________________________________
-double CostFunc::transitLineCmp(const trgraph::EdgePL& e) const
+double CostFunc::transitLineCmp(const trgraph::EdgePayload& e) const
 {
     if (_rAttrs.shortName.empty() && _rAttrs.toString.empty() &&
         _rAttrs.fromString.empty())
@@ -217,7 +217,8 @@ double CombCostFunc::operator()(const router::Edge* from, const router::Node* n,
 
 // _____________________________________________________________________________
 Router::Router(size_t numThreads, bool caching) :
-    _cache(numThreads), _caching(caching)
+    _cache(numThreads),
+    _caching(caching)
 {
     for (size_t i = 0; i < numThreads; i++)
     {
@@ -437,7 +438,8 @@ EdgeListHops Router::route(const EdgeCandRoute& route,
                            const osm::Restrictor& rest,
                            router::Graph* cgraph) const
 {
-    if (route.size() < 2) return EdgeListHops();
+    if (route.size() < 2)
+        return EdgeListHops();
     EdgeListHops ret(route.size() - 1);
 
     CombCostFunc ccost(rOpts);
@@ -489,18 +491,23 @@ EdgeListHops Router::route(const EdgeCandRoute& route,
             {
                 auto eTo = to.e;
                 tos.insert(eTo);
+
                 if (!nextNodes.count(eTo))
                     nextNodes[eTo] = cgraph->addNd(to.e->getFrom());
-                if (i == route.size() - 2) cgraph->addEdg(nextNodes[eTo], sink);
+
+                if (i == route.size() - 2)
+                    cgraph->addEdg(nextNodes[eTo], sink);
 
                 edges[eTo] = cgraph->addEdg(cNodeFr, nextNodes[eTo]);
                 pens[eTo] = to.pen;
 
                 edgeLists[eTo] = edges[eTo]->pl().getEdges();
                 edges[eTo]->pl().setStartNode(eFr->getFrom());
+
                 // for debugging
                 edges[eTo]->pl().setStartEdge(eFr);
                 edges[eTo]->pl().setEndNode(to.e->getFrom());
+
                 // for debugging
                 edges[eTo]->pl().setEndEdge(eTo);
             }
@@ -511,10 +518,8 @@ EdgeListHops Router::route(const EdgeCandRoute& route,
             assert(tos.size());
             assert(froms.size());
 
-            hops(eFr, froms, tos, tgGrp, edgeLists, &costs, rAttrs, rOpts, rest,
-                 hopBand);
-            double itPerSec =
-                    (static_cast<double>(EDijkstra::ITERS - iters)) / TOOK(t1, TIME());
+            hops(eFr, froms, tos, tgGrp, edgeLists, &costs, rAttrs, rOpts, rest, hopBand);
+            double itPerSec = (static_cast<double>(EDijkstra::ITERS - iters)) / TOOK(t1, TIME());
             n++;
             itPerSecTot += itPerSec;
 
@@ -524,9 +529,7 @@ EdgeListHops Router::route(const EdgeCandRoute& route,
                         << TOOK(t1, TIME()) << "ms (tput: " << itPerSec << " its/ms)";
             for (auto& kv : edges)
             {
-                kv.second->pl().setCost(
-                        EdgeCost(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, pens[kv.first], nullptr) +
-                        costs[kv.first]);
+                kv.second->pl().setCost(EdgeCost(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, pens[kv.first], nullptr) + costs[kv.first]);
 
                 if (rOpts.popReachEdge && !kv.second->pl().getEdges()->empty())
                 {
@@ -534,8 +537,7 @@ EdgeListHops Router::route(const EdgeCandRoute& route,
                         !kv.second->pl().getEdges()->empty())
                     {
                         // the reach edge is included, but we dont want it in the geometry
-                        kv.second->pl().getEdges()->erase(
-                                kv.second->pl().getEdges()->begin());
+                        kv.second->pl().getEdges()->erase(kv.second->pl().getEdges()->begin());
                     }
                 }
             }
@@ -552,8 +554,7 @@ EdgeListHops Router::route(const EdgeCandRoute& route,
     EDijkstra::shortestPath(source, sink, ccost, &res);
     size_t j = 0;
 
-    LOG(TRACE) << "Optim graph solve took " << EDijkstra::ITERS - iters
-                << " iterations.";
+    LOG(TRACE) << "Optim graph solve took " << EDijkstra::ITERS - iters << " iterations.";
 
     for (auto i = res.rbegin(); i != res.rend(); i++)
     {

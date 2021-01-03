@@ -6,20 +6,19 @@
 #include "pfaedle/Def.h"
 #include "pfaedle/config.h"
 #include "util/String.h"
+
 #include <logging/logger.h>
 #include <exception>
 #include <getopt.h>
 #include <iostream>
 #include <string>
+#include <cxxopts.hpp>
 
-using pfaedle::config::ConfigReader;
-
-using std::string;
-
+namespace pfaedle::config
+{
 static const char* YEAR = static_cast<const char*>(__DATE__) + 7;
-static const char* COPY =
-        "University of Freiburg - Chair of Algorithms and Data Structures";
-static const char* AUTHORS = "Patrick Brosi <brosi@informatik.uni-freiburg.de>";
+static const char* COPY = "University of Freiburg - Chair of Algorithms and Data Structures";
+static const char* AUTHORS = "Patrick Brosi <brosi@informatik.uni-freiburg.de> \n Vlad Vesa <vlad.vesa@outlook.com>";
 
 // _____________________________________________________________________________
 void ConfigReader::help(const char* bin)
@@ -115,12 +114,23 @@ void ConfigReader::help(const char* bin)
               << std::setw(35) << " "
               << "  results\n";
 }
+ConfigReader::ConfigReader(Config& cfg) :
+    config_{cfg}
+{
+    cxxopts::Options options("PFAEDLE", "One line description of MyProgram");
+    options.add_options()
+            ("b,bar", "Param bar", cxxopts::value<std::string>())
+            ("d,debug", "Enable debugging", cxxopts::value<bool>()->default_value("false"))
+            ("f,foo", "Param foo", cxxopts::value<int>()->default_value("10"))
+            ("h,help", "Print usage")
+            ;
+}
 
 // _____________________________________________________________________________
-void ConfigReader::read(Config& cfg, int argc, char** argv)
+void ConfigReader::read(int argc, char** argv)
 {
-    std::string motStr = "all";
-    bool printOpts = false;
+    std::string mot_str = "all";
+    bool print_opts = false;
 
     struct option ops[] = {{"output", required_argument, nullptr, 'o'},
                            {"input", required_argument, nullptr, 'i'},
@@ -146,71 +156,70 @@ void ConfigReader::read(Config& cfg, int argc, char** argv)
                            {"use-route-cache", no_argument, nullptr, 8},
                            {nullptr, 0, nullptr, 0}};
 
-    char c;
-    while ((c = getopt_long(argc, argv, ":o:hvi:c:x:Dm:g:X:T:d:p", ops, nullptr)) !=
-           -1)
+    char c = 0;
+    while ((c = getopt_long(argc, argv, ":o:hvi:c:x:Dm:g:X:T:d:p", ops, nullptr)) != -1)
     {
         switch (c)
         {
             case 1:
-                cfg.writeGraph = true;
+                config_.writeGraph = true;
                 break;
             case 2:
-                cfg.writeCombGraph = true;
+                config_.writeCombGraph = true;
                 break;
             case 3:
-                cfg.evaluate = true;
+                config_.evaluate = true;
                 break;
             case 4:
-                cfg.buildTransitGraph = true;
+                config_.buildTransitGraph = true;
                 break;
             case 5:
-                cfg.solveMethod = optarg;
+                config_.solveMethod = optarg;
                 break;
             case 6:
-                cfg.evalPath = optarg;
+                config_.evalPath = optarg;
                 break;
             case 7:
-                cfg.evalDfBins = optarg;
+                config_.evalDfBins = optarg;
                 break;
             case 8:
-                cfg.useCaching = true;
+                config_.useCaching = true;
                 break;
             case 'o':
-                cfg.outputPath = optarg;
+                config_.outputPath = optarg;
                 break;
             case 'i':
-                cfg.feedPaths.emplace_back(optarg);
+                config_.feedPaths.emplace_back(optarg);
                 break;
             case 'c':
-                cfg.configPaths.emplace_back(optarg);
+                config_.configPaths.emplace_back(optarg);
                 break;
             case 'x':
-                cfg.osmPath = optarg;
+                config_.osmPath = optarg;
                 break;
             case 'D':
-                cfg.dropShapes = true;
+                config_.dropShapes = true;
                 break;
             case 'm':
-                motStr = optarg;
+                mot_str = optarg;
                 break;
             case 'g':
-                cfg.gridSize = atof(optarg);
+                config_.gridSize = atof(optarg);
                 break;
             case 'X':
-                cfg.writeOsm = optarg;
+                config_.writeOsm = optarg;
                 break;
             case 'T':
-                cfg.shapeTripId = optarg;
+                config_.shapeTripId = optarg;
                 break;
             case 'd':
-                cfg.dbgOutputPath = optarg;
+                config_.dbgOutputPath = optarg;
                 break;
             case 'a':
-                cfg.writeOverpass = true;
+                config_.writeOverpass = true;
                 break;
             case 9:
-                cfg.inPlace = true;
+                config_.inPlace = true;
                 break;
             case 'v':
                 std::cout << "pfaedle " << pfaedle::short_version() << " (built " << __DATE__ << " "
@@ -221,7 +230,7 @@ void ConfigReader::read(Config& cfg, int argc, char** argv)
                                                        "License v3.0\n";
                 exit(0);
             case 'p':
-                printOpts = true;
+                print_opts = true;
                 break;
             case 'h':
                 help(argv[0]);
@@ -242,17 +251,20 @@ void ConfigReader::read(Config& cfg, int argc, char** argv)
         }
     }
 
-    for (int i = optind; i < argc; i++) cfg.feedPaths.emplace_back(argv[i]);
+    for (int i = optind; i < argc; i++)
+        config_.feedPaths.emplace_back(argv[i]);
 
-    auto v = util::split(motStr, ',');
-    for (const auto& motStr : v)
+    auto v = util::split(mot_str, ',');
+    for (const auto& mot_str : v)
     {
-        const auto& mots =
-                ad::cppgtfs::gtfs::flat::Route::getTypesFromString(util::trim(motStr));
-        cfg.mots.insert(mots.begin(), mots.end());
+        const auto& mots = ad::cppgtfs::gtfs::flat::Route::getTypesFromString(util::trim(mot_str));
+        config_.mots.insert(mots.begin(), mots.end());
     }
 
-    if (printOpts)
-        std::cout << "\nConfigured options:\n\n"
-                  << cfg.to_string() << std::endl;
+    if (print_opts)
+    {
+        LOG_INFO() << "\nConfigured options:\n\n"
+                   << config_.to_string();
+    }
+}
 }

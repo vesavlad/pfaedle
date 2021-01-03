@@ -9,14 +9,13 @@
 #include "cppgtfs/gtfs/Route.h"
 #include "pfaedle/config/MotConfig.h"
 #include "pfaedle/osm/OsmBuilder.h"
+
 #include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-namespace pfaedle
-{
-namespace config
+namespace pfaedle::config
 {
 
 using ad::cppgtfs::gtfs::Route;
@@ -25,7 +24,7 @@ class MotConfigReader
 {
 public:
     MotConfigReader();
-    MotConfigReader(const std::vector<std::string>&& paths);
+    explicit MotConfigReader(const std::vector<std::string>&& paths);
     void parse(const std::vector<std::string>& paths);
 
     const std::vector<MotConfig>& getConfigs() const;
@@ -40,7 +39,6 @@ private:
     osm::DeepAttrRule getDeepAttrRule(const std::string& rule) const;
     uint64_t getFlags(const std::set<string>& flags) const;
 };
-}// namespace config
 }// namespace pfaedle
 
 #endif// PFAEDLE_CONFIG_MOTCONFIGREADER_H_

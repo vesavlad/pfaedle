@@ -9,6 +9,7 @@
 #include "util/geo/Geo.h"
 #include "util/geo/output/GeoJsonOutput.h"
 #include <logging/logger.h>
+#include <cmath>
 #include <csignal>
 #include <set>
 #include <string>
@@ -22,7 +23,9 @@ using pfaedle::gtfs::Trip;
 using util::geo::output::GeoJsonOutput;
 
 // _____________________________________________________________________________
-double Collector::add(const Trip* t, const Shape* oldS, const Shape& newS,
+double Collector::add(const Trip* t,
+                      const Shape* oldS,
+                      const Shape& newS,
                       const std::vector<double>& newTripDists)
 {
     if (!oldS)
@@ -43,65 +46,57 @@ double Collector::add(const Trip* t, const Shape* oldS, const Shape& newS,
     }
 
     double fd = 0;
-    size_t unmatchedSegments;
-    double unmatchedSegmentsLength;
+    size_t unmatched_segments = 0;
+    double unmatched_segments_length = NAN;
 
-    std::vector<double> oldDists;
-    LINE oldL = getWebMercLine(
+    std::vector<double> old_dists;
+    LINE old_line = getWebMercLine(
             oldS, t->getStopTimes().begin()->getShapeDistanceTravelled(),
-            (--t->getStopTimes().end())->getShapeDistanceTravelled(), &oldDists);
+            (--t->getStopTimes().end())->getShapeDistanceTravelled(), &old_dists);
 
-    std::vector<double> newDists;
-    LINE newL = getWebMercLine(&newS, -1, -1, &newDists);
+    std::vector<double> new_dists;
+    LINE new_line = getWebMercLine(&newS, -1, -1, &new_dists);
 
     std::ofstream fstr(_evalOutPath + "/trip-" + t->getId() + ".json");
     GeoJsonOutput gjout(fstr);
 
-    auto oldSegs = segmentize(t, oldL, oldDists, nullptr);
-    auto newSegs = segmentize(t, newL, newDists, &newTripDists);
+    auto old_segs = segmentize(t, old_line, old_dists, nullptr);
+    auto new_segs = segmentize(t, new_line, new_dists, &newTripDists);
 
     // cut both result at the beginning and end to clear evaluation from
     // loops at the end
-    POLYLINE oldStart = oldSegs[0];
-    POLYLINE newStart = newSegs[0];
-    auto oldStartNew =
-            oldStart.getSegment(oldStart.projectOn(newSegs[0][0]).totalPos, 1);
-    auto newStartNew =
-            newStart.getSegment(newStart.projectOn(oldSegs[0][0]).totalPos, 1);
-    if (fabs(oldStartNew.getLength() - oldStart.getLength()) /
-                        oldStart.getLength() <
-                0.5 &&
-        fabs(newStartNew.getLength() - newStart.getLength()) /
-                        newStart.getLength() <
-                0.5)
+    POLYLINE old_start = old_segs[0];
+    POLYLINE new_start = new_segs[0];
+    auto old_start_new = old_start.getSegment(old_start.projectOn(new_segs[0][0]).totalPos, 1);
+    auto new_start_new = new_start.getSegment(new_start.projectOn(old_segs[0][0]).totalPos, 1);
+
+    if (fabs(old_start_new.getLength() - old_start.getLength()) / old_start.getLength() < 0.5 &&
+        fabs(new_start_new.getLength() - new_start.getLength()) / new_start.getLength() < 0.5)
     {
-        oldSegs[0] = oldStartNew.getLine();
-        newSegs[0] = newStartNew.getLine();
+        old_segs[0] = old_start_new.getLine();
+        new_segs[0] = new_start_new.getLine();
     }
 
-    POLYLINE oldEnd = oldSegs[oldSegs.size() - 1];
-    POLYLINE newEnd = newSegs[oldSegs.size() - 1];
-    auto oldEndNew =
-            oldEnd.getSegment(0, oldEnd.projectOn(newSegs.back().back()).totalPos);
-    auto newEndNew =
-            newEnd.getSegment(0, newEnd.projectOn(oldSegs.back().back()).totalPos);
-    if (fabs(oldEndNew.getLength() - oldEnd.getLength()) / oldEnd.getLength() <
-                0.5 &&
-        fabs(newEndNew.getLength() - newEnd.getLength()) / newEnd.getLength() <
-                0.5)
+    POLYLINE old_end = old_segs[old_segs.size() - 1];
+    POLYLINE new_end = new_segs[old_segs.size() - 1];
+    auto old_end_new = old_end.getSegment(0, old_end.projectOn(new_segs.back().back()).totalPos);
+    auto new_end_new = new_end.getSegment(0, new_end.projectOn(old_segs.back().back()).totalPos);
+
+    if (fabs(old_end_new.getLength() - old_end.getLength()) / old_end.getLength() < 0.5 &&
+        fabs(new_end_new.getLength() - new_end.getLength()) / new_end.getLength() < 0.5)
     {
-        oldSegs[oldSegs.size() - 1] = oldEndNew.getLine();
-        newSegs[newSegs.size() - 1] = newEndNew.getLine();
+        old_segs[old_segs.size() - 1] = old_end_new.getLine();
+        new_segs[new_segs.size() - 1] = new_end_new.getLine();
     }
 
     // check for suspicious (most likely erroneous) lines in the
     // ground truth data which have a long straight-line segment
 
-    for (auto oldL : oldSegs)
+    for (const auto& old_line_segs : old_segs)
     {
-        for (size_t i = 1; i < oldL.size(); i++)
+        for (size_t i = 1; i < old_line_segs.size(); i++)
         {
-            if (util::geo::webMercMeterDist(oldL[i - 1], oldL[i]) > 500)
+            if (util::geo::webMercMeterDist(old_line_segs[i - 1], old_line_segs[i]) > 500)
             {
                 // return 0;
             }
@@ -109,28 +104,27 @@ double Collector::add(const Trip* t, const Shape* oldS, const Shape& newS,
     }
 
     // new lines build from cleaned-up shapes
-    LINE oldLCut;
-    LINE newLCut;
+    LINE old_l_cut;
+    LINE new_l_cut;
 
-    for (auto oldL : oldSegs)
+    for (const auto& old_line_seg : old_segs)
     {
-        gjout.printLatLng(oldL, util::json::Dict{{"ver", "old"}});
-        oldLCut.insert(oldLCut.end(), oldL.begin(), oldL.end());
+        gjout.printLatLng(old_line_seg, util::json::Dict{{"ver", "old"}});
+        old_l_cut.insert(old_l_cut.end(), old_line_seg.begin(), old_line_seg.end());
     }
 
-    for (auto newL : newSegs)
+    for (const auto& new_line_seg : new_segs)
     {
-        gjout.printLatLng(newL, util::json::Dict{{"ver", "new"}});
-        newLCut.insert(newLCut.end(), newL.begin(), newL.end());
+        gjout.printLatLng(new_line_seg, util::json::Dict{{"ver", "new"}});
+        new_l_cut.insert(new_l_cut.end(), new_line_seg.begin(), new_line_seg.end());
     }
 
     gjout.flush();
     fstr.close();
 
-    double fac = cos(2 * atan(exp((oldSegs.front().front().getY() +
-                                   oldSegs.back().back().getY()) /
-                                  6378137.0)) -
-                     1.5707965);
+    double fac = cos(2 * atan(exp((old_segs.front().front().getY() +
+                                   old_segs.back().back().getY()) /
+                                  6378137.0)) - 1.5707965);
 
     if (_dCache.count(oldS) && _dCache.find(oldS)->second.count(newS.getId()))
     {
@@ -138,57 +132,59 @@ double Collector::add(const Trip* t, const Shape* oldS, const Shape& newS,
     }
     else
     {
-        fd = util::geo::accFrechetDistC(oldLCut, newLCut, 5 / fac) * fac;
+        fd = util::geo::accFrechetDistC(old_l_cut, new_l_cut, 5 / fac) * fac;
         _dCache[oldS][newS.getId()] = fd;
     }
 
     if (_dACache.count(oldS) && _dACache.find(oldS)->second.count(newS.getId()))
     {
-        unmatchedSegments = _dACache[oldS][newS.getId()].first;
-        unmatchedSegmentsLength = _dACache[oldS][newS.getId()].second;
+        unmatched_segments = _dACache[oldS][newS.getId()].first;
+        unmatched_segments_length = _dACache[oldS][newS.getId()].second;
     }
     else
     {
-        auto dA = getDa(oldSegs, newSegs);
+        auto dA = getDa(old_segs, new_segs);
         _dACache[oldS][newS.getId()] = dA;
-        unmatchedSegments = dA.first;
-        unmatchedSegmentsLength = dA.second;
+        unmatched_segments = dA.first;
+        unmatched_segments_length = dA.second;
     }
 
-    double totL = 0;
-    for (const auto& l : oldSegs) totL += util::geo::len(l) * fac;
+    double total_length = 0;
+    for (const auto& l : old_segs)
+        total_length += util::geo::len(l) * fac;
 
-    // filter out shapes with a lenght of under 5 meters - they are most likely
+    // filter out shapes with a length of under 5 meters - they are most likely
     // artifacts
-    if (totL < 5)
+    if (total_length < 5)
     {
         _noOrigShp++;
         return 0;
     }
 
-    _fdSum += fd / totL;
-    _unmatchedSegSum += unmatchedSegments;
-    _unmatchedSegLengthSum += unmatchedSegmentsLength;
-    _results.insert(Result(t, fd / totL));
-    _resultsAN.insert(Result(t, static_cast<double>(unmatchedSegments) /
-                                        static_cast<double>(oldSegs.size())));
-    _resultsAL.insert(Result(t, unmatchedSegmentsLength / totL));
+    _fdSum += fd / total_length;
+    _unmatchedSegSum += unmatched_segments;
+    _unmatchedSegLengthSum += unmatched_segments_length;
+    _results.insert(Result(t, fd / total_length));
+    _resultsAN.insert(Result(t, static_cast<double>(unmatched_segments) / static_cast<double>(old_segs.size())));
+    _resultsAL.insert(Result(t, unmatched_segments_length / total_length));
 
     LOG(DEBUG) << "This result (" << t->getId()
-               << "): A_N/N = " << unmatchedSegments << "/" << oldSegs.size()
+               << "): A_N/N = " << unmatched_segments << "/" << old_segs.size()
                << " = "
-               << static_cast<double>(unmatchedSegments) /
-                          static_cast<double>(oldSegs.size())
-               << " A_L/L = " << unmatchedSegmentsLength << "/" << totL << " = "
-               << unmatchedSegmentsLength / totL << " d_f = " << fd;
+               << static_cast<double>(unmatched_segments) /
+                          static_cast<double>(old_segs.size())
+               << " A_L/L = " << unmatched_segments_length << "/" << total_length << " = "
+               << unmatched_segments_length / total_length << " d_f = " << fd;
 
     return fd;
 }
 
 // _____________________________________________________________________________
 std::vector<LINE> Collector::segmentize(
-        const Trip* t, const LINE& shape, const std::vector<double>& dists,
-        const std::vector<double>* newTripDists)
+        const Trip* t,
+        const LINE& shape,
+        const std::vector<double>& dists,
+        const std::vector<double>* new_trip_dists)
 {
     std::vector<LINE> ret;
 
@@ -200,47 +196,45 @@ std::vector<LINE> Collector::segmentize(
     size_t i = 0;
     for (auto st : t->getStopTimes())
     {
-        if (newTripDists)
+        if (new_trip_dists)
         {
-            cuts.push_back(std::pair<POINT, double>(
-                    util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(st.getStop()->getLat(),
-                                                                  st.getStop()->getLng()),
-                    (*newTripDists)[i]));
+            cuts.emplace_back(
+                    util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(st.getStop()->getLat(), st.getStop()->getLng()),
+                    (*new_trip_dists)[i]);
         }
         else
         {
-            cuts.push_back(std::pair<POINT, double>(
-                    util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(st.getStop()->getLat(),
-                                                                  st.getStop()->getLng()),
-                    st.getShapeDistanceTravelled()));
+            cuts.emplace_back(
+                    util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(st.getStop()->getLat(), st.getStop()->getLng()),
+                    st.getShapeDistanceTravelled());
         }
         i++;
     }
 
     // get first half of geometry, and search for start point there!
-    size_t before = std::upper_bound(dists.begin(), dists.end(), cuts[1].second) -
-                    dists.begin();
-    if (before + 1 > shape.size()) before = shape.size() - 1;
+    size_t before = std::upper_bound(dists.begin(), dists.end(), cuts[1].second) - dists.begin();
+    if (before + 1 > shape.size())
+        before = shape.size() - 1;
+
     assert(shape.begin() + before + 1 <= shape.end());
+
     POLYLINE l(LINE(shape.begin(), shape.begin() + before + 1));
-    auto lastLp = l.projectOn(cuts.front().first);
+    auto last_lp = l.projectOn(cuts.front().first);
 
     for (size_t i = 1; i < cuts.size(); i++)
     {
         size_t before = shape.size();
         if (i < cuts.size() - 1 && cuts[i + 1].second > -0.5)
         {
-            before =
-                    std::upper_bound(dists.begin(), dists.end(), cuts[i + 1].second) -
-                    dists.begin();
+            before = std::upper_bound(dists.begin(), dists.end(), cuts[i + 1].second) - dists.begin();
         }
 
-        POLYLINE beforePl(LINE(shape.begin(), shape.begin() + before));
+        POLYLINE before_pl(LINE(shape.begin(), shape.begin() + before));
 
-        auto curLp = beforePl.projectOnAfter(cuts[i].first, lastLp.lastIndex);
+        auto cur_lp = before_pl.projectOnAfter(cuts[i].first, last_lp.lastIndex);
 
-        ret.push_back(pl.getSegment(lastLp, curLp).getLine());
-        lastLp = curLp;
+        ret.push_back(pl.getSegment(last_lp, cur_lp).getLine());
+        last_lp = cur_lp;
     }
 
     // std::raise(SIGABRT);
@@ -269,9 +263,9 @@ LINE Collector::getWebMercLine(const Shape* s, double from, double to,
         {
             if (to >= 0 && (p.travelDist - to) > 0.01) break;
 
-            POINT mercP = util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(p.lat, p.lng);
+            POINT merc_p = util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(p.lat, p.lng);
 
-            ret.push_back(mercP);
+            ret.push_back(merc_p);
             if (dists) dists->push_back(p.travelDist);
         }
     }

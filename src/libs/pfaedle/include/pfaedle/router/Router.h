@@ -46,7 +46,7 @@ struct HopBand {
 };
 
 struct CostFunc
-    : public EDijkstra::CostFunc<trgraph::NodePL, trgraph::EdgePL, EdgeCost> {
+    : public EDijkstra::CostFunc<trgraph::NodePayload, trgraph::EdgePayload, EdgeCost> {
   CostFunc(const RoutingAttrs& rAttrs, const RoutingOpts& rOpts,
            const osm::Restrictor& res, const trgraph::StatGroup* tgGrp,
            double max)
@@ -66,11 +66,11 @@ struct CostFunc
                       const trgraph::Edge* to) const override;
   EdgeCost inf() const override { return _inf; }
 
-  double transitLineCmp(const trgraph::EdgePL& e) const;
+  double transitLineCmp(const trgraph::EdgePayload& e) const;
 };
 
 struct NCostFunc
-    : public Dijkstra::CostFunc<trgraph::NodePL, trgraph::EdgePL, EdgeCost> {
+    : public Dijkstra::CostFunc<trgraph::NodePayload, trgraph::EdgePayload, EdgeCost> {
   NCostFunc(const RoutingAttrs& rAttrs, const RoutingOpts& rOpts,
             const osm::Restrictor& res, const trgraph::StatGroup* tgGrp)
       : _rAttrs(rAttrs),
@@ -90,11 +90,11 @@ struct NCostFunc
                       const trgraph::Node* to) const override;
   EdgeCost inf() const override { return _inf; }
 
-  double transitLineCmp(const trgraph::EdgePL& e) const;
+  double transitLineCmp(const trgraph::EdgePayload& e) const;
 };
 
 struct DistHeur
-    : public EDijkstra::HeurFunc<trgraph::NodePL, trgraph::EdgePL, EdgeCost> {
+    : public EDijkstra::HeurFunc<trgraph::NodePayload, trgraph::EdgePayload, EdgeCost> {
   DistHeur(uint8_t minLvl, const RoutingOpts& rOpts,
            const std::set<trgraph::Edge*>& tos);
 
@@ -107,7 +107,7 @@ struct DistHeur
 };
 
 struct NDistHeur
-    : public Dijkstra::HeurFunc<trgraph::NodePL, trgraph::EdgePL, EdgeCost> {
+    : public Dijkstra::HeurFunc<trgraph::NodePayload, trgraph::EdgePayload, EdgeCost> {
   NDistHeur(const RoutingOpts& rOpts, const std::set<trgraph::Node*>& tos);
 
   const RoutingOpts& _rOpts;
@@ -173,6 +173,7 @@ class Router {
  private:
   mutable std::vector<Cache*> _cache;
   bool _caching;
+
   HopBand getHopBand(const EdgeCandGroup& a, const EdgeCandGroup& b,
                      const RoutingAttrs& rAttrs, const RoutingOpts& rOpts,
                      const osm::Restrictor& rest) const;

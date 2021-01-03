@@ -14,8 +14,13 @@ namespace pfaedle::config
 class ConfigReader
 {
 public:
-    static void read(Config& cfg, int argc, char** argv);
-    static void help(const char* bin);
+    ConfigReader(Config& cfg);
+
+    void read(int argc, char** argv);
+    void help(const char* bin);
+
+private:
+    Config& config_;
 };
 }  // namespace pfaedle::config
 #endif// PFAEDLE_CONFIG_CONFIGREADER_H_

@@ -545,8 +545,7 @@ void MotConfigReader::parse(const std::vector<std::string>& paths)
 }
 
 // _____________________________________________________________________________
-ReplRules MotConfigReader::getNormRules(
-        const std::vector<std::string>& arr) const
+ReplRules MotConfigReader::getNormRules(const std::vector<std::string>& arr) const
 {
     trgraph::ReplRules ret;
 

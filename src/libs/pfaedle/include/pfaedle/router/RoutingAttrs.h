@@ -5,9 +5,9 @@
 #ifndef PFAEDLE_ROUTER_ROUTINGATTRS_H_
 #define PFAEDLE_ROUTER_ROUTINGATTRS_H_
 
+#include "pfaedle/trgraph/EdgePayload.h"
 #include <map>
 #include <string>
-#include "pfaedle/trgraph/EdgePL.h"
 
 using pfaedle::trgraph::TransitEdgeLine;
 
