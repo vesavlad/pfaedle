@@ -8,21 +8,21 @@
 #include <vector>
 #include "./Point.h"
 
-namespace util {
-namespace geo {
+namespace util::geo
+{
 
-template <typename T>
-class Line : public std::vector<Point<T>> {
-  using std::vector<Point<T>>::vector;
+template<typename T>
+class Line : public std::vector<Point<T>>
+{
+    using std::vector<Point<T>>::vector;
 };
 
-template <typename T>
+template<typename T>
 using LineSegment = std::pair<Point<T>, Point<T>>;
 
-template <typename T>
+template<typename T>
 using MultiLine = std::vector<Line<T>>;
 
-}  // namespace geo
 }  // namespace util
 
 #endif  // UTIL_GEO_LINE_H_

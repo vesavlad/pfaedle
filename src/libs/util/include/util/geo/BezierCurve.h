@@ -18,9 +18,17 @@ struct CubicPolynom
         a(a), b(b), c(c), d(d), x(x) {}
     CubicPolynom() :
         a(0), b(0), c(0), d(0), x(0) {}
-    double a, b, c, d, x;
+    double a;
+    double b;
+    double c;
+    double d;
+    double x;
 
-    double valueAt(double x) const;
+    double valueAt(double atx) const
+    {
+        double dx = atx - x;
+        return a + b * dx + c * dx * dx + d * dx * dx * dx;
+    }
 };
 
 /**
@@ -117,13 +125,6 @@ const PolyLine<T>& BezierCurve<T>::render(double d)
 
     _didRender = true;
     return _rendered;
-}
-
-// _____________________________________________________________________________
-double CubicPolynom::valueAt(double atx) const
-{
-    double dx = atx - x;
-    return a + b * dx + c * dx * dx + d * dx * dx * dx;
 }
 }
 

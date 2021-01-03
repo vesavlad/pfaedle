@@ -5,15 +5,16 @@
 #ifndef UTIL_GRAPH_EDIJKSTRA_H_
 #define UTIL_GRAPH_EDIJKSTRA_H_
 
+#include "util/graph/Edge.h"
+#include "util/graph/Graph.h"
+#include "util/graph/Node.h"
+#include "util/graph/ShortestPath.h"
+
 #include <limits>
 #include <list>
 #include <queue>
 #include <set>
 #include <unordered_map>
-#include "util/graph/Edge.h"
-#include "util/graph/Graph.h"
-#include "util/graph/Node.h"
-#include "util/graph/ShortestPath.h"
 
 namespace util::graph
 {

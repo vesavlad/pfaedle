@@ -10,9 +10,7 @@
 #include "util/graph/UndirGraph.h"
 #include "util/graph/Node.h"
 
-namespace util
-{
-namespace graph
+namespace util::graph
 {
 
 using util::graph::Graph;
@@ -56,7 +54,6 @@ public:
     }
 };
 
-}
 }
 
 #endif  // UTIL_GRAPH_ALGORITHM_H_

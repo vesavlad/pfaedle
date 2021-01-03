@@ -9,24 +9,25 @@
 #include "util/geo/Geo.h"
 #include "util/json/Writer.h"
 
-namespace util {
-namespace geograph {
+namespace util::geograph
+{
 
 template<typename T>
-class GeoEdgePL {
- public:
-  virtual const util::geo::Line<T>* getGeom() const = 0;
-  virtual json::Dict getAttrs() const = 0;
+class GeoEdgePL
+{
+public:
+    virtual const util::geo::Line<T>* getGeom() const = 0;
+    virtual json::Dict getAttrs() const = 0;
 };
 
 template<typename T>
-class GeoNodePL {
- public:
-  virtual const util::geo::Point<T>* getGeom() const = 0;
-  virtual json::Dict getAttrs() const = 0;
+class GeoNodePL
+{
+public:
+    virtual const util::geo::Point<T>* getGeom() const = 0;
+    virtual json::Dict getAttrs() const = 0;
 };
 
-}  // namespace geograph
 }  // namespace util
 
 #endif  // UTIL_GEOGRAPH_H_

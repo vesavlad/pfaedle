@@ -16,9 +16,7 @@
 #include "util/graph/Graph.h"
 #include "util/graph/Node.h"
 
-namespace util
-{
-namespace graph
+namespace util::graph
 {
 
 using util::graph::Graph;
@@ -437,7 +435,6 @@ public:
         return D::shortestPathImpl(froms, costFunc, true);
     }
 };
-}
 }
 
 #endif  // UTIL_GRAPH_SHORTESTPATH_H_
