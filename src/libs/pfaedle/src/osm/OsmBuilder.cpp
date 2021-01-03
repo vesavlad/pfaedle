@@ -10,7 +10,6 @@
 #include "pfaedle/osm/Restrictor.h"
 #include "pfaedle/trgraph/StatGroup.h"
 #include "util/Misc.h"
-#include "util/Nullable.h"
 
 #include <logging/logger.h>
 #include <pugixml.hpp>
@@ -42,7 +41,6 @@ using pfaedle::trgraph::Normalizer;
 using pfaedle::trgraph::StatGroup;
 using pfaedle::trgraph::StatInfo;
 using pfaedle::trgraph::TransitEdgeLine;
-using util::Nullable;
 using util::geo::webMercMeterDist;
 
 
@@ -883,9 +881,9 @@ void OsmBuilder::readNodes(pugi::xml_document& xml,
                 {
                     auto si = getStatInfo(n, nd.id, pos, nd.attrs, &attr_groups, nodeRels,
                                           rels, opts);
-                    if (!si.isNull())
+                    if (si.has_value())
                     {
-                        n->pl().setSI(si);
+                        n->pl().setSI(si.value());
                     }
                 }
                 else if (filter.blocker(nd.attrs))
@@ -902,9 +900,9 @@ void OsmBuilder::readNodes(pugi::xml_document& xml,
                     {
                         auto si = getStatInfo(node, nd.id, pos, nd.attrs, &attr_groups, nodeRels,
                                               rels, opts);
-                        if (!si.isNull())
+                        if (si.has_value())
                         {
-                            node->pl().setSI(si);
+                            node->pl().setSI(si.value());
                         }
                     }
                     else if (filter.blocker(nd.attrs))
@@ -921,9 +919,9 @@ void OsmBuilder::readNodes(pugi::xml_document& xml,
                     auto tmp = g.addNd(NodePayload(pos));
                     auto si = getStatInfo(tmp, nd.id, pos, nd.attrs, &attr_groups, nodeRels, rels, opts);
 
-                    if (!si.isNull())
+                    if (si.has_value())
                     {
-                        tmp->pl().setSI(si);
+                        tmp->pl().setSI(si.value());
                     }
 
                     if (tmp->pl().getSI())
@@ -1128,7 +1126,7 @@ std::string OsmBuilder::getAttr(const DeepAttrRule& s, osmid id,
 }
 
 
-Nullable<StatInfo> OsmBuilder::getStatInfo(Node* node, osmid nid,
+std::optional<StatInfo> OsmBuilder::getStatInfo(Node* node, osmid nid,
                                            const POINT& pos, const AttrMap& m,
                                            StAttrGroups* groups,
                                            const RelMap& nodeRels,
@@ -1144,7 +1142,7 @@ Nullable<StatInfo> OsmBuilder::getStatInfo(Node* node, osmid nid,
                                    nodeRels, rels, ops.trackNormzer);
 
     if (names.empty())
-        return Nullable<StatInfo>();
+        return std::nullopt;
 
     auto ret = StatInfo(names[0], platform, true);
 

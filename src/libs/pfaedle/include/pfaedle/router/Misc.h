@@ -13,7 +13,6 @@
 #include "cppgtfs/gtfs/Route.h"
 #include "pfaedle/gtfs/Feed.h"
 #include "pfaedle/trgraph/Graph.h"
-#include "util/Nullable.h"
 
 using ad::cppgtfs::gtfs::Route;
 using ad::cppgtfs::gtfs::Stop;

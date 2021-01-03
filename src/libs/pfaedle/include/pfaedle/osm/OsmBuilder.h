@@ -17,7 +17,6 @@
 #include "pfaedle/trgraph/Normalizer.h"
 #include "pfaedle/trgraph/StatInfo.h"
 #include "pfaedle/trgraph/NodePayload.h"
-#include "util/Nullable.h"
 #include "util/geo/Geo.h"
 #include "util/xml/XmlWriter.h"
 
@@ -28,6 +27,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <optional>
 
 namespace pugi
 {
@@ -52,7 +52,6 @@ using pfaedle::trgraph::StatGroup;
 using pfaedle::trgraph::Component;
 using pfaedle::router::NodeSet;
 using ad::cppgtfs::gtfs::Stop;
-using util::Nullable;
 
 struct NodeCand
 {
@@ -208,7 +207,7 @@ private:
                   const OsmIdSet& bBoxNodes, const OsmFilter& filter,
                   const FlatRels& fl) const;
 
-    Nullable<StatInfo> getStatInfo(Node* node, osmid nid, const POINT& pos,
+    std::optional<StatInfo> getStatInfo(Node* node, osmid nid, const POINT& pos,
                                    const AttrMap& m, StAttrGroups* groups,
                                    const RelMap& nodeRels, const RelLst& rels,
                                    const OsmReadOpts& ops) const;
