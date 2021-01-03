@@ -9,50 +9,231 @@
 #include <algorithm>
 #include "util/graph/Node.h"
 
-namespace util {
-namespace graph {
+namespace util::graph
+{
 
 // forward declaration of Edge
+template<typename N, typename E>
+class DirNode : public Node<N, E>
+{
+public:
+    DirNode();
+    DirNode(const N& pl);
+    ~DirNode() override;
 
-template <typename N, typename E>
-class DirNode : public Node<N, E> {
- public:
-  DirNode();
-  DirNode(const N& pl);
-  ~DirNode() override;
+    const std::vector<Edge<N, E>*>& getAdjList() const override;
+    const std::vector<Edge<N, E>*>& getAdjListIn() const override;
+    const std::vector<Edge<N, E>*>& getAdjListOut() const override;
 
-  const std::vector<Edge<N, E>*>& getAdjList() const override;
-  const std::vector<Edge<N, E>*>& getAdjListIn() const override;
-  const std::vector<Edge<N, E>*>& getAdjListOut() const override;
+    size_t getDeg() const override;
+    size_t getInDeg() const override;
+    size_t getOutDeg() const override;
 
-  size_t getDeg() const override;
-  size_t getInDeg() const override;
-  size_t getOutDeg() const override;
+    bool hasEdgeIn(const Edge<N, E>* e) const override;
+    bool hasEdgeOut(const Edge<N, E>* e) const override;
+    bool hasEdge(const Edge<N, E>* e) const override;
 
-  bool hasEdgeIn(const Edge<N, E>* e) const override;
-  bool hasEdgeOut(const Edge<N, E>* e) const override;
-  bool hasEdge(const Edge<N, E>* e) const override;
+    // add edge to this node's adjacency lists
+    void addEdge(Edge<N, E>* e) override;
 
-  // add edge to this node's adjacency lists
-  void addEdge(Edge<N, E>* e) override;
+    // remove edge from this node's adjacency lists
+    void removeEdge(Edge<N, E>* e) override;
 
-  // remove edge from this node's adjacency lists
-  void removeEdge(Edge<N, E>* e) override;
+    N& pl() override;
+    const N& pl() const override;
 
-  N& pl() override;
-  const N& pl() const override;
+private:
+    std::vector<Edge<N, E>*> _adjListIn;
+    std::vector<Edge<N, E>*> _adjListOut;
+    N _pl;
 
- private:
-  std::vector<Edge<N, E>*> _adjListIn;
-  std::vector<Edge<N, E>*> _adjListOut;
-  N _pl;
-
-  bool adjInContains(const Edge<N, E>* e) const;
-  bool adjOutContains(const Edge<N, E>* e) const;
+    bool adjInContains(const Edge<N, E>* e) const;
+    bool adjOutContains(const Edge<N, E>* e) const;
 };
 
-#include "util/graph/DirNode.tpp"
+// _____________________________________________________________________________
+template<typename N, typename E>
+DirNode<N, E>::DirNode() :
+    _pl()
+{}
 
-}}
+// _____________________________________________________________________________
+template<typename N, typename E>
+DirNode<N, E>::DirNode(const N& pl) :
+    _pl(pl)
+{}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+DirNode<N, E>::~DirNode()
+{
+    // delete self edges
+    for (auto e = _adjListOut.begin(); e != _adjListOut.end();)
+    {
+        Edge<N, E>* eP = *e;
+        if (eP->getTo() == this)
+        {
+            _adjListIn.erase(std::find(_adjListIn.begin(), _adjListIn.end(), eP));
+            e = _adjListOut.erase(e);
+            delete eP;
+        }
+        else
+        {
+            e++;
+        }
+    }
+
+    for (auto e = _adjListOut.begin(); e != _adjListOut.end(); e++)
+    {
+        Edge<N, E>* eP = *e;
+
+        if (eP->getTo() != this)
+        {
+            eP->getTo()->removeEdge(eP);
+            delete eP;
+        }
+    }
+
+    for (auto e = _adjListIn.begin(); e != _adjListIn.end(); e++)
+    {
+        Edge<N, E>* eP = *e;
+
+        if (eP->getFrom() != this)
+        {
+            eP->getFrom()->removeEdge(eP);
+            delete eP;
+        }
+    }
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+void DirNode<N, E>::addEdge(Edge<N, E>* e)
+{
+    if (e->getFrom() == this && !adjOutContains(e))
+    {
+        _adjListOut.reserve(_adjListOut.size() + 1);
+        _adjListOut.push_back(e);
+    }
+    if (e->getTo() == this && !adjInContains(e))
+    {
+        _adjListIn.reserve(_adjListIn.size() + 1);
+        _adjListIn.push_back(e);
+    }
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+void DirNode<N, E>::removeEdge(Edge<N, E>* e)
+{
+    if (e->getFrom() == this)
+    {
+        auto p = std::find(_adjListOut.begin(), _adjListOut.end(), e);
+        if (p != _adjListOut.end()) _adjListOut.erase(p);
+    }
+    if (e->getTo() == this)
+    {
+        auto p = std::find(_adjListIn.begin(), _adjListIn.end(), e);
+        if (p != _adjListIn.end()) _adjListIn.erase(p);
+    }
+}
+//
+// _____________________________________________________________________________
+template<typename N, typename E>
+bool DirNode<N, E>::hasEdgeIn(const Edge<N, E>* e) const
+{
+    return e->getTo() == this;
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+bool DirNode<N, E>::hasEdgeOut(const Edge<N, E>* e) const
+{
+    return e->getFrom() == this;
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+bool DirNode<N, E>::hasEdge(const Edge<N, E>* e) const
+{
+    return hasEdgeOut(e) || hasEdgeIn(e);
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+const std::vector<Edge<N, E>*>& DirNode<N, E>::getAdjList() const
+{
+    return _adjListOut;
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+const std::vector<Edge<N, E>*>& DirNode<N, E>::getAdjListOut() const
+{
+    return _adjListOut;
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+const std::vector<Edge<N, E>*>& DirNode<N, E>::getAdjListIn() const
+{
+    return _adjListIn;
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+size_t DirNode<N, E>::getDeg() const
+{
+    return _adjListOut.size();
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+size_t DirNode<N, E>::getInDeg() const
+{
+    return _adjListIn.size();
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+size_t DirNode<N, E>::getOutDeg() const
+{
+    return _adjListOut.size();
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+N& DirNode<N, E>::pl()
+{
+    return _pl;
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+const N& DirNode<N, E>::pl() const
+{
+    return _pl;
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+bool DirNode<N, E>::adjInContains(const Edge<N, E>* e) const
+{
+    for (size_t i = 0; i < _adjListIn.size(); i++)
+        if (_adjListIn[i] == e) return true;
+    return false;
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+bool DirNode<N, E>::adjOutContains(const Edge<N, E>* e) const
+{
+    for (size_t i = 0; i < _adjListOut.size(); i++)
+        if (_adjListOut[i] == e) return true;
+    return false;
+}
+
+
+}
 
 #endif  // UTIL_GRAPH_DIRNODE_H_

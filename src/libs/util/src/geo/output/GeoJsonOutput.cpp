@@ -4,9 +4,7 @@
 //
 #include "util/geo/output/GeoJsonOutput.h"
 
-using namespace util;
-using namespace geo;
-using namespace output;
+using namespace util::geo::output;
 
 // _____________________________________________________________________________
 GeoJsonOutput::GeoJsonOutput(std::ostream& str) :

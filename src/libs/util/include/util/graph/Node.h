@@ -7,41 +7,43 @@
 
 #include <vector>
 
-namespace util {
-namespace graph {
+namespace util::graph
+{
 
 // forward declaration of Edge
-template <typename N, typename E>
+template<typename N, typename E>
 class Edge;
 
-template <typename N, typename E>
-class Node {
- public:
-  virtual const std::vector<Edge<N, E>*>& getAdjList() const = 0;
-  virtual const std::vector<Edge<N, E>*>& getAdjListOut() const = 0;
-  virtual const std::vector<Edge<N, E>*>& getAdjListIn() const = 0;
+template<typename N, typename E>
+class Node
+{
+public:
+    virtual const std::vector<Edge<N, E>*>& getAdjList() const = 0;
+    virtual const std::vector<Edge<N, E>*>& getAdjListOut() const = 0;
+    virtual const std::vector<Edge<N, E>*>& getAdjListIn() const = 0;
 
-  virtual size_t getDeg() const = 0;
-  virtual size_t getInDeg() const = 0;
-  virtual size_t getOutDeg() const = 0;
+    virtual size_t getDeg() const = 0;
+    virtual size_t getInDeg() const = 0;
+    virtual size_t getOutDeg() const = 0;
 
-  virtual bool hasEdgeIn(const Edge<N, E>* e) const = 0;
-  virtual bool hasEdgeOut(const Edge<N, E>* e) const = 0;
-  virtual bool hasEdge(const Edge<N, E>* e) const = 0;
+    virtual bool hasEdgeIn(const Edge<N, E>* e) const = 0;
+    virtual bool hasEdgeOut(const Edge<N, E>* e) const = 0;
+    virtual bool hasEdge(const Edge<N, E>* e) const = 0;
 
-  // add edge to this node's adjacency lists
-  virtual void addEdge(Edge<N, E>* e) = 0;
-  virtual void removeEdge(Edge<N, E>* e) = 0;
+    // add edge to this node's adjacency lists
+    virtual void addEdge(Edge<N, E>* e) = 0;
+    virtual void removeEdge(Edge<N, E>* e) = 0;
 
-  virtual ~Node() = 0;
+    virtual ~Node() = 0;
 
-  virtual N& pl() = 0;
-  virtual const N& pl() const = 0;
+    virtual N& pl() = 0;
+    virtual const N& pl() const = 0;
 };
 
-template <typename N, typename E>
-inline Node<N, E>::~Node() {}
+template<typename N, typename E>
+inline Node<N, E>::~Node()
+{}
 
-}}
+}
 
 #endif  // UTIL_GRAPH_NODE_H_

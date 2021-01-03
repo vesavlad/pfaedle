@@ -9,46 +9,199 @@
 #include <algorithm>
 #include "util/graph/Node.h"
 
-namespace util {
-namespace graph {
+namespace util::graph
+{
 
-template <typename N, typename E>
-class UndirNode : public Node<N, E> {
- public:
-  UndirNode();
-  UndirNode(const N& pl);
-  ~UndirNode() override;
+template<typename N, typename E>
+class UndirNode : public Node<N, E>
+{
+public:
+    UndirNode();
+    UndirNode(const N& pl);
+    ~UndirNode() override;
 
-  const std::vector<Edge<N, E>*>& getAdjList() const override;
-  const std::vector<Edge<N, E>*>& getAdjListIn() const override;
-  const std::vector<Edge<N, E>*>& getAdjListOut() const override;
+    const std::vector<Edge<N, E>*>& getAdjList() const override;
+    const std::vector<Edge<N, E>*>& getAdjListIn() const override;
+    const std::vector<Edge<N, E>*>& getAdjListOut() const override;
 
-  size_t getDeg() const override;
-  size_t getInDeg() const override;
-  size_t getOutDeg() const override;
+    size_t getDeg() const override;
+    size_t getInDeg() const override;
+    size_t getOutDeg() const override;
 
-  bool hasEdgeIn(const Edge<N, E>* e) const override;
-  bool hasEdgeOut(const Edge<N, E>* e) const override;
-  bool hasEdge(const Edge<N, E>* e) const override;
+    bool hasEdgeIn(const Edge<N, E>* e) const override;
+    bool hasEdgeOut(const Edge<N, E>* e) const override;
+    bool hasEdge(const Edge<N, E>* e) const override;
 
-  // add edge to this node's adjacency lists
-  void addEdge(Edge<N, E>* e) override;
+    // add edge to this node's adjacency lists
+    void addEdge(Edge<N, E>* e) override;
 
-  // remove edge from this node's adjacency lists
-  void removeEdge(Edge<N, E>* e) override;
+    // remove edge from this node's adjacency lists
+    void removeEdge(Edge<N, E>* e) override;
 
-  N& pl() override;
-  const N& pl() const override;
+    N& pl() override;
+    const N& pl() const override;
 
- private:
-  std::vector<Edge<N, E>*> _adjList;
-  N _pl;
+private:
+    std::vector<Edge<N, E>*> _adjList;
+    N _pl;
 
-  bool adjContains(const Edge<N, E>* e) const;
+    bool adjContains(const Edge<N, E>* e) const;
 };
 
-#include "util/graph/UndirNode.tpp"
+// _____________________________________________________________________________
+template<typename N, typename E>
+UndirNode<N, E>::UndirNode() :
+    _pl()
+{
+}
 
-}}
+// _____________________________________________________________________________
+template<typename N, typename E>
+UndirNode<N, E>::UndirNode(const N& pl) :
+    _pl(pl)
+{
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+UndirNode<N, E>::~UndirNode()
+{
+    // delete self edges
+    for (auto e = _adjList.begin(); e != _adjList.end();)
+    {
+        Edge<N, E>* eP = *e;
+        if (eP->getTo() == this && eP->getFrom() == this)
+        {
+            e = _adjList.erase(e);
+            delete eP;
+        }
+        else
+        {
+            e++;
+        }
+    }
+
+    for (auto e = _adjList.begin(); e != _adjList.end(); e++)
+    {
+        Edge<N, E>* eP = *e;
+
+        if (eP->getTo() != this)
+        {
+            eP->getTo()->removeEdge(eP);
+        }
+
+        if (eP->getFrom() != this)
+        {
+            eP->getFrom()->removeEdge(eP);
+        }
+
+        delete eP;
+    }
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+bool UndirNode<N, E>::hasEdgeIn(const Edge<N, E>* e) const
+{
+    return hasEdge(e);
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+bool UndirNode<N, E>::hasEdgeOut(const Edge<N, E>* e) const
+{
+    return hasEdge(e);
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+bool UndirNode<N, E>::hasEdge(const Edge<N, E>* e) const
+{
+    return e->getFrom() == this || e->getTo() == this;
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+bool UndirNode<N, E>::adjContains(const Edge<N, E>* e) const
+{
+    for (size_t i = 0; i < _adjList.size(); i++)
+        if (_adjList[i] == e) return true;
+    return false;
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+void UndirNode<N, E>::addEdge(Edge<N, E>* e)
+{
+    if (adjContains(e)) return;
+    _adjList.reserve(_adjList.size() + 1);
+    _adjList.push_back(e);
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+void UndirNode<N, E>::removeEdge(Edge<N, E>* e)
+{
+    auto p = std::find(_adjList.begin(), _adjList.end(), e);
+    if (p != _adjList.end()) _adjList.erase(p);
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+const std::vector<Edge<N, E>*>& UndirNode<N, E>::getAdjList() const
+{
+    return _adjList;
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+const std::vector<Edge<N, E>*>& UndirNode<N, E>::getAdjListOut() const
+{
+    return _adjList;
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+const std::vector<Edge<N, E>*>& UndirNode<N, E>::getAdjListIn() const
+{
+    return _adjList;
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+size_t UndirNode<N, E>::getDeg() const
+{
+    return _adjList.size();
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+size_t UndirNode<N, E>::getInDeg() const
+{
+    return getDeg();
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+size_t UndirNode<N, E>::getOutDeg() const
+{
+    return getDeg();
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+N& UndirNode<N, E>::pl()
+{
+    return _pl;
+}
+
+// _____________________________________________________________________________
+template<typename N, typename E>
+const N& UndirNode<N, E>::pl() const
+{
+    return _pl;
+}
+
+}
 
 #endif  // UTIL_GRAPH_UNDIRNODE_H_
