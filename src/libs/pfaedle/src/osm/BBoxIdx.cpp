@@ -4,14 +4,17 @@
 
 #include "pfaedle/osm/BBoxIdx.h"
 
-using pfaedle::osm::BBoxIdx;
+namespace pfaedle::osm
+{
 
-// _____________________________________________________________________________
+
 BBoxIdx::BBoxIdx(double padding) :
-    _padding(padding), _size(0) {}
+    _padding(padding),
+    _size(0)
+{}
 
-// _____________________________________________________________________________
-void BBoxIdx::add(Box<double> box)
+
+void BBoxIdx::add(util::geo::Box<double> box)
 {
     // division by 83.000m is only correct here around a latitude deg of 25,
     // but should be a good heuristic. 1 deg is around 63km at latitude deg of 44,
@@ -22,16 +25,16 @@ void BBoxIdx::add(Box<double> box)
     _size++;
 }
 
-// _____________________________________________________________________________
+
 size_t BBoxIdx::size() const { return _size; }
 
-// _____________________________________________________________________________
-bool BBoxIdx::contains(const Point<double>& p) const
+
+bool BBoxIdx::contains(const util::geo::Point<double>& p) const
 {
     return treeHas(p, _root);
 }
 
-// _____________________________________________________________________________
+
 BOX BBoxIdx::getFullWebMercBox() const
 {
     return BOX(
@@ -41,10 +44,10 @@ BOX BBoxIdx::getFullWebMercBox() const
                     _root.box.getUpperRight().getY(), _root.box.getUpperRight().getX()));
 }
 
-// _____________________________________________________________________________
+
 BOX BBoxIdx::getFullBox() const { return _root.box; }
 
-// _____________________________________________________________________________
+
 std::vector<util::geo::Box<double>> BBoxIdx::getLeafs() const
 {
     std::vector<util::geo::Box<double>> ret;
@@ -52,7 +55,7 @@ std::vector<util::geo::Box<double>> BBoxIdx::getLeafs() const
     return ret;
 }
 
-// _____________________________________________________________________________
+
 void BBoxIdx::getLeafsRec(const BBoxIdxNd& nd,
                           std::vector<util::geo::Box<double>>* ret) const
 {
@@ -66,12 +69,10 @@ void BBoxIdx::getLeafsRec(const BBoxIdxNd& nd,
     {
         getLeafsRec(child, ret);
     }
-
-    return;
 }
 
-// _____________________________________________________________________________
-bool BBoxIdx::treeHas(const Point<double>& p, const BBoxIdxNd& nd) const
+
+bool BBoxIdx::treeHas(const util::geo::Point<double>& p, const BBoxIdxNd& nd) const
 {
     if (nd.childs.empty()) return util::geo::contains(p, nd.box);
     for (const auto& child : nd.childs)
@@ -82,11 +83,11 @@ bool BBoxIdx::treeHas(const Point<double>& p, const BBoxIdxNd& nd) const
     return false;
 }
 
-// _____________________________________________________________________________
-void BBoxIdx::addToTree(const Box<double>& box, BBoxIdxNd* nd, size_t lvl)
+
+void BBoxIdx::addToTree(const util::geo::Box<double>& box, BBoxIdxNd* nd, size_t lvl)
 {
-    double bestCommonArea = 0;
-    ssize_t bestChild = -1;
+    double best_common_area = 0;
+    ssize_t best_child = -1;
 
     // 1. update the bbox of this node
     nd->box = util::geo::extendBox(box, nd->box);
@@ -97,25 +98,26 @@ void BBoxIdx::addToTree(const Box<double>& box, BBoxIdxNd* nd, size_t lvl)
     for (size_t i = 0; i < nd->childs.size(); i++)
     {
         double cur = util::geo::commonArea(box, nd->childs[i].box);
-        if (cur > MIN_COM_AREA && cur > bestCommonArea)
+        if (cur > MIN_COM_AREA && cur > best_common_area)
         {
-            bestChild = i;
-            bestCommonArea = cur;
+            best_child = i;
+            best_common_area = cur;
         }
     }
 
-    if (bestChild < 0)
+    if (best_child < 0)
     {
         // 3. add a new node with the inserted bbox
-        nd->childs.push_back(BBoxIdxNd(box));
+        nd->childs.emplace_back(box);
         addToTree(box, &nd->childs.back(), lvl + 1);
     }
     else
     {
         // 3. add to best node
-        addToTree(box, &nd->childs[bestChild], lvl + 1);
+        addToTree(box, &nd->childs[best_child], lvl + 1);
     }
 
     // TODO(patrick): some tree balancing by mergin overlapping bboxes in
     // non-leafs
+}
 }

@@ -1578,20 +1578,20 @@ inline double accFrechetDistC(const Line<T>& a, const Line<T>& b, double d) {
 
 // _____________________________________________________________________________
 template <typename T>
-inline Point<T> latLngToWebMerc(double lat, double lng) {
-  double x = 6378137.0 * lng * 0.017453292519943295;
-  double a = lat * 0.017453292519943295;
+inline Point<T> latLngToWebMerc(T lat, T lng) {
+  T x = 6378137.0 * lng * 0.017453292519943295;
+  T a = lat * 0.017453292519943295;
 
-  double y = 3189068.5 * log((1.0 + sin(a)) / (1.0 - sin(a)));
+  T y = 3189068.5 * log((1.0 + sin(a)) / (1.0 - sin(a)));
   return Point<T>(x, y);
 }
 
 // _____________________________________________________________________________
 template <typename T>
-inline Point<T> webMercToLatLng(double x, double y) {
-  double lat =
+inline Point<T> webMercToLatLng(T x, T y) {
+  T lat =
       (1.5707963267948966 - (2.0 * atan(exp(-y / 6378137.0)))) * (180.0 / M_PI);
-  double lon = x / 111319.4907932735677;
+  T lon = x / 111319.4907932735677;
   return Point<T>(lon, lat);
 }
 

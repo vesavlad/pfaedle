@@ -9,13 +9,12 @@
 #include "pfaedle/osm/OsmFilter.h"
 #include "pfaedle/osm/Restrictor.h"
 #include "pfaedle/trgraph/StatGroup.h"
-#include "pfxml/pfxml.h"
 #include "util/Misc.h"
 #include "util/Nullable.h"
+
 #include <logging/logger.h>
+#include <pugixml.hpp>
 #include <algorithm>
-#include <exception>
-#include <float.h>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -46,7 +45,7 @@ using pfaedle::trgraph::TransitEdgeLine;
 using util::Nullable;
 using util::geo::webMercMeterDist;
 
-// _____________________________________________________________________________
+
 bool EqSearch::operator()(const Node* cand, const StatInfo* si) const
 {
     if (orphanSnap && cand->pl().getSI() &&
@@ -58,36 +57,43 @@ bool EqSearch::operator()(const Node* cand, const StatInfo* si) const
     return cand->pl().getSI() && cand->pl().getSI()->simi(si) > minSimi;
 }
 
-// _____________________________________________________________________________
-OsmBuilder::OsmBuilder() {}
 
-// _____________________________________________________________________________
-void OsmBuilder::read(const std::string& path, const OsmReadOpts& opts,
-                      Graph* g, const BBoxIdx& bbox, size_t gridSize,
-                      router::FeedStops* fs, Restrictor* res)
+OsmBuilder::OsmBuilder() = default;
+
+
+void OsmBuilder::read(const std::string& path,
+                      const OsmReadOpts& opts,
+                      Graph& g,
+                      const BBoxIdx& bbox,
+                      size_t gridSize,
+                      router::FeedStops& fs,
+                      Restrictor& res)
 {
     if (!bbox.size()) return;
 
     LOG(INFO) << "Reading OSM file " << path << " ... ";
 
-    NodeSet orphanStations;
-    EdgTracks eTracks;
+    NodeSet orphan_stations;
+    EdgTracks e_tracks;
     {
         OsmIdSet bboxNodes, noHupNodes;
 
         NIdMap nodes;
-        NIdMultMap multNodes;
-        RelLst intmRels;
-        RelMap nodeRels, wayRels;
+        NIdMultMap mult_nodes;
+        RelLst intm_rels;
+        RelMap node_rels, wayRels;
 
-        Restrictions rawRests;
+        Restrictions raw_rests;
 
-        AttrKeySet attrKeys[3] = {};
-        getKeptAttrKeys(opts, attrKeys);
+        AttrKeySet attr_keys[3] = {};
+        getKeptAttrKeys(opts, attr_keys);
 
         OsmFilter filter(opts);
 
-        pfxml::file xml(path);
+        pugi::xml_document doc;
+        pugi::xml_parse_result result = doc.load_file(path.c_str());
+        if (!result)
+            return;
 
         // we do four passes of the file here to be as memory creedy as possible:
         // - the first pass collects all node IDs which are
@@ -104,34 +110,27 @@ void OsmBuilder::read(const std::string& path, const OsmReadOpts& opts,
         //    * have been used in a way in pass 3
 
         LOG(TRACE) << "Reading bounding box nodes...";
-        skipUntil(&xml, "node");
-        pfxml::parser_state nodeBeg = xml.state();
-        pfxml::parser_state edgesBeg =
-                readBBoxNds(&xml, &bboxNodes, &noHupNodes, filter, bbox);
+        filter_nodes(doc, &bboxNodes, &noHupNodes, filter, bbox);
 
         LOG(TRACE) << "Reading relations...";
-        skipUntil(&xml, "relation");
-        readRels(&xml, &intmRels, &nodeRels, &wayRels, filter, attrKeys[2],
-                 &rawRests);
+        readRels(doc, intm_rels, node_rels, wayRels, filter, attr_keys[2], raw_rests);
 
         LOG(TRACE) << "Reading edges...";
-        xml.set_state(edgesBeg);
-        readEdges(&xml, g, intmRels, wayRels, filter, bboxNodes, &nodes, &multNodes,
-                  noHupNodes, attrKeys[1], rawRests, res, intmRels.flat, &eTracks,
+        readEdges(doc, g, intm_rels, wayRels, filter, bboxNodes, nodes, mult_nodes,
+                  noHupNodes, attr_keys[1], raw_rests, res, intm_rels.flat, e_tracks,
                   opts);
 
         LOG(TRACE) << "Reading kept nodes...";
-        xml.set_state(nodeBeg);
-        readNodes(&xml, g, intmRels, nodeRels, filter, bboxNodes, &nodes,
-                  &multNodes, &orphanStations, attrKeys[0], intmRels.flat, opts);
+        readNodes(doc, g, intm_rels, node_rels, filter, bboxNodes, nodes,
+                  mult_nodes, orphan_stations, attr_keys[0], intm_rels.flat, opts);
     }
 
     LOG(TRACE) << "OSM ID set lookups: " << osm::OsmIdSet::LOOKUPS
                 << ", file lookups: " << osm::OsmIdSet::FLOOKUPS;
 
     LOG(TRACE) << "Applying edge track numbers...";
-    writeEdgeTracks(eTracks);
-    eTracks.clear();
+    writeEdgeTracks(e_tracks);
+    e_tracks.clear();
 
     {
         LOG(TRACE) << "Fixing gaps...";
@@ -143,7 +142,7 @@ void OsmBuilder::read(const std::string& path, const OsmReadOpts& opts,
     writeGeoms(g);
 
     LOG(TRACE) << "Snapping stations...";
-    snapStats(opts, g, bbox, gridSize, fs, res, orphanStations);
+    snapStats(opts, g, bbox, gridSize, fs, res, orphan_stations);
 
     LOG(TRACE) << "Deleting orphan nodes...";
     deleteOrphNds(g);
@@ -174,18 +173,18 @@ void OsmBuilder::read(const std::string& path, const OsmReadOpts& opts,
     LOG(TRACE) << "Write dummy node self-edges...";
     writeSelfEdgs(g);
 
-    size_t numEdges = 0;
+    size_t num_edges = 0;
 
-    for (auto* n : *g->getNds())
+    for (auto* n : *g.getNds())
     {
-        numEdges += n->getAdjListOut().size();
+        num_edges += n->getAdjListOut().size();
     }
 
-    LOG(DEBUG) << "Graph has " << g->getNds()->size() << " nodes, " << numEdges
+    LOG(DEBUG) << "Graph has " << g.getNds()->size() << " nodes, " << num_edges
                << " edges and " << comps << " connected component(s)";
 }
 
-// _____________________________________________________________________________
+
 void OsmBuilder::overpassQryWrite(std::ostream* out,
                                   const std::vector<OsmReadOpts>& opts,
                                   const BBoxIdx& latLngBox) const
@@ -273,8 +272,9 @@ void OsmBuilder::overpassQryWrite(std::ostream* out,
     wr.closeTags();
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::filterWrite(const std::string& in, const std::string& out,
+
+void OsmBuilder::filterWrite(const std::string& in,
+                             const std::string& out,
                              const std::vector<OsmReadOpts>& opts,
                              const BBoxIdx& latLngBox)
 {
@@ -293,75 +293,108 @@ void OsmBuilder::filterWrite(const std::string& in, const std::string& out,
     // always empty
     NIdMultMap multNodes;
 
-    pfxml::file xml(in);
-    std::ofstream outstr;
-    outstr.open(out);
+    pugi::xml_document input_doc;
+    input_doc.load_file(in.c_str());
 
-    util::xml::XmlWriter wr(&outstr, true, 4);
+    pugi::xml_document outout_doc;
+    auto osm_child = outout_doc.append_child("osm");
+    auto bounds_child = osm_child.append_child("bounds");
+    bounds_child.append_attribute("minlat").set_value(latLngBox.getFullBox().getLowerLeft().getY());
+    bounds_child.append_attribute("minlon").set_value(latLngBox.getFullBox().getLowerLeft().getX());
+    bounds_child.append_attribute("maxlat").set_value(latLngBox.getFullBox().getUpperRight().getY());
+    bounds_child.append_attribute("maxlon").set_value(latLngBox.getFullBox().getUpperRight().getX());
 
-    outstr << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    wr.openTag("osm");
-    wr.openTag(
-            "bounds",
-            {{"minlat", std::to_string(latLngBox.getFullBox().getLowerLeft().getY())},
-             {"minlon", std::to_string(latLngBox.getFullBox().getLowerLeft().getX())},
-             {"maxlat",
-              std::to_string(latLngBox.getFullBox().getUpperRight().getY())},
-             {"maxlon",
-              std::to_string(latLngBox.getFullBox().getUpperRight().getX())}});
-    wr.closeTag();
 
     OsmFilter filter;
-    AttrKeySet attrKeys[3] = {};
+    AttrKeySet attr_keys[3] = {};
 
     for (const OsmReadOpts& o : opts)
     {
-        getKeptAttrKeys(o, attrKeys);
+        getKeptAttrKeys(o, attr_keys);
         filter = filter.merge(OsmFilter(o.keepFilter, o.dropFilter));
     }
 
-    skipUntil(&xml, "node");
-    pfxml::parser_state nodeBeg = xml.state();
-    pfxml::parser_state edgesBeg =
-            readBBoxNds(&xml, &bboxNodes, &noHupNodes, filter, latLngBox);
+    filter_nodes(input_doc, &bboxNodes, &noHupNodes, filter, latLngBox);
 
-    skipUntil(&xml, "relation");
-    readRels(&xml, &rels, &nodeRels, &wayRels, filter, attrKeys[2], &rests);
+    readRels(input_doc, rels, nodeRels, wayRels, filter, attr_keys[2], rests);
+    readEdges(input_doc, wayRels, filter, bboxNodes, attr_keys[1], ways, nodes, rels.flat);
 
-    xml.set_state(edgesBeg);
-    readEdges(&xml, wayRels, filter, bboxNodes, attrKeys[1], &ways, &nodes,
-              rels.flat);
-
-    xml.set_state(nodeBeg);
-
-    readWriteNds(&xml, &wr, nodeRels, filter, bboxNodes, &nodes, attrKeys[0],
-                 rels.flat);
-    readWriteWays(&xml, &wr, &ways, attrKeys[1]);
+    readWriteNds(input_doc, osm_child, nodeRels, filter, bboxNodes, nodes, attr_keys[0], rels.flat);
+    readWriteWays(input_doc, osm_child, ways, attr_keys[1]);
 
     std::sort(ways.begin(), ways.end());
-    skipUntil(&xml, "relation");
-    readWriteRels(&xml, &wr, &ways, &nodes, filter, attrKeys[2]);
+    readWriteRels(input_doc, osm_child, ways, nodes, filter, attr_keys[2]);
 
-    wr.closeTags();
+    std::ofstream outstr;
+    outstr.open(out);
+    outout_doc.save(outstr);
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::readWriteRels(pfxml::file* i, util::xml::XmlWriter* o,
-                               OsmIdList* ways, NIdMap* nodes,
+
+void OsmBuilder::readWriteRels(pugi::xml_document& i,
+                               pugi::xml_node& o,
+                               OsmIdList& ways,
+                               NIdMap& nodes,
                                const OsmFilter& filter,
                                const AttrKeySet& keepAttrs)
 {
-    OsmRel rel;
-    while ((rel = nextRel(i, filter, keepAttrs)).id)
+    for(const auto& xmlrel : i.child("osm").children("relation"))
     {
-        OsmIdList realNodes, realWays;
-        std::vector<const char*> realNodeRoles, realWayRoles;
+        OsmRel rel;
+        uint64_t keep_flags = 0;
+        uint64_t drop_flags = 0;
+
+        rel.id = xmlrel.attribute("id").as_ullong();
+        // processing attributes
+        {
+            for (const auto& tag : xmlrel.children("tag"))
+            {
+                const auto& key = tag.attribute("k").as_string();
+                const auto& value = tag.attribute("v").as_string();
+                if (keepAttrs.count(key))
+                {
+                    rel.attrs[key] = value;
+                }
+            }
+
+            if (rel.id && !rel.attrs.empty() &&
+                (keep_flags = filter.keep(rel.attrs, OsmFilter::REL)) &&
+                !(drop_flags = filter.drop(rel.attrs, OsmFilter::REL)))
+            {
+                rel.keepFlags = keep_flags;
+                rel.dropFlags = drop_flags;
+            }
+        }
+
+        // processing members
+        for(const auto& member: xmlrel.children("member"))
+        {
+            const auto& type = member.attribute("type").as_string();
+            if(strcmp(type, "node") == 0)
+            {
+                osmid id = member.attribute("ref").as_ullong();
+                rel.nodes.emplace_back(id);
+                rel.nodeRoles.emplace_back(member.attribute("role").as_string());
+            }
+            if(strcmp(type, "way") == 0)
+            {
+                osmid id = member.attribute("ref").as_ullong();
+                rel.ways.emplace_back(id);
+                rel.wayRoles.emplace_back(member.attribute("role").as_string());
+            }
+        }
+
+
+        OsmIdList realNodes;
+        OsmIdList realWays;
+        std::vector<const char*> realNodeRoles;
+        std::vector<const char*> realWayRoles;
 
         for (size_t j = 0; j < rel.ways.size(); j++)
         {
             osmid wid = rel.ways[j];
-            const auto& i = std::lower_bound(ways->begin(), ways->end(), wid);
-            if (i != ways->end() && *i == wid)
+            const auto& i = std::lower_bound(ways.begin(), ways.end(), wid);
+            if (i != ways.end() && *i == wid)
             {
                 realWays.push_back(wid);
                 realWayRoles.push_back(rel.wayRoles[j].c_str());
@@ -371,7 +404,7 @@ void OsmBuilder::readWriteRels(pfxml::file* i, util::xml::XmlWriter* o,
         for (size_t j = 0; j < rel.nodes.size(); j++)
         {
             osmid nid = rel.nodes[j];
-            if (nodes->count(nid))
+            if (nodes.count(nid))
             {
                 realNodes.push_back(nid);
                 realNodeRoles.push_back(rel.nodeRoles[j].c_str());
@@ -380,75 +413,94 @@ void OsmBuilder::readWriteRels(pfxml::file* i, util::xml::XmlWriter* o,
 
         if (!realNodes.empty() || !realWays.empty())
         {
-            o->openTag("relation", "id", std::to_string(rel.id));
+            auto relation_child = o.append_child("relation");
+            relation_child.append_attribute("id").set_value(rel.id);
+
 
             for (size_t j = 0; j < realNodes.size(); j++)
             {
-                osmid nid = realNodes[j];
-                std::map<std::string, std::string> attrs;
-                attrs["type"] = "node";
+                auto member_child = relation_child.append_child("member");
+                member_child.append_attribute("type").set_value("node");
+                member_child.append_attribute("ref").set_value(realNodes[j]);
                 if (strlen(realNodeRoles[j]))
-                    attrs["role"] = realNodeRoles[j];
-                attrs["ref"] = std::to_string(nid);
-                o->openTag("member", attrs);
-                o->closeTag();
+                    member_child.append_attribute("role").set_value(realNodeRoles[j]);
             }
 
             for (size_t j = 0; j < realWays.size(); j++)
             {
-                osmid wid = realWays[j];
-                std::map<std::string, std::string> attrs;
-                attrs["type"] = "way";
-                if (strlen(realWayRoles[j])) attrs["role"] = realWayRoles[j];
-                attrs["ref"] = std::to_string(wid);
-                o->openTag("member", attrs);
-                o->closeTag();
+                auto member_child = relation_child.append_child("member");
+                member_child.append_attribute("type").set_value("way");
+                member_child.append_attribute("ref").set_value(realWays[j]);
+                if (strlen(realWayRoles[j]))
+                    member_child.append_attribute("role").set_value(realWayRoles[j]);
             }
 
             for (const auto& kv : rel.attrs)
             {
-                std::map<std::string, std::string> attrs = {
-                        {"k", kv.first},
-                        {"v", pfxml::file::decode(kv.second)}};
-                o->openTag("tag", attrs);
-                o->closeTag();
+                auto tag_child = relation_child.append_child("tag");
+                tag_child.append_attribute("k").set_value(kv.first.c_str());
+                tag_child.append_attribute("v").set_value(kv.second.c_str());
+//                        {"v", pfxml::file::decode(kv.second)}};
             }
 
-            o->closeTag();
         }
     }
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::readWriteWays(pfxml::file* i, util::xml::XmlWriter* o,
-                               OsmIdList* ways,
+
+void OsmBuilder::readWriteWays(pugi::xml_document& i,
+                               pugi::xml_node& o,
+                               OsmIdList& ways,
                                const AttrKeySet& keepAttrs) const
 {
-    OsmWay w;
     NIdMultMap empty;
-    for (auto wid : *ways)
+    for(const auto & wayxml: i.child("osm").children())
     {
-        w = nextWayWithId(i, wid, keepAttrs);
-        assert(w.id);
-        o->openTag("way", "id", std::to_string(wid));
-        for (osmid nid : w.nodes)
+        bool usable = false;
+        OsmWay w;
+        w.id = wayxml.attribute("id").as_ullong();
+        for (auto wid : ways)
         {
-            o->openTag("nd", "ref", std::to_string(nid));
-            o->closeTag();
+            if (w.id == wid)
+            {
+                usable = true;
+                break;
+            }
         }
-        for (const auto& kv : w.attrs)
+
+        if (usable)
         {
-            std::map<std::string, std::string> attrs;
-            attrs["k"] = kv.first;
-            attrs["v"] = pfxml::file::decode(kv.second);
-            o->openTag("tag", attrs);
-            o->closeTag();
+            for (const auto& node : wayxml.children("nd"))
+            {
+                osmid nid = node.attribute("ref").as_ullong();
+                w.nodes.push_back(nid);
+            }
+            for (const auto& tag : wayxml.children("tag"))
+            {
+                const auto& key = tag.attribute("k").as_string();
+                const auto& val = tag.attribute("v").as_string();
+                if (keepAttrs.count(key))
+                    w.attrs[key] = val;
+            }
+
+            auto way_child = o.append_child("way");
+            way_child.append_attribute("id").set_value(w.id);
+            for (osmid nid : w.nodes)
+            {
+                auto nd_child = way_child.append_child("nd");
+                nd_child.append_attribute("ref").set_value(nid);
+            }
+            for (const auto& kv : w.attrs)
+            {
+                auto tag_child = way_child.append_child("tag");
+                tag_child.append_attribute("k").set_value(kv.first.c_str());
+                tag_child.append_attribute("v").set_value(kv.second.c_str());
+            }
         }
-        o->closeTag();
     }
 }
 
-// _____________________________________________________________________________
+
 NodePL OsmBuilder::plFromGtfs(const Stop* s, const OsmReadOpts& ops)
 {
     NodePL ret(
@@ -470,97 +522,44 @@ NodePL OsmBuilder::plFromGtfs(const Stop* s, const OsmReadOpts& ops)
     return ret;
 }
 
-// _____________________________________________________________________________
-pfxml::parser_state OsmBuilder::readBBoxNds(pfxml::file* xml, OsmIdSet* nodes,
-                                            OsmIdSet* nohupNodes,
-                                            const OsmFilter& filter,
-                                            const BBoxIdx& bbox) const
+
+int OsmBuilder::filter_nodes(pugi::xml_document& xml,
+                             OsmIdSet* nodes,
+                             OsmIdSet* nohupNodes,
+                             const OsmFilter& filter,
+                             const BBoxIdx& bbox) const
 {
-    bool inNodeBlock = false;
-    uint64_t curId = 0;
 
-    do
+    for(const auto& node : xml.child("osm").children("node"))
     {
-        const pfxml::tag& cur = xml->get();
+        osmid cur_id = 0;
 
-        if (inNodeBlock && xml->level() == 3 && curId &&
-            strcmp(cur.name, "tag") == 0)
+        double y = node.attribute("lat").as_double() ;
+        double x = node.attribute("lon").as_double();
+
+        if (bbox.contains(Point(x, y)))
         {
-            if (filter.nohup(cur.attr("k"),
-                             cur.attr("v")))
-            {
-                nohupNodes->add(curId);
-            }
+            cur_id = util::atoul(node.attribute("id").value());
+            nodes->add(cur_id);
         }
 
-        if (xml->level() != 2) continue;
-        if (!inNodeBlock && strcmp(cur.name, "node") == 0) inNodeBlock = true;
+        if(cur_id == 0)
+            continue;
 
-        if (inNodeBlock)
+        for(const auto& tag: node.children("tag"))
         {
-            // block ended
-            if (strcmp(cur.name, "node") != 0)
-                return xml->state();
-            double y = util::atof(cur.attr("lat"), 7);
-            double x = util::atof(cur.attr("lon"), 7);
-
-            if (bbox.contains(Point<double>(x, y)))
+            if (filter.nohup(tag.attribute("k").as_string(),
+                             tag.attribute("v").as_string()))
             {
-                curId = util::atoul(cur.attr("id"));
-                nodes->add(curId);
+                nohupNodes->add(cur_id);
             }
         }
-    } while (xml->next());
-
-    return xml->state();
-}
-
-// _____________________________________________________________________________
-OsmWay OsmBuilder::nextWayWithId(pfxml::file* xml, osmid wid,
-                                 const AttrKeySet& keepAttrs) const
-{
-    OsmWay w;
-
-    do
-    {
-        const pfxml::tag& cur = xml->get();
-        if (xml->level() == 2 || xml->level() == 0)
-        {
-            if (w.id || strcmp(cur.name, "way") != 0)
-                return w;
-
-            osmid id = util::atoul(cur.attr("id"));
-            if (id == wid) w.id = id;
-        }
-
-        if (w.id && xml->level() == 3)
-        {
-            if (strcmp(cur.name, "nd") == 0)
-            {
-                w.nodes.push_back(util::atoul(cur.attr("ref")));
-            }
-            else if (strcmp(cur.name, "tag") == 0)
-            {
-                if (keepAttrs.count(cur.attr("k")))
-                    w.attrs[cur.attr("k")] = cur.attr("v");
-            }
-        }
-    } while (xml->next());
-
-    if (w.id) return w;
-
-    return OsmWay();
-}
-
-// _____________________________________________________________________________
-void OsmBuilder::skipUntil(pfxml::file* xml, const std::string& s) const
-{
-    while (xml->next() && strcmp(xml->get().name, s.c_str()) != 0)
-    {
     }
+
+    return 0;
 }
 
-// _____________________________________________________________________________
+
 bool OsmBuilder::relKeep(osmid id, const RelMap& rels,
                          const FlatRels& fl) const
 {
@@ -568,57 +567,16 @@ bool OsmBuilder::relKeep(osmid id, const RelMap& rels,
 
     if (it == rels.end()) return false;
 
-    for (osmid relId : it->second)
+    for (osmid rel_id : it->second)
     {
         // as soon as any of this entities relations is not flat, return true
-        if (!fl.count(relId)) return true;
+        if (!fl.count(rel_id)) return true;
     }
 
     return false;
 }
 
-// _____________________________________________________________________________
-OsmWay OsmBuilder::nextWay(pfxml::file* xml, const RelMap& wayRels,
-                           const OsmFilter& filter, const OsmIdSet& bBoxNodes,
-                           const AttrKeySet& keepAttrs,
-                           const FlatRels& fl) const
-{
-    OsmWay w;
 
-    do
-    {
-        const pfxml::tag& cur = xml->get();
-        if (xml->level() == 2 || xml->level() == 0)
-        {
-            if (keepWay(w, wayRels, filter, bBoxNodes, fl)) return w;
-            if (strcmp(cur.name, "way") != 0)
-                return OsmWay();
-
-            w.id = util::atoul(cur.attr("id"));
-            w.nodes.clear();
-            w.attrs.clear();
-        }
-
-        if (w.id && xml->level() == 3)
-        {
-            if (strcmp(cur.name, "nd") == 0)
-            {
-                osmid nid = util::atoul(cur.attr("ref"));
-                w.nodes.push_back(nid);
-            }
-            else if (strcmp(cur.name, "tag") == 0)
-            {
-                if (keepAttrs.count(cur.attr("k")))
-                    w.attrs[cur.attr("k")] = cur.attr("v");
-            }
-        }
-    } while (xml->next());
-
-    if (keepWay(w, wayRels, filter, bBoxNodes, fl)) return w;
-    return OsmWay();
-}
-
-// _____________________________________________________________________________
 bool OsmBuilder::keepWay(const OsmWay& w, const RelMap& wayRels,
                          const OsmFilter& filter, const OsmIdSet& bBoxNodes,
                          const FlatRels& fl) const
@@ -639,90 +597,146 @@ bool OsmBuilder::keepWay(const OsmWay& w, const RelMap& wayRels,
     return false;
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::readEdges(pfxml::file* xml, const RelMap& wayRels,
-                           const OsmFilter& filter, const OsmIdSet& bBoxNodes,
-                           const AttrKeySet& keepAttrs, OsmIdList* ret,
-                           NIdMap* nodes, const FlatRels& flat)
+
+void OsmBuilder::readEdges(pugi::xml_document& xml,
+                           const RelMap& wayRels,
+                           const OsmFilter& filter,
+                           const OsmIdSet& bBoxNodes,
+                           const AttrKeySet& keepAttrs,
+                           OsmIdList& ret,
+                           NIdMap& nodes,
+                           const FlatRels& flat)
 {
-    OsmWay w;
-    while ((w = nextWay(xml, wayRels, filter, bBoxNodes, keepAttrs, flat)).id)
+    for(const auto& wayxml: xml.child("osm").children("way"))
     {
-        ret->push_back(w.id);
-        for (auto n : w.nodes)
+        OsmWay w;
+        w.id = wayxml.attribute("id").as_ullong();
+        for(const auto& node: wayxml.children("nd"))
         {
-            (*nodes)[n] = nullptr;
+            osmid nid = node.attribute("ref").as_ullong();
+            w.nodes.push_back(nid);
+
+        }
+        for(const auto& tag: wayxml.children("tag"))
+        {
+            const auto& key = tag.attribute("k").as_string();
+            const auto& val = tag.attribute("v").as_string();
+            if (keepAttrs.count(key))
+                w.attrs[key] = val;
+
+        }
+
+        if(keepWay(w, wayRels, filter, bBoxNodes, flat))
+        {
+            ret.push_back(w.id);
+            for (auto n : w.nodes)
+            {
+                nodes[n] = nullptr;
+            }
         }
     }
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::readEdges(pfxml::file* xml, Graph* g, const RelLst& rels,
-                           const RelMap& wayRels, const OsmFilter& filter,
-                           const OsmIdSet& bBoxNodes, NIdMap* nodes,
-                           NIdMultMap* multiNodes, const OsmIdSet& noHupNodes,
+
+void OsmBuilder::readEdges(pugi::xml_document& xml,
+                           Graph& g,
+                           const RelLst& rels,
+                           const RelMap& wayRels,
+                           const OsmFilter& filter,
+                           const OsmIdSet& bBoxNodes,
+                           NIdMap& nodes,
+                           NIdMultMap& multiNodes,
+                           const OsmIdSet& noHupNodes,
                            const AttrKeySet& keepAttrs,
-                           const Restrictions& rawRests, Restrictor* restor,
-                           const FlatRels& fl, EdgTracks* eTracks,
+                           const Restrictions& rawRests,
+                           Restrictor& restor,
+                           const FlatRels& fl,
+                           EdgTracks& eTracks,
                            const OsmReadOpts& opts)
 {
-    OsmWay w;
-    while ((w = nextWay(xml, wayRels, filter, bBoxNodes, keepAttrs, fl)).id)
+    for(const auto& xmlway : xml.child("osm").children("way"))
     {
-        Node* last = nullptr;
-        std::vector<TransitEdgeLine*> lines;
-        if (wayRels.count(w.id))
+        OsmWay w;
+        w.id = xmlway.attribute("id").as_ullong();
+        for (const auto& nd : xmlway.children("nd"))
         {
-            lines = getLines(wayRels.find(w.id)->second, rels, opts);
+            osmid node_id = nd.attribute("ref").as_ullong();
+            w.nodes.emplace_back(node_id);
         }
-        std::string track =
-                getAttrByFirstMatch(opts.edgePlatformRules, w.id, w.attrs, wayRels,
-                                    rels, opts.trackNormzer);
 
-        osmid lastnid = 0;
-        for (osmid nid : w.nodes)
+        for (const auto& tag : xmlway.children("tag"))
         {
-            Node* n = nullptr;
-            if (noHupNodes.has(nid))
+            const auto& key = tag.attribute("k").as_string();
+            const auto& val = tag.attribute("v").as_string();
+            if (keepAttrs.count(key))
             {
-                n = g->addNd();
-                (*multiNodes)[nid].insert(n);
+                w.attrs[key] = val;
             }
-            else if (!nodes->count(nid))
+        }
+        if (keepWay(w, wayRels, filter, bBoxNodes, fl))
+        {
+            Node* last = nullptr;
+            std::vector<TransitEdgeLine*> lines;
+            if (wayRels.count(w.id))
             {
-                if (!bBoxNodes.has(nid)) continue;
-                n = g->addNd();
-                (*nodes)[nid] = n;
+                lines = getLines(wayRels.find(w.id)->second, rels, opts);
             }
-            else
-            {
-                n = (*nodes)[nid];
-            }
-            if (last)
-            {
-                auto e = g->addEdg(last, n, EdgePL());
-                if (!e) continue;
+            std::string track =
+                    getAttrByFirstMatch(opts.edgePlatformRules,
+                                        w.id,
+                                        w.attrs,
+                                        wayRels,
+                                        rels,
+                                        opts.trackNormzer);
 
-                processRestr(nid, w.id, rawRests, e, n, restor);
-                processRestr(lastnid, w.id, rawRests, e, last, restor);
+            osmid lastnid = 0;
+            for (osmid nid : w.nodes)
+            {
+                Node* n = nullptr;
+                if (noHupNodes.has(nid))
+                {
+                    n = g.addNd();
+                    multiNodes[nid].insert(n);
+                }
+                else if (!nodes.count(nid))
+                {
+                    if (!bBoxNodes.has(nid)) continue;
+                    n = g.addNd();
+                    nodes[nid] = n;
+                }
+                else
+                {
+                    n = nodes[nid];
+                }
+                if (last)
+                {
+                    auto e = g.addEdg(last, n, EdgePL());
+                    if (!e) continue;
 
-                e->pl().addLines(lines);
-                e->pl().setLvl(filter.level(w.attrs));
-                if (!track.empty()) (*eTracks)[e] = track;
+                    processRestr(nid, w.id, rawRests, e, n, restor);
+                    processRestr(lastnid, w.id, rawRests, e, last, restor);
 
-                if (filter.oneway(w.attrs)) e->pl().setOneWay(1);
-                if (filter.onewayrev(w.attrs)) e->pl().setOneWay(2);
+                    e->pl().addLines(lines);
+                    e->pl().setLvl(filter.level(w.attrs));
+                    if (!track.empty()) eTracks[e] = track;
+
+                    if (filter.oneway(w.attrs)) e->pl().setOneWay(1);
+                    if (filter.onewayrev(w.attrs)) e->pl().setOneWay(2);
+                }
+                lastnid = nid;
+                last = n;
             }
-            lastnid = nid;
-            last = n;
         }
     }
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::processRestr(osmid nid, osmid wid,
-                              const Restrictions& rawRests, Edge* e, Node* n,
-                              Restrictor* restor) const
+
+void OsmBuilder::processRestr(osmid nid,
+                              osmid wid,
+                              const Restrictions& rawRests,
+                              Edge* e,
+                              Node* n,
+                              Restrictor& restor) const
 {
     if (rawRests.pos.count(nid))
     {
@@ -731,12 +745,12 @@ void OsmBuilder::processRestr(osmid nid, osmid wid,
             if (kv.eFrom == wid)
             {
                 e->pl().setRestricted();
-                restor->add(e, kv.eTo, n, true);
+                restor.add(e, kv.eTo, n, true);
             }
             else if (kv.eTo == wid)
             {
                 e->pl().setRestricted();
-                restor->relax(wid, n, e);
+                restor.relax(wid, n, e);
             }
         }
     }
@@ -748,64 +762,28 @@ void OsmBuilder::processRestr(osmid nid, osmid wid,
             if (kv.eFrom == wid)
             {
                 e->pl().setRestricted();
-                restor->add(e, kv.eTo, n, false);
+                restor.add(e, kv.eTo, n, false);
             }
             else if (kv.eTo == wid)
             {
                 e->pl().setRestricted();
-                restor->relax(wid, n, e);
+                restor.relax(wid, n, e);
             }
         }
     }
 }
 
-// _____________________________________________________________________________
-OsmNode OsmBuilder::nextNode(pfxml::file* xml, NIdMap* nodes,
-                             NIdMultMap* multNodes, const RelMap& nodeRels,
-                             const OsmFilter& filter, const OsmIdSet& bBoxNodes,
-                             const AttrKeySet& keepAttrs,
-                             const FlatRels& fl) const
-{
-    OsmNode n;
 
-    do
-    {
-        const pfxml::tag& cur = xml->get();
-        if (xml->level() == 2 || xml->level() == 0)
-        {
-            if (keepNode(n, *nodes, *multNodes, nodeRels, bBoxNodes, filter, fl))
-                return n;
-            // block ended
-            if (strcmp(cur.name, "node") != 0)
-                return OsmNode();
-
-            n.attrs.clear();
-            n.lat = util::atof(cur.attr("lat"), 7);
-            n.lng = util::atof(cur.attr("lon"), 7);
-            n.id = util::atoul(cur.attr("id"));
-        }
-
-        if (xml->level() == 3 && n.id && strcmp(cur.name, "tag") == 0)
-        {
-            if (keepAttrs.count(cur.attr("k")))
-                n.attrs[cur.attr("k")] = cur.attr("v");
-        }
-    } while (xml->next());
-
-    if (keepNode(n, *nodes, *multNodes, nodeRels, bBoxNodes, filter, fl))
-        return n;
-    return OsmNode();
-}
-
-// _____________________________________________________________________________
-bool OsmBuilder::keepNode(const OsmNode& n, const NIdMap& nodes,
-                          const NIdMultMap& multNodes, const RelMap& nodeRels,
-                          const OsmIdSet& bBoxNodes, const OsmFilter& filter,
+bool OsmBuilder::keepNode(const OsmNode& n,
+                          const NIdMap& nodes,
+                          const NIdMultMap& multNodes,
+                          const RelMap& nodeRels,
+                          const OsmIdSet& bBoxNodes,
+                          const OsmFilter& filter,
                           const FlatRels& fl) const
 {
     if (n.id &&
-        (nodes.count(n.id) || multNodes.count(n.id) ||
-         relKeep(n.id, nodeRels, fl) || filter.keep(n.attrs, OsmFilter::NODE)) &&
+        (nodes.count(n.id) || multNodes.count(n.id) || relKeep(n.id, nodeRels, fl) || filter.keep(n.attrs, OsmFilter::NODE)) &&
         (nodes.count(n.id) || bBoxNodes.has(n.id)) &&
         (nodes.count(n.id) || multNodes.count(n.id) ||
          !filter.drop(n.attrs, OsmFilter::NODE)))
@@ -816,231 +794,236 @@ bool OsmBuilder::keepNode(const OsmNode& n, const NIdMap& nodes,
     return false;
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::readWriteNds(pfxml::file* i, util::xml::XmlWriter* o,
-                              const RelMap& nRels, const OsmFilter& filter,
-                              const OsmIdSet& bBoxNds, NIdMap* nds,
+
+void OsmBuilder::readWriteNds(pugi::xml_document& i,
+                              pugi::xml_node& o,
+                              const RelMap& nRels,
+                              const OsmFilter& filter,
+                              const OsmIdSet& bBoxNds,
+                              NIdMap& nds,
                               const AttrKeySet& keepAttrs,
                               const FlatRels& f) const
 {
-    OsmNode nd;
     NIdMultMap empt;
-    while (
-            (nd = nextNode(i, nds, &empt, nRels, filter, bBoxNds, keepAttrs, f)).id)
+    for (const auto & xmlnode: i.child("osm").children("node"))
     {
-        (*nds)[nd.id] = nullptr;
-        o->openTag("node", {{"id", std::to_string(nd.id)},
-                            {"lat", std::to_string(nd.lat)},
-                            {"lon", std::to_string(nd.lng)}});
-        for (const auto& kv : nd.attrs)
+        OsmNode nd;
+        nd.lat = xmlnode.attribute("lat").as_double();
+        nd.lng = xmlnode.attribute("lon").as_double();
+        nd.id = xmlnode.attribute("id").as_ullong();
+
+        for (const auto& tag : xmlnode.children("tag"))
         {
-            o->openTag("tag",
-                       {{"k", kv.first}, {"v", pfxml::file::decode(kv.second)}});
-            o->closeTag();
+            const auto& key = tag.attribute("k").as_string();
+            const auto& val = tag.attribute("v").as_string();
+
+            if (keepAttrs.count(key))
+                nd.attrs[key] = val;
         }
-        o->closeTag();
+
+        if (keepNode(nd, nds, empt, nRels, bBoxNds, filter, f))
+        {
+            nds[nd.id] = nullptr;
+            pugi::xml_node node = o.append_child("node");
+            node.append_attribute("id").set_value(nd.id);
+            node.append_attribute("lat").set_value(nd.lat);
+            node.append_attribute("lon").set_value(nd.lng);
+            for (const auto& kv : nd.attrs)
+            {
+                pugi::xml_node tag = node.append_child("tag");
+                tag.append_attribute("k").set_value(kv.first.c_str());
+                tag.append_attribute("v").set_value(kv.second.c_str());
+            }
+        }
     }
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::readNodes(pfxml::file* xml, Graph* g, const RelLst& rels,
-                           const RelMap& nodeRels, const OsmFilter& filter,
-                           const OsmIdSet& bBoxNodes, NIdMap* nodes,
-                           NIdMultMap* multNodes, NodeSet* orphanStations,
-                           const AttrKeySet& keepAttrs, const FlatRels& fl,
+
+void OsmBuilder::readNodes(pugi::xml_document& xml,
+                           Graph& g,
+                           const RelLst& rels,
+                           const RelMap& nodeRels,
+                           const OsmFilter& filter,
+                           const OsmIdSet& bBoxNodes,
+                           NIdMap& nodes,
+                           NIdMultMap& multNodes,
+                           NodeSet& orphanStations,
+                           const AttrKeySet& keepAttrs,
+                           const FlatRels& fl,
                            const OsmReadOpts& opts) const
 {
-    StAttrGroups attrGroups;
+    StAttrGroups attr_groups;
 
-    OsmNode nd;
-    while ((nd = nextNode(xml, nodes, multNodes, nodeRels, filter, bBoxNodes,
-                          keepAttrs, fl))
-                   .id)
+    for(const auto& xmlnode: xml.child("osm").children("node"))
     {
-        Node* n = nullptr;
-        auto pos = util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(nd.lat, nd.lng);
-        if (nodes->count(nd.id))
+        OsmNode nd;
+        nd.lat = xmlnode.attribute("lat").as_double();
+        nd.lng = xmlnode.attribute("lon").as_double();
+        nd.id = xmlnode.attribute("id").as_ullong();
+
+        for(const auto& tag: xmlnode.children("tag"))
         {
-            n = (*nodes)[nd.id];
-            n->pl().setGeom(pos);
-            if (filter.station(nd.attrs))
-            {
-                auto si = getStatInfo(n, nd.id, pos, nd.attrs, &attrGroups, nodeRels,
-                                      rels, opts);
-                if (!si.isNull()) n->pl().setSI(si);
-            }
-            else if (filter.blocker(nd.attrs))
-            {
-                n->pl().setBlocker();
-            }
+            const auto& key = tag.attribute("k").as_string();
+            const auto& val = tag.attribute("v").as_string();
+
+            if(keepAttrs.count(key))
+                nd.attrs[key] = val;
         }
-        else if ((*multNodes).count(nd.id))
+
+        if(keepNode(nd, nodes, multNodes, nodeRels, bBoxNodes, filter, fl))
         {
-            for (auto* n : (*multNodes)[nd.id])
+            Node* n = nullptr;
+            auto pos = util::geo::latLngToWebMerc<double>(nd.lat, nd.lng);
+            if (nodes.count(nd.id))
             {
+                n = nodes[nd.id];
                 n->pl().setGeom(pos);
                 if (filter.station(nd.attrs))
                 {
-                    auto si = getStatInfo(n, nd.id, pos, nd.attrs, &attrGroups, nodeRels,
+                    auto si = getStatInfo(n, nd.id, pos, nd.attrs, &attr_groups, nodeRels,
                                           rels, opts);
-                    if (!si.isNull()) n->pl().setSI(si);
+                    if (!si.isNull())
+                    {
+                        n->pl().setSI(si);
+                    }
                 }
                 else if (filter.blocker(nd.attrs))
                 {
                     n->pl().setBlocker();
                 }
             }
-        }
-        else
-        {
-            // these are nodes without any connected edges
-            if (filter.station(nd.attrs))
+            else if (multNodes.count(nd.id))
             {
-                auto tmp = g->addNd(NodePL(pos));
-                auto si = getStatInfo(tmp, nd.id, pos, nd.attrs, &attrGroups, nodeRels,
-                                      rels, opts);
-                if (!si.isNull()) tmp->pl().setSI(si);
-                if (tmp->pl().getSI())
+                for (auto* node : multNodes[nd.id])
                 {
-                    tmp->pl().getSI()->setIsFromOsm(false);
-                    orphanStations->insert(tmp);
+                    node->pl().setGeom(pos);
+                    if (filter.station(nd.attrs))
+                    {
+                        auto si = getStatInfo(node, nd.id, pos, nd.attrs, &attr_groups, nodeRels,
+                                              rels, opts);
+                        if (!si.isNull())
+                        {
+                            node->pl().setSI(si);
+                        }
+                    }
+                    else if (filter.blocker(nd.attrs))
+                    {
+                        node->pl().setBlocker();
+                    }
+                }
+            }
+            else
+            {
+                // these are nodes without any connected edges
+                if (filter.station(nd.attrs))
+                {
+                    auto tmp = g.addNd(NodePL(pos));
+                    auto si = getStatInfo(tmp, nd.id, pos, nd.attrs, &attr_groups, nodeRels, rels, opts);
+
+                    if (!si.isNull())
+                    {
+                        tmp->pl().setSI(si);
+                    }
+
+                    if (tmp->pl().getSI())
+                    {
+                        tmp->pl().getSI()->setIsFromOsm(false);
+                        orphanStations.insert(tmp);
+                    }
                 }
             }
         }
     }
 }
 
-// _____________________________________________________________________________
-OsmRel OsmBuilder::nextRel(pfxml::file* xml, const OsmFilter& filter,
-                           const AttrKeySet& keepAttrs) const
-{
-    OsmRel rel;
 
-    do
-    {
-        const pfxml::tag& cur = xml->get();
-        if (xml->level() == 2 || xml->level() == 0)
-        {
-            uint64_t keepFlags = 0;
-            uint64_t dropFlags = 0;
-            if (rel.id && !rel.attrs.empty() &&
-                (keepFlags = filter.keep(rel.attrs, OsmFilter::REL)) &&
-                !(dropFlags = filter.drop(rel.attrs, OsmFilter::REL)))
-            {
-                rel.keepFlags = keepFlags;
-                rel.dropFlags = dropFlags;
-                return rel;
-            }
-
-            // block ended
-            if (strcmp(cur.name, "relation") != 0)
-                return OsmRel();
-
-            rel.attrs.clear();
-            rel.nodes.clear();
-            rel.ways.clear();
-            rel.nodeRoles.clear();
-            rel.wayRoles.clear();
-            rel.keepFlags = 0;
-            rel.dropFlags = 0;
-            rel.id = util::atoul(cur.attr("id"));
-        }
-
-        if (xml->level() == 3 && rel.id)
-        {
-            if (strcmp(cur.name, "member") == 0)
-            {
-                if (strcmp(cur.attr("type"), "node") == 0)
-                {
-                    osmid id = util::atoul(cur.attr("ref"));
-                    // TODO(patrick): no need to push IDs that have been filtered out by
-                    // the bounding box!!!!
-                    rel.nodes.push_back(id);
-                    const auto count = std::count_if(std::begin(cur.attrs), std::end(cur.attrs), [](const auto& attr) {
-                        return attr.first == "role";
-                    });
-                    if (count)
-                    {
-                        rel.nodeRoles.emplace_back(cur.attr("role"));
-                    }
-                    else
-                    {
-                        rel.nodeRoles.emplace_back("");
-                    }
-                }
-                if (strcmp(cur.attr("type"), "way") == 0)
-                {
-                    osmid id = util::atoul(cur.attr("ref"));
-                    rel.ways.push_back(id);
-                    const auto count = std::count_if(std::begin(cur.attrs), std::end(cur.attrs), [](const auto& attr) {
-                        return attr.first == "role";
-                    });
-                    if (count)
-                    {
-                        rel.wayRoles.emplace_back(cur.attr("role"));
-                    }
-                    else
-                    {
-                        rel.wayRoles.emplace_back("");
-                    }
-                }
-            }
-            else if (strcmp(cur.name, "tag") == 0)
-            {
-                if (keepAttrs.count(cur.attr("k")))
-                    rel.attrs[cur.attr("k")] = cur.attr("v");
-            }
-        }
-    } while (xml->next());
-
-    // dont forget last relation
-    uint64_t keepFlags = 0;
-    uint64_t dropFlags = 0;
-    if (rel.id && !rel.attrs.empty() &&
-        (keepFlags = filter.keep(rel.attrs, OsmFilter::REL)) &&
-        !(dropFlags = filter.drop(rel.attrs, OsmFilter::REL)))
-    {
-        rel.keepFlags = keepFlags;
-        rel.dropFlags = dropFlags;
-        return rel;
-    }
-
-    return OsmRel();
-}
-
-// _____________________________________________________________________________
-void OsmBuilder::readRels(pfxml::file* xml, RelLst* rels, RelMap* nodeRels,
-                          RelMap* wayRels, const OsmFilter& filter,
+void OsmBuilder::readRels(pugi::xml_document& xml,
+                          RelLst& rels,
+                          RelMap& nodeRels,
+                          RelMap& wayRels,
+                          const OsmFilter& filter,
                           const AttrKeySet& keepAttrs,
-                          Restrictions* rests) const
+                          Restrictions& rests) const
 {
-    OsmRel rel;
-    while ((rel = nextRel(xml, filter, keepAttrs)).id)
+    for(const auto& xmlrel: xml.child("osm").children("relation"))
     {
-        rels->rels.push_back(rel.attrs);
+        OsmRel rel;
+        uint64_t keep_flags = 0;
+        uint64_t drop_flags = 0;
+
+        rel.id = xmlrel.attribute("id").as_ullong();
+        // processing attributes
+        {
+            for (const auto& tag : xmlrel.children("tag"))
+            {
+                const auto& key = tag.attribute("k").as_string();
+                const auto& value = tag.attribute("v").as_string();
+                if (keepAttrs.count(key))
+                {
+                    rel.attrs[key] = value;
+                }
+            }
+
+            if (rel.id && !rel.attrs.empty() &&
+                (keep_flags = filter.keep(rel.attrs, OsmFilter::REL)) &&
+                !(drop_flags = filter.drop(rel.attrs, OsmFilter::REL)))
+            {
+                rel.keepFlags = keep_flags;
+                rel.dropFlags = drop_flags;
+            }
+
+            rels.rels.emplace_back(rel.attrs);
+        }
+
+        // processing members
+        for(const auto& member: xmlrel.children("member"))
+        {
+            const auto& type = member.attribute("type").as_string();
+            if(strcmp(type, "node") == 0)
+            {
+                osmid id = member.attribute("ref").as_ullong();
+                rel.nodes.emplace_back(id);
+                rel.nodeRoles.emplace_back(member.attribute("role").as_string());
+            }
+            if(strcmp(type, "way") == 0)
+            {
+                osmid id = member.attribute("ref").as_ullong();
+                rel.ways.emplace_back(id);
+                rel.wayRoles.emplace_back(member.attribute("role").as_string());
+            }
+        }
+
         if (rel.keepFlags & osm::REL_NO_DOWN)
         {
-            rels->flat.insert(rels->rels.size() - 1);
+            rels.flat.insert(rels.rels.size() - 1);
         }
-        for (osmid id : rel.nodes) (*nodeRels)[id].push_back(rels->rels.size() - 1);
-        for (osmid id : rel.ways) (*wayRels)[id].push_back(rels->rels.size() - 1);
+        for (osmid id : rel.nodes)
+        {
+            nodeRels[id].push_back(rels.rels.size() - 1);
+        }
+        for (osmid id : rel.ways)
+        {
+            wayRels[id].push_back(rels.rels.size() - 1);
+        }
 
         // TODO(patrick): this is not needed for the filtering - remove it here!
         readRestr(rel, rests, filter);
     }
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::readRestr(const OsmRel& rel, Restrictions* rests,
+
+void OsmBuilder::readRestr(const OsmRel& rel,
+                           Restrictions& rests,
                            const OsmFilter& filter) const
 {
-    if (!rel.attrs.count("type")) return;
-    if (rel.attrs.find("type")->second != "restriction") return;
+    if (!rel.attrs.count("type") || rel.attrs.find("type")->second != "restriction")
+        return;
 
     bool pos = filter.posRestr(rel.attrs);
     bool neg = filter.negRestr(rel.attrs);
 
-    if (!pos && !neg) return;
+    if (!pos && !neg)
+        return;
 
     osmid from = 0;
     osmid to = 0;
@@ -1050,12 +1033,12 @@ void OsmBuilder::readRestr(const OsmRel& rel, Restrictions* rests,
     {
         if (rel.wayRoles[i] == "from")
         {
-            if (from) return;// only one from member supported
+            if (from) return; // only one from member supported
             from = rel.ways[i];
         }
         if (rel.wayRoles[i] == "to")
         {
-            if (to) return;// only one to member supported
+            if (to) return; // only one to member supported
             to = rel.ways[i];
         }
     }
@@ -1072,13 +1055,13 @@ void OsmBuilder::readRestr(const OsmRel& rel, Restrictions* rests,
     if (from && to && via)
     {
         if (pos)
-            rests->pos[via].push_back(Restriction{from, to});
+            rests.pos[via].emplace_back(from, to);
         else if (neg)
-            rests->neg[via].push_back(Restriction{from, to});
+            rests.neg[via].emplace_back(from, to);
     }
 }
 
-// _____________________________________________________________________________
+
 std::string OsmBuilder::getAttrByFirstMatch(const DeepAttrLst& rule, osmid id,
                                             const AttrMap& attrs,
                                             const RelMap& entRels,
@@ -1088,15 +1071,13 @@ std::string OsmBuilder::getAttrByFirstMatch(const DeepAttrLst& rule, osmid id,
     std::string ret;
     for (const auto& s : rule)
     {
-        ret =
-                normzer.norm(pfxml::file::decode(getAttr(s, id, attrs, entRels, rels)));
+        ret = normzer.norm(getAttr(s, id, attrs, entRels, rels));
         if (!ret.empty()) return ret;
     }
-
     return ret;
 }
 
-// _____________________________________________________________________________
+
 std::vector<std::string> OsmBuilder::getAttrMatchRanked(
         const DeepAttrLst& rule, osmid id, const AttrMap& attrs,
         const RelMap& entRels, const RelLst& rels,
@@ -1105,15 +1086,16 @@ std::vector<std::string> OsmBuilder::getAttrMatchRanked(
     std::vector<std::string> ret;
     for (const auto& s : rule)
     {
-        std::string tmp =
-                normzer.norm(pfxml::file::decode(getAttr(s, id, attrs, entRels, rels)));
-        if (!tmp.empty()) ret.push_back(tmp);
+        std::string tmp = normzer.norm(getAttr(s, id, attrs, entRels, rels));
+        if (!tmp.empty())
+        {
+            ret.push_back(tmp);
+        }
     }
-
     return ret;
 }
 
-// _____________________________________________________________________________
+
 std::string OsmBuilder::getAttr(const DeepAttrRule& s, osmid id,
                                 const AttrMap& attrs, const RelMap& entRels,
                                 const RelLst& rels) const
@@ -1144,7 +1126,7 @@ std::string OsmBuilder::getAttr(const DeepAttrRule& s, osmid id,
     return "";
 }
 
-// _____________________________________________________________________________
+
 Nullable<StatInfo> OsmBuilder::getStatInfo(Node* node, osmid nid,
                                            const POINT& pos, const AttrMap& m,
                                            StAttrGroups* groups,
@@ -1220,22 +1202,22 @@ Nullable<StatInfo> OsmBuilder::getStatInfo(Node* node, osmid nid,
     return ret;
 }
 
-// _____________________________________________________________________________
+
 double OsmBuilder::dist(const Node* a, const Node* b)
 {
     return webMercMeterDist(*a->pl().getGeom(), *b->pl().getGeom());
 }
 
-// _____________________________________________________________________________
+
 double OsmBuilder::webMercDist(const Node* a, const Node* b)
 {
     return webMercMeterDist(*a->pl().getGeom(), *b->pl().getGeom());
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::writeGeoms(Graph* g)
+
+void OsmBuilder::writeGeoms(Graph& g)
 {
-    for (auto* n : *g->getNds())
+    for (auto* n : *g.getNds())
     {
         for (auto* e : n->getAdjListOut())
         {
@@ -1246,11 +1228,11 @@ void OsmBuilder::writeGeoms(Graph* g)
     }
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::fixGaps(Graph* g, NodeGrid* ng)
+
+void OsmBuilder::fixGaps(Graph& g, NodeGrid* ng)
 {
     double meter = 1;
-    for (auto* n : *g->getNds())
+    for (auto* n : *g.getNds())
     {
         if (n->getInDeg() + n->getOutDeg() == 1)
         {
@@ -1280,13 +1262,13 @@ void OsmBuilder::fixGaps(Graph* g, NodeGrid* ng)
 
                         Edge* e;
                         if (nb->getOutDeg())
-                            e = g->addEdg(otherN, n, (*nb->getAdjListOut().begin())->pl());
+                            e = g.addEdg(otherN, n, (*nb->getAdjListOut().begin())->pl());
                         else
-                            e = g->addEdg(otherN, n, (*nb->getAdjListIn().begin())->pl());
+                            e = g.addEdg(otherN, n, (*nb->getAdjListIn().begin())->pl());
                         if (e)
                         {
                             *e->pl().getGeom() = l;
-                            g->delNd(nb);
+                            g.delNd(nb);
                             ng->remove(nb);
                         }
                     }
@@ -1294,9 +1276,9 @@ void OsmBuilder::fixGaps(Graph* g, NodeGrid* ng)
                     {
                         // if one of the nodes is a station, just add an edge between them
                         if (nb->getOutDeg())
-                            g->addEdg(n, nb, (*nb->getAdjListOut().begin())->pl());
+                            g.addEdg(n, nb, (*nb->getAdjListOut().begin())->pl());
                         else
-                            g->addEdg(n, nb, (*nb->getAdjListIn().begin())->pl());
+                            g.addEdg(n, nb, (*nb->getAdjListIn().begin())->pl());
                     }
                 }
             }
@@ -1304,12 +1286,12 @@ void OsmBuilder::fixGaps(Graph* g, NodeGrid* ng)
     }
 }
 
-// _____________________________________________________________________________
-EdgeGrid OsmBuilder::buildEdgeIdx(Graph* g, size_t size,
+
+EdgeGrid OsmBuilder::buildEdgeIdx(Graph& g, size_t size,
                                   const BOX& webMercBox)
 {
     EdgeGrid ret(size, size, webMercBox, false);
-    for (auto* n : *g->getNds())
+    for (auto* n : *g.getNds())
     {
         for (auto* e : n->getAdjListOut())
         {
@@ -1320,12 +1302,12 @@ EdgeGrid OsmBuilder::buildEdgeIdx(Graph* g, size_t size,
     return ret;
 }
 
-// _____________________________________________________________________________
-NodeGrid OsmBuilder::buildNodeIdx(Graph* g, size_t size, const BOX& webMercBox,
+
+NodeGrid OsmBuilder::buildNodeIdx(Graph& g, size_t size, const BOX& webMercBox,
                                   bool which)
 {
     NodeGrid ret(size, size, webMercBox, false);
-    for (auto* n : *g->getNds())
+    for (auto* n : *g.getNds())
     {
         if (!which && n->getInDeg() + n->getOutDeg() == 1)
             ret.add(*n->pl().getGeom(), n);
@@ -1335,7 +1317,7 @@ NodeGrid OsmBuilder::buildNodeIdx(Graph* g, size_t size, const BOX& webMercBox,
     return ret;
 }
 
-// _____________________________________________________________________________
+
 Node* OsmBuilder::depthSearch(const Edge* e, const StatInfo* si, const POINT& p,
                               double maxD, int maxFullTurns, double minAngle,
                               const SearchFunc& sfunc)
@@ -1411,14 +1393,14 @@ Node* OsmBuilder::depthSearch(const Edge* e, const StatInfo* si, const POINT& p,
     return nullptr;
 }
 
-// _____________________________________________________________________________
+
 bool OsmBuilder::isBlocked(const Edge* e, const StatInfo* si, const POINT& p,
                            double maxD, int maxFullTurns, double minAngle)
 {
     return depthSearch(e, si, p, maxD, maxFullTurns, minAngle, BlockSearch());
 }
 
-// _____________________________________________________________________________
+
 Node* OsmBuilder::eqStatReach(const Edge* e, const StatInfo* si, const POINT& p,
                               double maxD, int maxFullTurns, double minAngle,
                               bool orphanSnap)
@@ -1427,7 +1409,7 @@ Node* OsmBuilder::eqStatReach(const Edge* e, const StatInfo* si, const POINT& p,
                        EqSearch(orphanSnap));
 }
 
-// _____________________________________________________________________________
+
 void OsmBuilder::getEdgCands(const POINT& geom, EdgeCandPQ* ret, EdgeGrid* eg,
                              double d)
 {
@@ -1448,7 +1430,7 @@ void OsmBuilder::getEdgCands(const POINT& geom, EdgeCandPQ* ret, EdgeGrid* eg,
     }
 }
 
-// _____________________________________________________________________________
+
 std::set<Node*> OsmBuilder::getMatchingNds(const NodePL& s, NodeGrid* ng,
                                            double d)
 {
@@ -1470,7 +1452,7 @@ std::set<Node*> OsmBuilder::getMatchingNds(const NodePL& s, NodeGrid* ng,
     return ret;
 }
 
-// _____________________________________________________________________________
+
 Node* OsmBuilder::getMatchingNd(const NodePL& s, NodeGrid* ng, double d)
 {
     double distor = util::geo::webMercDistFactor(*s.getGeom());
@@ -1497,10 +1479,10 @@ Node* OsmBuilder::getMatchingNd(const NodePL& s, NodeGrid* ng, double d)
     return ret;
 }
 
-// _____________________________________________________________________________
-std::set<Node*> OsmBuilder::snapStation(Graph* g, NodePL* s, EdgeGrid* eg,
+
+std::set<Node*> OsmBuilder::snapStation(Graph& g, NodePL* s, EdgeGrid* eg,
                                         NodeGrid* sng, const OsmReadOpts& opts,
-                                        Restrictor* restor, bool surrHeur,
+                                        Restrictor& restor, bool surrHeur,
                                         bool orphSnap, double d)
 {
     assert(s->getSI());
@@ -1565,12 +1547,12 @@ std::set<Node*> OsmBuilder::snapStation(Graph* g, NodePL* s, EdgeGrid* eg,
             else
             {
                 s->setGeom(geom);
-                Node* n = g->addNd(*s);
+                Node* n = g.addNd(*s);
                 if (n->pl().getSI()->getGroup())
                     n->pl().getSI()->getGroup()->addNode(n);
                 sng->add(geom, n);
 
-                auto ne = g->addEdg(e->getFrom(), n, e->pl());
+                auto ne = g.addEdg(e->getFrom(), n, e->pl());
                 ne->pl().setLength(webMercDist(n, e->getFrom()));
                 LINE l;
                 l.push_back(*e->getFrom()->pl().getGeom());
@@ -1578,7 +1560,7 @@ std::set<Node*> OsmBuilder::snapStation(Graph* g, NodePL* s, EdgeGrid* eg,
                 *ne->pl().getGeom() = l;
                 eg->add(l, ne);
 
-                auto nf = g->addEdg(n, e->getTo(), e->pl());
+                auto nf = g.addEdg(n, e->getTo(), e->pl());
                 nf->pl().setLength(webMercDist(n, e->getTo()));
                 LINE ll;
                 ll.push_back(*n->pl().getGeom());
@@ -1587,9 +1569,9 @@ std::set<Node*> OsmBuilder::snapStation(Graph* g, NodePL* s, EdgeGrid* eg,
                 eg->add(ll, nf);
 
                 // replace edge in restrictor
-                restor->replaceEdge(e, ne, nf);
+                restor.replaceEdge(e, ne, nf);
 
-                g->delEdg(e->getFrom(), e->getTo());
+                g.delEdg(e->getFrom(), e->getTo());
                 eg->remove(e);
                 ret.insert(n);
             }
@@ -1611,7 +1593,7 @@ std::set<Node*> OsmBuilder::snapStation(Graph* g, NodePL* s, EdgeGrid* eg,
     return ret;
 }
 
-// _____________________________________________________________________________
+
 StatGroup* OsmBuilder::groupStats(const NodeSet& s)
 {
     if (s.empty())
@@ -1645,19 +1627,20 @@ StatGroup* OsmBuilder::groupStats(const NodeSet& s)
     return ret;
 }
 
-// _____________________________________________________________________________
+
 std::vector<TransitEdgeLine*> OsmBuilder::getLines(
-        const std::vector<size_t>& edgeRels, const RelLst& rels,
+        const std::vector<size_t>& edgeRels,
+        const RelLst& rels,
         const OsmReadOpts& ops)
 {
     std::vector<TransitEdgeLine*> ret;
-    for (size_t relId : edgeRels)
+    for (size_t rel_id : edgeRels)
     {
         TransitEdgeLine* elp = nullptr;
 
-        if (_relLines.count(relId))
+        if (_relLines.count(rel_id))
         {
-            elp = _relLines[relId];
+            elp = _relLines[rel_id];
         }
         else
         {
@@ -1666,13 +1649,14 @@ std::vector<TransitEdgeLine*> OsmBuilder::getLines(
             bool found = false;
             for (const auto& r : ops.relLinerules.sNameRule)
             {
-                for (const auto& relAttr : rels.rels[relId])
+                for (const auto& rel_attr : rels.rels[rel_id])
                 {
-                    if (relAttr.first == r)
+                    if (rel_attr.first == r)
                     {
-                        el.shortName =
-                                ops.lineNormzer.norm(pfxml::file::decode(relAttr.second));
-                        if (!el.shortName.empty()) found = true;
+                        el.shortName = ops.lineNormzer.norm(rel_attr.second);
+                                //ops.lineNormzer.norm(pfxml::file::decode(relAttr.second));
+                        if (!el.shortName.empty())
+                            found = true;
                     }
                 }
                 if (found) break;
@@ -1681,27 +1665,29 @@ std::vector<TransitEdgeLine*> OsmBuilder::getLines(
             found = false;
             for (const auto& r : ops.relLinerules.fromNameRule)
             {
-                for (const auto& relAttr : rels.rels[relId])
+                for (const auto& rel_attr : rels.rels[rel_id])
                 {
-                    if (relAttr.first == r)
+                    if (rel_attr.first == r)
                     {
-                        el.fromStr =
-                                ops.statNormzer.norm(pfxml::file::decode(relAttr.second));
-                        if (!el.fromStr.empty()) found = true;
+                        el.fromStr = ops.lineNormzer.norm(rel_attr.second);
+                                //ops.statNormzer.norm(pfxml::file::decode(relAttr.second));
+                        if (!el.fromStr.empty())
+                            found = true;
                     }
                 }
-                if (found) break;
+                if (found)
+                    break;
             }
 
             found = false;
             for (const auto& r : ops.relLinerules.toNameRule)
             {
-                for (const auto& relAttr : rels.rels[relId])
+                for (const auto& rel_attr : rels.rels[rel_id])
                 {
-                    if (relAttr.first == r)
+                    if (rel_attr.first == r)
                     {
-                        el.toStr =
-                                ops.statNormzer.norm(pfxml::file::decode(relAttr.second));
+                        el.toStr = ops.lineNormzer.norm(rel_attr.second);
+                                //ops.statNormzer.norm(pfxml::file::decode(relAttr.second));
                         if (!el.toStr.empty()) found = true;
                     }
                 }
@@ -1714,22 +1700,21 @@ std::vector<TransitEdgeLine*> OsmBuilder::getLines(
             if (_lines.count(el))
             {
                 elp = _lines[el];
-                _relLines[relId] = elp;
+                _relLines[rel_id] = elp;
             }
             else
             {
                 elp = new TransitEdgeLine(el);
                 _lines[el] = elp;
-                _relLines[relId] = elp;
+                _relLines[rel_id] = elp;
             }
         }
         ret.push_back(elp);
     }
-
     return ret;
 }
 
-// _____________________________________________________________________________
+
 void OsmBuilder::getKeptAttrKeys(const OsmReadOpts& opts,
                                  AttrKeySet sets[3]) const
 {
@@ -1873,13 +1858,13 @@ void OsmBuilder::getKeptAttrKeys(const OsmReadOpts& opts,
     }
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::deleteOrphEdgs(Graph* g, const OsmReadOpts& opts)
+
+void OsmBuilder::deleteOrphEdgs(Graph& g, const OsmReadOpts& opts)
 {
     const size_t rounds = 3;
     for (size_t c = 0; c < rounds; c++)
     {
-        for (auto i = g->getNds()->begin(); i != g->getNds()->end();)
+        for (auto i = g.getNds()->begin(); i != g.getNds()->end();)
         {
             if ((*i)->getInDeg() + (*i)->getOutDeg() != 1 || (*i)->pl().getSI())
             {
@@ -1896,22 +1881,22 @@ void OsmBuilder::deleteOrphEdgs(Graph* g, const OsmReadOpts& opts)
                 continue;
             }
 
-            i = g->delNd(*i);
+            i = g.delNd(*i);
             continue;
             i++;
         }
     }
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::deleteOrphNds(Graph* g)
+
+void OsmBuilder::deleteOrphNds(Graph& g)
 {
-    for (auto i = g->getNds()->begin(); i != g->getNds()->end();)
+    for (auto i = g.getNds()->begin(); i != g.getNds()->end();)
     {
         if ((*i)->getInDeg() + (*i)->getOutDeg() == 0 &&
             !((*i)->pl().getSI() && (*i)->pl().getSI()->getGroup()))
         {
-            i = g->delNd(i);
+            i = g.delNd(i);
             // TODO(patrick): maybe delete from node grid?
         }
         else
@@ -1921,7 +1906,7 @@ void OsmBuilder::deleteOrphNds(Graph* g)
     }
 }
 
-// _____________________________________________________________________________
+
 bool OsmBuilder::edgesSim(const Edge* a, const Edge* b)
 {
     if (static_cast<bool>(a->pl().oneWay()) ^ static_cast<bool>(b->pl().oneWay()))
@@ -1938,7 +1923,7 @@ bool OsmBuilder::edgesSim(const Edge* a, const Edge* b)
     return true;
 }
 
-// _____________________________________________________________________________
+
 const EdgePL& OsmBuilder::mergeEdgePL(Edge* a, Edge* b)
 {
     const Node* n = nullptr;
@@ -1985,10 +1970,10 @@ const EdgePL& OsmBuilder::mergeEdgePL(Edge* a, Edge* b)
     return a->pl();
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::collapseEdges(Graph* g)
+
+void OsmBuilder::collapseEdges(Graph& g)
 {
-    for (auto* n : *g->getNds())
+    for (auto* n : *g.getNds())
     {
         if (n->getOutDeg() + n->getInDeg() != 2 || n->pl().getSI()) continue;
 
@@ -2012,29 +1997,29 @@ void OsmBuilder::collapseEdges(Graph* g)
 
         // important, we don't have a multigraph! if the same edge
         // will already exist, leave this node
-        if (g->getEdg(ea->getOtherNd(n), eb->getOtherNd(n))) continue;
-        if (g->getEdg(eb->getOtherNd(n), ea->getOtherNd(n))) continue;
+        if (g.getEdg(ea->getOtherNd(n), eb->getOtherNd(n))) continue;
+        if (g.getEdg(eb->getOtherNd(n), ea->getOtherNd(n))) continue;
 
         if (edgesSim(ea, eb))
         {
             if (ea->pl().oneWay() && ea->getOtherNd(n) != ea->getFrom())
             {
-                g->addEdg(eb->getOtherNd(n), ea->getOtherNd(n), mergeEdgePL(eb, ea));
+                g.addEdg(eb->getOtherNd(n), ea->getOtherNd(n), mergeEdgePL(eb, ea));
             }
             else
             {
-                g->addEdg(ea->getOtherNd(n), eb->getOtherNd(n), mergeEdgePL(ea, eb));
+                g.addEdg(ea->getOtherNd(n), eb->getOtherNd(n), mergeEdgePL(ea, eb));
             }
-            g->delEdg(ea->getFrom(), ea->getTo());
-            g->delEdg(eb->getFrom(), eb->getTo());
+            g.delEdg(ea->getFrom(), ea->getTo());
+            g.delEdg(eb->getFrom(), eb->getTo());
         }
     }
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::simplifyGeoms(Graph* g)
+
+void OsmBuilder::simplifyGeoms(Graph& g)
 {
-    for (auto* n : *g->getNds())
+    for (auto* n : *g.getNds())
     {
         for (auto* e : n->getAdjListOut())
         {
@@ -2043,13 +2028,13 @@ void OsmBuilder::simplifyGeoms(Graph* g)
     }
 }
 
-// _____________________________________________________________________________
-uint32_t OsmBuilder::writeComps(Graph* g)
+
+uint32_t OsmBuilder::writeComps(Graph& g)
 {
     auto* comp = new Component{7};
     uint32_t numC = 0;
 
-    for (auto* n : *g->getNds())
+    for (auto* n : *g.getNds())
     {
         if (!n->pl().getComp())
         {
@@ -2088,7 +2073,7 @@ uint32_t OsmBuilder::writeComps(Graph* g)
     return numC;
 }
 
-// _____________________________________________________________________________
+
 void OsmBuilder::writeEdgeTracks(const EdgTracks& tracks)
 {
     for (const auto& tr : tracks)
@@ -2106,33 +2091,34 @@ void OsmBuilder::writeEdgeTracks(const EdgTracks& tracks)
     }
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::writeODirEdgs(Graph* g, Restrictor* restor)
+
+void OsmBuilder::writeODirEdgs(Graph& g, Restrictor& restor)
 {
-    for (auto* n : *g->getNds())
+    for (auto* n : *g.getNds())
     {
         for (auto* e : n->getAdjListOut())
         {
-            if (g->getEdg(e->getTo(), e->getFrom())) continue;
-            auto newE = g->addEdg(e->getTo(), e->getFrom(), e->pl().revCopy());
-            if (e->pl().isRestricted()) restor->duplicateEdge(e, newE);
+            if (g.getEdg(e->getTo(), e->getFrom())) continue;
+            auto newE = g.addEdg(e->getTo(), e->getFrom(), e->pl().revCopy());
+            if (e->pl().isRestricted())
+                restor.duplicateEdge(e, newE);
         }
     }
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::writeSelfEdgs(Graph* g)
+
+void OsmBuilder::writeSelfEdgs(Graph& g)
 {
-    for (auto* n : *g->getNds())
+    for (auto* n : *g.getNds())
     {
         if (n->pl().getSI() && n->getAdjListOut().empty())
         {
-            g->addEdg(n, n);
+            g.addEdg(n, n);
         }
     }
 }
 
-// _____________________________________________________________________________
+
 bool OsmBuilder::keepFullTurn(const trgraph::Node* n, double ang)
 {
     if (n->getInDeg() + n->getOutDeg() != 1) return false;
@@ -2176,10 +2162,10 @@ bool OsmBuilder::keepFullTurn(const trgraph::Node* n, double ang)
     return false;
 }
 
-// _____________________________________________________________________________
-void OsmBuilder::snapStats(const OsmReadOpts& opts, Graph* g,
+
+void OsmBuilder::snapStats(const OsmReadOpts& opts, Graph& g,
                            const BBoxIdx& bbox, size_t gridSize,
-                           router::FeedStops* fs, Restrictor* res,
+                           router::FeedStops& fs, Restrictor& res,
                            const NodeSet& orphanStations)
 {
     NodeGrid sng = buildNodeIdx(g, gridSize, bbox.getFullWebMercBox(), true);
@@ -2210,11 +2196,10 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts, Graph* g,
         }
     }
 
-    if (!fs) return;
 
     std::vector<const Stop*> notSnapped;
 
-    for (auto& s : *fs)
+    for (auto& s : fs)
     {
         bool snapped = false;
         auto pl = plFromGtfs(s.first, opts);
@@ -2229,7 +2214,7 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts, Graph* g,
             if (group)
             {
                 group->addStop(s.first);
-                (*fs)[s.first] = *group->getNodes().begin();
+                fs[s.first] = *group->getNodes().begin();
                 snapped = true;
             }
         }
@@ -2279,7 +2264,7 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts, Graph* g,
                     if (n->pl().getSI())
                         n->pl().getSI()->addAltName(pl.getSI()->getName());
                 }
-                (*fs)[s] = *group->getNodes().begin();
+                fs[s] = *group->getNodes().begin();
                 snapped = true;
             }
         }
@@ -2289,12 +2274,12 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts, Graph* g,
 
             // add a group with only this stop in it
             auto* dummy_group = new StatGroup();
-            auto* dummy_node = g->addNd(pl);
+            auto* dummy_node = g.addNd(pl);
 
             dummy_node->pl().getSI()->setGroup(dummy_group);
             dummy_group->addNode(dummy_node);
             dummy_group->addStop(s);
-            (*fs)[s] = dummy_node;
+            fs[s] = dummy_node;
             if (!bbox.contains(*pl.getGeom()))
             {
                 LOG(TRACE) << "Could not snap station "

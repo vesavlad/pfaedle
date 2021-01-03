@@ -35,6 +35,6 @@ target_link_libraries(pfaedle-lib
         PUBLIC pfaedle-util
         PUBLIC configparser
         PUBLIC cppgtfs
-        PUBLIC pfxml)
+        PUBLIC pugixml)
 target_include_directories(pfaedle-lib PUBLIC include)
 

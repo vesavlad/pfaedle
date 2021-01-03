@@ -11,60 +11,66 @@
 #include <unordered_map>
 #include <vector>
 
-namespace pfaedle {
-namespace osm {
+namespace pfaedle::osm
+{
 
 using osmid = uint64_t;
 
-typedef std::unordered_map<std::string, std::string> AttrMap;
-typedef std::pair<std::string, std::string> Attr;
+using AttrMap = std::unordered_map<std::string, std::string>;
+using Attr = std::pair<std::string, std::string>;
 using OsmIdList = std::vector<osmid>;
 
-struct OsmRel {
-  OsmRel() : id(0) {}
-  osmid id;
-  AttrMap attrs;
-  std::vector<osmid> nodes;
-  std::vector<osmid> ways;
+struct OsmRel
+{
+    osmid id;
+    AttrMap attrs;
+    std::vector<osmid> nodes;
+    std::vector<osmid> ways;
 
-  std::vector<std::string> nodeRoles;
-  std::vector<std::string> wayRoles;
+    std::vector<std::string> nodeRoles;
+    std::vector<std::string> wayRoles;
 
-  uint64_t keepFlags;
-  uint64_t dropFlags;
+    uint64_t keepFlags;
+    uint64_t dropFlags;
 };
 
-struct OsmWay {
-  OsmWay() : id(0) {}
-  osmid id;
-  AttrMap attrs;
-  std::vector<osmid> nodes;
+struct OsmWay
+{
+    osmid id;
+    AttrMap attrs;
+    std::vector<osmid> nodes;
 
-  uint64_t keepFlags;
-  uint64_t dropFlags;
+    uint64_t keepFlags;
+    uint64_t dropFlags;
 };
 
-struct OsmNode {
-  OsmNode() : id(0) {}
-  osmid id;
-  double lat;
-  double lng;
-  AttrMap attrs;
+struct OsmNode
+{
+    osmid id;
+    double lat;
+    double lng;
+    AttrMap attrs;
 
-  uint64_t keepFlags;
-  uint64_t dropFlags;
+    uint64_t keepFlags;
+    uint64_t dropFlags;
 };
 
-struct Restriction {
-  osmid eFrom, eTo;
+struct Restriction
+{
+    Restriction(osmid from, osmid to):
+        eFrom{from},
+        eTo{to}
+    {}
+    osmid eFrom;
+    osmid eTo;
 };
 
-typedef std::unordered_map<osmid, std::vector<Restriction>> RestrMap;
+using RestrMap = std::unordered_map<osmid, std::vector<Restriction>>;
 
-struct Restrictions {
-  RestrMap pos;
-  RestrMap neg;
+struct Restrictions
+{
+    RestrMap pos;
+    RestrMap neg;
 };
-}  // namespace osm
-}  // namespace pfaedle
+}  // namespace pfaedle::osm
 #endif  // PFAEDLE_OSM_OSM_H_

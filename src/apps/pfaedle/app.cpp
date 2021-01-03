@@ -1,5 +1,4 @@
 #include "app.h"
-
 #ifndef CFG_HOME_SUFFIX
 #define CFG_HOME_SUFFIX "/.config"
 #endif
@@ -248,16 +247,16 @@ int app::run()
                 opts.push_back(o.osmBuildOpts);
             }
         }
-        try
-        {
+//        try
+//        {
             osm_builder.filterWrite(cfg_.osmPath, cfg_.writeOsm, opts, box);
-        }
-        catch (const pfxml::parse_exc& ex)
-        {
-            LOG(ERROR) << "Could not parse OSM data, reason was:";
-            std::cerr << ex.what() << std::endl;
-            exit(static_cast<int>(ret_code::OSM_PARSE_ERR));
-        }
+//        }
+//        catch (const pfxml::parse_exc& ex)
+//        {
+//            LOG(ERROR) << "Could not parse OSM data, reason was:";
+//            std::cerr << ex.what() << std::endl;
+//            exit(static_cast<int>(ret_code::OSM_PARSE_ERR));
+//        }
         exit(static_cast<int>(ret_code::SUCCESS));
     }
     else if (cfg_.writeOverpass)
@@ -310,8 +309,8 @@ int app::run()
         const std::string mot_str = pfaedle::router::getMotStr(used_mots);
         LOG(INFO) << "Calculating shapes for mots " << mot_str;
 
-        try
-        {
+//        try
+//        {
             pfaedle::router::FeedStops f_stops =
                     pfaedle::router::writeMotStops(&feeds_[0], used_mots, cfg_.shapeTripId);
 
@@ -323,13 +322,15 @@ int app::run()
             pfaedle::router::ShapeBuilder::getGtfsBox(&feeds_[0], cmd_cfg_mots, cfg_.shapeTripId, cfg_.dropShapes, box);
 
             if (!f_stops.empty())
+            {
                 osm_builder.read(cfg_.osmPath,
                                  mot_cfg.osmBuildOpts,
-                                 &graph,
+                                 graph,
                                  box,
                                  cfg_.gridSize,
-                                 &f_stops,
-                                 &restr);
+                                 f_stops,
+                                 restr);
+            }
 
             // TODO(patrick): move this somewhere else
             for (auto& feed_stop : f_stops)
@@ -387,16 +388,17 @@ int app::run()
                 out.printLatLng(ng, fstr);
                 fstr.close();
             }
-        }
-        catch (const pfxml::parse_exc& ex)
-        {
-            LOG(ERROR) << "Could not parse OSM data, reason was:";
-            LOG(ERROR) << ex.what();
-            exit(static_cast<int>(ret_code::OSM_PARSE_ERR));
-        }
+//        }
+//        catch (const pfxml::parse_exc& ex)
+//        {
+//            LOG(ERROR) << "Could not parse OSM data, reason was:";
+//            LOG(ERROR) << ex.what();
+//            exit(static_cast<int>(ret_code::OSM_PARSE_ERR));
+//        }
     }
 
-    if (cfg_.evaluate) ecoll.printStats(&std::cout);
+    if (cfg_.evaluate)
+        ecoll.printStats(&std::cout);
 
     if (!cfg_.feedPaths.empty())
     {

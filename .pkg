@@ -2,10 +2,12 @@
 	url=git@github.com:vesavlad/cppgtfs.git
     branch=c++17
     commit=2a6223e85bea2f09574dd1003f88bdf74923fd6b
-[xml]
-	url=git@github.com:vesavlad/pfxml.git
-    branch=feat/add-cmake-support
-    commit=2ad3712e0a8a8b8d14082dceaf84b24fa33654c4
+
+[pugixml]
+    url=git@github.com:zeux/pugixml.git
+    branch=master
+    commit=08b3433180727ea2f78fe02e860a08471db1e03c
+
 [configparser]
     url=git@github.com:vesavlad/configparser.git
     branch=master
