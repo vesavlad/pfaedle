@@ -236,14 +236,14 @@ void ShapeBuilder::shape(pfaedle::netgraph::Graph& ng)
     double tot_avg_dist = 0;
     size_t tot_num_trips = 0;
 
-//#pragma omp parallel for num_threads(_numThreads)
+#pragma omp parallel for num_threads(_numThreads)
     for (size_t i = 0; i < clusters.size(); i++)
     {
         j++;
 
         if (j % 10 == 0)
         {
-//#pragma omp critical
+#pragma omp critical
             {
                 LOG(INFO) << "@ " << j << " / " << clusters.size() << " ("
                           << (static_cast<int>((j * 1.0) / clusters.size() * 100))
@@ -263,7 +263,7 @@ void ShapeBuilder::shape(pfaedle::netgraph::Graph& ng)
 
         if (_cfg.buildTransitGraph)
         {
-//#pragma omp critical
+#pragma omp critical
             {
                 writeTransitGraph(cshp, gtfsGraph, clusters[i]);
             }
