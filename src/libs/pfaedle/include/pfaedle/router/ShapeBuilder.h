@@ -35,7 +35,7 @@ struct Shape
 
 using Cluster = std::vector<pfaedle::gtfs::Trip*>;
 using Clusters = std::vector<Cluster>;
-using StopPair = std::pair<const Stop*, const Stop*>;
+using StopPair = std::pair<const ad::cppgtfs::gtfs::Stop*, const ad::cppgtfs::gtfs::Stop*>;
 using TripRAttrs = std::unordered_map<const pfaedle::gtfs::Trip*, router::RoutingAttrs>;
 using TrGraphEdgs = std::unordered_map<const trgraph::Edge*, std::set<const pfaedle::gtfs::Trip*>>;
 
