@@ -108,7 +108,7 @@ void OsmBuilder::read(const std::string& path,
         //    * have been used in a way in pass 3
 
         LOG(TRACE) << "Reading bounding box nodes...";
-        filter_nodes(doc, &bboxNodes, &noHupNodes, filter, bbox);
+        filter_nodes(doc, bboxNodes, noHupNodes, filter, bbox);
 
         LOG(TRACE) << "Reading relations...";
         readRels(doc, intm_rels, node_rels, wayRels, filter, attr_keys[2], raw_rests);
@@ -313,7 +313,7 @@ void OsmBuilder::filterWrite(const std::string& in,
         filter = filter.merge(OsmFilter(o.keepFilter, o.dropFilter));
     }
 
-    filter_nodes(input_doc, &bboxNodes, &noHupNodes, filter, latLngBox);
+    filter_nodes(input_doc, bboxNodes, noHupNodes, filter, latLngBox);
 
     readRels(input_doc, rels, nodeRels, wayRels, filter, attr_keys[2], rests);
     readEdges(input_doc, wayRels, filter, bboxNodes, attr_keys[1], ways, nodes, rels.flat);
@@ -523,8 +523,8 @@ NodePayload OsmBuilder::plFromGtfs(const Stop* s, const OsmReadOpts& ops)
 
 
 int OsmBuilder::filter_nodes(pugi::xml_document& xml,
-                             OsmIdSet* nodes,
-                             OsmIdSet* nohupNodes,
+                             OsmIdSet& nodes,
+                             OsmIdSet& nohupNodes,
                              const OsmFilter& filter,
                              const BBoxIdx& bbox) const
 {
@@ -539,7 +539,7 @@ int OsmBuilder::filter_nodes(pugi::xml_document& xml,
         if (bbox.contains(Point(x, y)))
         {
             cur_id = util::atoul(node.attribute("id").value());
-            nodes->add(cur_id);
+            nodes.add(cur_id);
         }
 
         if(cur_id == 0)
@@ -550,7 +550,7 @@ int OsmBuilder::filter_nodes(pugi::xml_document& xml,
             if (filter.nohup(tag.attribute("k").as_string(),
                              tag.attribute("v").as_string()))
             {
-                nohupNodes->add(cur_id);
+                nohupNodes.add(cur_id);
             }
         }
     }

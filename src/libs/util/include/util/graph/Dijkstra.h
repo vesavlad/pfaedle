@@ -19,10 +19,6 @@
 namespace util::graph
 {
 
-using util::graph::Graph;
-using util::graph::Node;
-using util::graph::Edge;
-
 // dijkstras algorithm for util graph
 class Dijkstra : public ShortestPath<Dijkstra>
 {

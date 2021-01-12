@@ -7,9 +7,9 @@
 
 #include <ostream>
 #include <string>
-#include "util/String.h"
-#include "util/geo/output/GeoJsonOutput.h"
-#include "util/graph/Graph.h"
+#include <util/String.h>
+#include <util/geo/output/GeoJsonOutput.h>
+#include <util/graph/Graph.h>
 
 namespace util::geo::output
 {
@@ -21,128 +21,109 @@ public:
 
     // print a graph to the provided path
     template<typename N, typename E>
-    void print(const util::graph::Graph<N, E>& outG, std::ostream& str);
+    void print(const util::graph::Graph<N, E>& outG, std::ostream& str)
+    {
+        printImpl(outG, str, false);
+    }
 
     // print a graph to the provided path, but treat coordinates as Web Mercator coordinates and reproject to WGS84
     template<typename N, typename E>
-    void printLatLng(const util::graph::Graph<N, E>& outG, std::ostream& str);
+    void printLatLng(const util::graph::Graph<N, E>& outG, std::ostream& str)
+    {
+        printImpl(outG, str, true);
+    }
 
 private:
     template<typename T>
     Line<T> createLine(const util::geo::Point<T>& a,
-                       const util::geo::Point<T>& b);
+                       const util::geo::Point<T>& b)
+    {
+        Line<T> ret;
+        ret.push_back(a);
+        ret.push_back(b);
+        return ret;
+    }
 
     // print a graph to the provided path
     template<typename N, typename E>
-    void printImpl(const util::graph::Graph<N, E>& outG, std::ostream& str, bool proj);
-};
-
-// _____________________________________________________________________________
-template<typename T>
-Line<T> GeoGraphJsonOutput::createLine(const util::geo::Point<T>& a,
-                                       const util::geo::Point<T>& b)
-{
-    Line<T> ret;
-    ret.push_back(a);
-    ret.push_back(b);
-    return ret;
-}
-
-// _____________________________________________________________________________
-template<typename N, typename E>
-void GeoGraphJsonOutput::print(const util::graph::Graph<N, E>& outG,
-                               std::ostream& str)
-{
-    printImpl(outG, str, false);
-}
-
-// _____________________________________________________________________________
-template<typename N, typename E>
-void GeoGraphJsonOutput::printLatLng(const util::graph::Graph<N, E>& outG,
-                                     std::ostream& str)
-{
-    printImpl(outG, str, true);
-}
-
-// _____________________________________________________________________________
-template<typename N, typename E>
-void GeoGraphJsonOutput::printImpl(const util::graph::Graph<N, E>& outG,
-                                   std::ostream& str, bool proj)
-{
-    GeoJsonOutput _out(str);
-
-    // first pass, nodes
-    for (util::graph::Node<N, E>* n : outG.getNds())
+    void printImpl(const util::graph::Graph<N, E>& outG, std::ostream& str, bool proj)
     {
-        if (!n->pl().getGeom()) continue;
+        GeoJsonOutput json_output(str);
 
-        json::Dict props{{"id", util::toString(n)},
-                         {"deg", util::toString(n->getDeg())},
-                         {"deg_out", util::toString(n->getOutDeg())},
-                         {"deg_in", util::toString(n->getInDeg())}};
-
-        auto addProps = n->pl().getAttrs();
-        props.insert(addProps.begin(), addProps.end());
-
-        if (proj)
+        // first pass, nodes
+        for (util::graph::Node<N, E>* n : outG.getNds())
         {
-            _out.printLatLng(*n->pl().getGeom(), props);
-        }
-        else
-        {
-            _out.print(*n->pl().getGeom(), props);
-        }
-    }
+            if (!n->pl().getGeom()) continue;
 
-    // second pass, edges
-    for (graph::Node<N, E>* n : outG.getNds())
-    {
-        for (graph::Edge<N, E>* e : n->getAdjListOut())
-        {
-            // to avoid double output for undirected graphs
-            if (e->getFrom() != n) continue;
-            json::Dict props{{"from", util::toString(e->getFrom())},
-                             {"to", util::toString(e->getTo())},
-                             {"id", util::toString(e)}};
+            json::Dict props{{"id", util::toString(n)},
+                             {"deg", util::toString(n->getDeg())},
+                             {"deg_out", util::toString(n->getOutDeg())},
+                             {"deg_in", util::toString(n->getInDeg())}};
 
-            auto addProps = e->pl().getAttrs();
+            auto addProps = n->pl().getAttrs();
             props.insert(addProps.begin(), addProps.end());
 
-            if (!e->pl().getGeom() || e->pl().getGeom()->empty())
+            if (proj)
             {
-                if (e->getFrom()->pl().getGeom())
-                {
-                    auto a = *e->getFrom()->pl().getGeom();
-                    if (e->getTo()->pl().getGeom())
-                    {
-                        auto b = *e->getTo()->pl().getGeom();
-                        if (proj)
-                        {
-                            _out.printLatLng(createLine(a, b), props);
-                        }
-                        else
-                        {
-                            _out.print(createLine(a, b), props);
-                        }
-                    }
-                }
+                json_output.printLatLng(*n->pl().getGeom(), props);
             }
             else
             {
-                if (proj)
+                json_output.print(*n->pl().getGeom(), props);
+            }
+        }
+
+        // second pass, edges
+        for (graph::Node<N, E>* n : outG.getNds())
+        {
+            for (graph::Edge<N, E>* e : n->getAdjListOut())
+            {
+                // to avoid double output for undirected graphs
+                if (e->getFrom() != n) continue;
+                json::Dict props{{"from", util::toString(e->getFrom())},
+                                 {"to", util::toString(e->getTo())},
+                                 {"id", util::toString(e)}};
+
+                auto addProps = e->pl().getAttrs();
+                props.insert(addProps.begin(), addProps.end());
+
+                if (!e->pl().getGeom() || e->pl().getGeom()->empty())
                 {
-                    _out.printLatLng(*e->pl().getGeom(), props);
+                    if (e->getFrom()->pl().getGeom())
+                    {
+                        auto a = *e->getFrom()->pl().getGeom();
+                        if (e->getTo()->pl().getGeom())
+                        {
+                            auto b = *e->getTo()->pl().getGeom();
+                            if (proj)
+                            {
+                                json_output.printLatLng(createLine(a, b), props);
+                            }
+                            else
+                            {
+                                json_output.print(createLine(a, b), props);
+                            }
+                        }
+                    }
                 }
                 else
                 {
-                    _out.print(*e->pl().getGeom(), props);
+                    if (proj)
+                    {
+                        json_output.printLatLng(*e->pl().getGeom(), props);
+                    }
+                    else
+                    {
+                        json_output.print(*e->pl().getGeom(), props);
+                    }
                 }
             }
         }
-    }
 
-    _out.flush();
-}
+        json_output.flush();
+    }
+};
+
 }
 
 #endif  // UTIL_GEO_OUTPUT_GEOGRAPHJSONOUTPUT_H_

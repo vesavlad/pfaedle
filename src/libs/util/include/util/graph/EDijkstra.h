@@ -142,7 +142,6 @@ public:
     static size_t ITERS;
 };
 
-// _____________________________________________________________________________
 template<typename N, typename E, typename C>
 C EDijkstra::shortestPathImpl(Node<N, E>* from, const std::set<Node<N, E>*>& to,
                               const ShortestPath::CostFunc<N, E, C>& costFunc,
@@ -167,7 +166,6 @@ C EDijkstra::shortestPathImpl(Node<N, E>* from, const std::set<Node<N, E>*>& to,
     return cost;
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E, typename C>
 C EDijkstra::shortestPathImpl(Edge<N, E>* from, const std::set<Node<N, E>*>& to,
                               const ShortestPath::CostFunc<N, E, C>& costFunc,
@@ -189,7 +187,6 @@ C EDijkstra::shortestPathImpl(Edge<N, E>* from, const std::set<Node<N, E>*>& to,
     return cost;
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E, typename C>
 C EDijkstra::shortestPathImpl(const std::set<Edge<N, E>*> from,
                               const std::set<Edge<N, E>*>& to,
@@ -245,7 +242,6 @@ C EDijkstra::shortestPathImpl(const std::set<Edge<N, E>*> from,
     return cur.d;
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E, typename C>
 std::unordered_map<Edge<N, E>*, C> EDijkstra::shortestPathImpl(
         const std::set<Edge<N, E>*>& from, const ShortestPath::CostFunc<N, E, C>& costFunc,
@@ -292,7 +288,6 @@ std::unordered_map<Edge<N, E>*, C> EDijkstra::shortestPathImpl(
     return costs;
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E, typename C>
 std::unordered_map<Edge<N, E>*, C> EDijkstra::shortestPathImpl(
         Edge<N, E>* from, const std::set<Edge<N, E>*>& to,
@@ -348,7 +343,6 @@ std::unordered_map<Edge<N, E>*, C> EDijkstra::shortestPathImpl(
     return costs;
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E, typename C>
 void EDijkstra::relaxInv(RouteEdge<N, E, C>& cur,
                          const ShortestPath::CostFunc<N, E, C>& costFunc,
@@ -368,7 +362,6 @@ void EDijkstra::relaxInv(RouteEdge<N, E, C>& cur,
     }
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E, typename C>
 void EDijkstra::relax(RouteEdge<N, E, C>& cur, const std::set<Edge<N, E>*>& to,
                       const ShortestPath::CostFunc<N, E, C>& costFunc,
@@ -406,7 +399,6 @@ void EDijkstra::relax(RouteEdge<N, E, C>& cur, const std::set<Edge<N, E>*>& to,
     }
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E, typename C>
 void EDijkstra::buildPath(Edge<N, E>* curE, const Settled<N, E, C>& settled,
                           NList<N, E>* resNodes, EList<N, E>* resEdges)

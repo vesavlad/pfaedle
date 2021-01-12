@@ -15,9 +15,15 @@ class Point
 {
 public:
     Point() :
-        _x(0), _y(0) {}
+        _x(0),
+        _y(0)
+    {}
+
     Point(T x, T y) :
-        _x(x), _y(y) {}
+        _x(x),
+        _y(y)
+    {}
+
     T getX() const { return _x; }
     T getY() const { return _y; }
 
@@ -41,11 +47,13 @@ public:
 
     bool operator!=(const Point<T>& p) const
     {
-        return !(*this == p);
+        const bool equals = (*this == p);
+        return !equals;
     }
 
 private:
-    T _x, _y;
+    T _x;
+    T _y;
 };
 
 template<typename T>

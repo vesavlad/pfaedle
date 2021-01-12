@@ -124,8 +124,8 @@ public:
                      const BBoxIdx& box);
 
 private:
-    int filter_nodes(pugi::xml_document& xml, OsmIdSet* nodes,
-                     OsmIdSet* noHupNodes, const OsmFilter& filter,
+    int filter_nodes(pugi::xml_document& xml, OsmIdSet& nodes,
+                     OsmIdSet& noHupNodes, const OsmFilter& filter,
                      const BBoxIdx& bbox) const;
 
     void readRels(pugi::xml_document& xml,

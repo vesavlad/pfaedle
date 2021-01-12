@@ -15,7 +15,6 @@
 namespace util
 {
 
-// _____________________________________________________________________________
 inline std::string urlDecode(const std::string& encoded)
 {
     std::string decoded;
@@ -43,7 +42,6 @@ inline std::string urlDecode(const std::string& encoded)
     return decoded;
 }
 
-// _____________________________________________________________________________
 inline std::string jsonStringEscape(const std::string& unesc)
 {
     // modified code from
@@ -89,7 +87,6 @@ inline std::string jsonStringEscape(const std::string& unesc)
     return o.str();
 }
 
-// _____________________________________________________________________________
 inline bool replace(std::string& subj, const std::string& from,
                     const std::string& to)
 {
@@ -104,7 +101,6 @@ inline bool replace(std::string& subj, const std::string& from,
     return false;
 }
 
-// _____________________________________________________________________________
 inline bool replaceAll(std::string& subj, const std::string& from,
                        const std::string& to)
 {
@@ -120,7 +116,6 @@ inline bool replaceAll(std::string& subj, const std::string& from,
     return found;
 }
 
-// _____________________________________________________________________________
 inline std::string unixBasename(const std::string& pathname)
 {
     return {std::find_if(pathname.rbegin(), pathname.rend(),
@@ -129,7 +124,6 @@ inline std::string unixBasename(const std::string& pathname)
             pathname.end()};
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline std::string toString(T obj)
 {
@@ -138,7 +132,6 @@ inline std::string toString(T obj)
     return ss.str();
 }
 
-// _____________________________________________________________________________
 inline std::vector<std::string> split(std::string in, char sep)
 {
     std::stringstream ss(in);
@@ -151,24 +144,20 @@ inline std::vector<std::string> split(std::string in, char sep)
     return ret;
 }
 
-// _____________________________________________________________________________
 inline std::string ltrim(std::string str)
 {
     str.erase(0, str.find_first_not_of(" \t\n\v\f\r"));
     return str;
 }
 
-// _____________________________________________________________________________
 inline std::string rtrim(std::string str)
 {
     str.erase(str.find_last_not_of(" \t\n\v\f\r") + 1);
     return str;
 }
 
-// _____________________________________________________________________________
 inline std::string trim(std::string str) { return ltrim(rtrim(str)); }
 
-// _____________________________________________________________________________
 inline size_t editDist(const std::string& s1, const std::string& s2)
 {
     // https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#C++
@@ -194,7 +183,6 @@ inline size_t editDist(const std::string& s1, const std::string& s2)
     return prev[len2];
 }
 
-// _____________________________________________________________________________
 inline size_t prefixEditDist(const std::string& prefix, const std::string& s,
                              size_t deltaMax)
 {
@@ -229,27 +217,23 @@ inline size_t prefixEditDist(const std::string& prefix, const std::string& s,
     return deltaMin;
 }
 
-// _____________________________________________________________________________
 inline size_t prefixEditDist(const std::string& prefix, const std::string& s)
 {
     return prefixEditDist(prefix, s, s.size());
 }
 
-// _____________________________________________________________________________
 inline std::string toUpper(std::string str)
 {
     std::transform(str.begin(), str.end(), str.begin(), toupper);
     return str;
 }
 
-// _____________________________________________________________________________
 inline std::string toLower(std::string str)
 {
     std::transform(str.begin(), str.end(), str.begin(), tolower);
     return str;
 }
 
-// _____________________________________________________________________________
 template<class Iter>
 inline std::string implode(Iter begin, const Iter& end, const char* del)
 {
@@ -266,7 +250,6 @@ inline std::string implode(Iter begin, const Iter& end, const char* del)
     return ss.str();
 }
 
-// _____________________________________________________________________________
 inline std::string normalizeWhiteSpace(const std::string& input)
 {
     std::string ret;
@@ -291,7 +274,6 @@ inline std::string normalizeWhiteSpace(const std::string& input)
     return ret;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline std::string implode(const std::vector<T>& vec, const char* del)
 {

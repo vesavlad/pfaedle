@@ -5,12 +5,12 @@
 #ifndef UTIL_GRAPH_DIRGRAPH_H_
 #define UTIL_GRAPH_DIRGRAPH_H_
 
+#include <util/graph/Graph.h>
+#include <util/graph/Edge.h>
+#include <util/graph/DirNode.h>
+
 #include <set>
 #include <string>
-
-#include "util/graph/Graph.h"
-#include "util/graph/Edge.h"
-#include "util/graph/DirNode.h"
 
 namespace util::graph
 {

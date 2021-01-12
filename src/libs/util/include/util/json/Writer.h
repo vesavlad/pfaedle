@@ -77,7 +77,7 @@ public:
     Writer(std::ostream& out, size_t prec);
     Writer(std::ostream& out, size_t prec, bool pretty);
     Writer(std::ostream& out, size_t prec, bool pretty, size_t indent);
-    ~Writer()= default;
+    ~Writer() = default;
 
     void obj();
     void arr();

@@ -7,13 +7,8 @@
 #include <map>
 #include <ostream>
 #include <string>
-
-using namespace util;
-using namespace xml;
-
-using std::map;
-using std::ostream;
-using std::string;
+namespace util::xml
+{
 
 // _____________________________________________________________________________
 XmlWriter::XmlWriter(std::ostream& out) :
@@ -28,7 +23,7 @@ XmlWriter::XmlWriter(std::ostream& out, bool pret, size_t indent) :
     _out(out), _pretty(pret), _indent(indent) {}
 
 // _____________________________________________________________________________
-void XmlWriter::openTag(const string& tag, const map<string, string>& attrs)
+void XmlWriter::openTag(const std::string& tag, const std::map<std::string, std::string>& attrs)
 {
     if (!_nstack.empty() && _nstack.top().t == COMMENT)
     {
@@ -54,15 +49,15 @@ void XmlWriter::openTag(const string& tag, const map<string, string>& attrs)
 }
 
 // _____________________________________________________________________________
-void XmlWriter::openTag(const string& tag)
+void XmlWriter::openTag(const std::string& tag)
 {
-    openTag(tag, map<string, string>());
+    openTag(tag, std::map<std::string, std::string>());
 }
 
 // _____________________________________________________________________________
-void XmlWriter::openTag(const string& tag, const string& k, const string& v)
+void XmlWriter::openTag(const std::string& tag, const std::string& k, const std::string& v)
 {
-    map<string, string> kv;
+    std::map<std::string, std::string> kv;
     kv[k] = v;
     openTag(tag, kv);
 }
@@ -82,7 +77,7 @@ void XmlWriter::openComment()
 }
 
 // _____________________________________________________________________________
-void XmlWriter::writeText(const string& text)
+void XmlWriter::writeText(const std::string& text)
 {
     if (_nstack.empty())
     {
@@ -115,7 +110,7 @@ void XmlWriter::closeTag()
         }
         else
         {
-            string tag = _nstack.top().pload;
+            std::string tag = _nstack.top().pload;
             _nstack.pop();
             doIndent();
             _out << "</" << tag << ">";
@@ -157,7 +152,7 @@ void XmlWriter::closeHanging()
 }
 
 // _____________________________________________________________________________
-void XmlWriter::putEsced(ostream& out, const string& str, char quot)
+void XmlWriter::putEsced(std::ostream& out, const std::string& str, char quot)
 {
     if (!_nstack.empty() && _nstack.top().t == COMMENT)
     {
@@ -183,14 +178,14 @@ void XmlWriter::putEsced(ostream& out, const string& str, char quot)
 }
 
 // _____________________________________________________________________________
-void XmlWriter::checkTagName(const string& str) const
+void XmlWriter::checkTagName(const std::string& str) const
 {
     if (!isalpha(str[0]) && str[0] != '_')
         throw XmlWriterException(
                 "XML elements must start with either a letter "
                 "or an underscore");
 
-    string begin = str.substr(0, 3);
+    std::string begin = str.substr(0, 3);
     std::transform(begin.begin(), begin.end(), begin.begin(), ::tolower);
     if (begin == "xml")
         throw XmlWriterException(
@@ -206,4 +201,5 @@ void XmlWriter::checkTagName(const string& str) const
                     "XML elements can only contain letters, "
                     "digits, hyphens, underscores and periods.");
     }
+}
 }

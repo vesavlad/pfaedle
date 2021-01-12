@@ -52,24 +52,19 @@ using IPolygon = Polygon<int>;
 const static double EPSILON = 0.00001;
 const static double RAD = 0.017453292519943295;// PI/180
 
-// _____________________________________________________________________________
 template<typename T>
 inline Box<T> pad(const Box<T>& box, double padding)
 {
-    return Box<T>(Point<T>(box.getLowerLeft().getX() - padding,
-                           box.getLowerLeft().getY() - padding),
-                  Point<T>(box.getUpperRight().getX() + padding,
-                           box.getUpperRight().getY() + padding));
+    return Box<T>(Point<T>(box.getLowerLeft().getX() - padding, box.getLowerLeft().getY() - padding),
+                  Point<T>(box.getUpperRight().getX() + padding, box.getUpperRight().getY() + padding));
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Point<T> centroid(const Point<T> p)
 {
     return p;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Point<T> centroid(const LineSegment<T> ls)
 {
@@ -77,7 +72,6 @@ inline Point<T> centroid(const LineSegment<T> ls)
                     (ls.first.getY() + ls.second.getY()) / T(2));
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Point<T> centroid(const Line<T> ls)
 {
@@ -90,21 +84,18 @@ inline Point<T> centroid(const Line<T> ls)
     return Point<T>(x / T(ls.size()), y / T(ls.size()));
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Point<T> centroid(const Polygon<T> ls)
 {
     return centroid(ls.getOuter());
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Point<T> centroid(const Box<T> box)
 {
     return centroid(LineSegment<T>(box.getLowerLeft(), box.getUpperRight()));
 }
 
-// _____________________________________________________________________________
 template<typename T, template<typename> class Geometry>
 inline Point<T> centroid(std::vector<Geometry<T>> multigeo)
 {
@@ -113,7 +104,6 @@ inline Point<T> centroid(std::vector<Geometry<T>> multigeo)
     return centroid(a);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Point<T> rotate(const Point<T>& p, double deg)
 {
@@ -121,7 +111,6 @@ inline Point<T> rotate(const Point<T>& p, double deg)
     return p;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Point<T> rotate(Point<T> p, double deg, const Point<T>& c)
 {
@@ -131,11 +120,9 @@ inline Point<T> rotate(Point<T> p, double deg, const Point<T>& c)
     p = p - c;
 
     return Point<T>(p.getX() * co - p.getY() * si,
-                    p.getX() * si + p.getY() * co) +
-           c;
+                    p.getX() * si + p.getY() * co) + c;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline LineSegment<T> rotate(LineSegment<T> geo, double deg,
                              const Point<T>& c)
@@ -145,14 +132,12 @@ inline LineSegment<T> rotate(LineSegment<T> geo, double deg,
     return geo;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline LineSegment<T> rotate(LineSegment<T> geo, double deg)
 {
     return (geo, deg, centroid(geo));
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Line<T> rotate(Line<T> geo, double deg, const Point<T>& c)
 {
@@ -160,7 +145,6 @@ inline Line<T> rotate(Line<T> geo, double deg, const Point<T>& c)
     return geo;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Polygon<T> rotate(Polygon<T> geo, double deg, const Point<T>& c)
 {
@@ -169,7 +153,6 @@ inline Polygon<T> rotate(Polygon<T> geo, double deg, const Point<T>& c)
     return geo;
 }
 
-// _____________________________________________________________________________
 template<template<typename> class Geometry, typename T>
 inline std::vector<Geometry<T>> rotate(std::vector<Geometry<T>> multigeo,
                                        double deg, const Point<T>& c)
@@ -179,7 +162,6 @@ inline std::vector<Geometry<T>> rotate(std::vector<Geometry<T>> multigeo,
     return multigeo;
 }
 
-// _____________________________________________________________________________
 template<template<typename> class Geometry, typename T>
 inline std::vector<Geometry<T>> rotate(std::vector<Geometry<T>> multigeo,
                                        double deg)
@@ -190,14 +172,12 @@ inline std::vector<Geometry<T>> rotate(std::vector<Geometry<T>> multigeo,
     return multigeo;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Point<T> move(const Point<T>& geo, double x, double y)
 {
     return Point<T>(geo.getX() + x, geo.getY() + y);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Line<T> move(Line<T> geo, double x, double y)
 {
@@ -205,7 +185,6 @@ inline Line<T> move(Line<T> geo, double x, double y)
     return geo;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline LineSegment<T> move(LineSegment<T> geo, double x, double y)
 {
@@ -214,7 +193,6 @@ inline LineSegment<T> move(LineSegment<T> geo, double x, double y)
     return geo;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Polygon<T> move(Polygon<T> geo, double x, double y)
 {
@@ -223,7 +201,6 @@ inline Polygon<T> move(Polygon<T> geo, double x, double y)
     return geo;
 }
 
-// _____________________________________________________________________________
 template<template<typename> class Geometry, typename T>
 inline std::vector<Geometry<T>> move(std::vector<Geometry<T>> multigeo,
                                      double x, double y)
@@ -233,14 +210,12 @@ inline std::vector<Geometry<T>> move(std::vector<Geometry<T>> multigeo,
     return multigeo;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Box<T> minbox()
 {
     return Box<T>();
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline RotatedBox<T> shrink(const RotatedBox<T>& b, double d)
 {
@@ -260,10 +235,8 @@ inline RotatedBox<T> shrink(const RotatedBox<T>& b, double d)
     return RotatedBox<T>(r, b.getDegree(), b.getCenter());
 }
 
-// _____________________________________________________________________________
 inline bool doubleEq(double a, double b) { return fabs(a - b) < EPSILON; }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool contains(const Point<T>& p, const Box<T>& box)
 {
@@ -278,7 +251,6 @@ inline bool contains(const Point<T>& p, const Box<T>& box)
             p.getY() < box.getUpperRight().getY());
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool contains(const Line<T>& l, const Box<T>& box)
 {
@@ -288,7 +260,6 @@ inline bool contains(const Line<T>& l, const Box<T>& box)
     return true;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool contains(const LineSegment<T>& l, const Box<T>& box)
 {
@@ -296,7 +267,6 @@ inline bool contains(const LineSegment<T>& l, const Box<T>& box)
     return contains(l.first, box) && contains(l.second, box);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool contains(const Box<T>& b, const Box<T>& box)
 {
@@ -304,7 +274,6 @@ inline bool contains(const Box<T>& b, const Box<T>& box)
     return contains(b.getLowerLeft(), box) && contains(b.getUpperRight(), box);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool contains(const Point<T>& p, const LineSegment<T>& ls)
 {
@@ -312,7 +281,6 @@ inline bool contains(const Point<T>& p, const LineSegment<T>& ls)
     return fabs(crossProd(p, ls)) < EPSILON && contains(p, getBoundingBox(ls));
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool contains(const LineSegment<T>& a, const LineSegment<T>& b)
 {
@@ -320,7 +288,6 @@ inline bool contains(const LineSegment<T>& a, const LineSegment<T>& b)
     return contains(a.first, b) && contains(a.second, b);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool contains(const Point<T>& p, const Line<T>& l)
 {
@@ -332,7 +299,6 @@ inline bool contains(const Point<T>& p, const Line<T>& l)
     return false;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool contains(const Point<T>& p, const Polygon<T>& poly)
 {
@@ -352,7 +318,6 @@ inline bool contains(const Point<T>& p, const Polygon<T>& poly)
     return c >= 0;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline int8_t polyContCheck(const Point<T>& a, Point<T> b, Point<T> c)
 {
@@ -380,7 +345,6 @@ inline int8_t polyContCheck(const Point<T>& a, Point<T> b, Point<T> c)
     return 0;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool contains(const Polygon<T>& polyC, const Polygon<T>& poly)
 {
@@ -401,7 +365,6 @@ inline bool contains(const Polygon<T>& polyC, const Polygon<T>& poly)
     return true;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool contains(const LineSegment<T>& ls, const Polygon<T>& p)
 {
@@ -431,7 +394,6 @@ inline bool contains(const LineSegment<T>& ls, const Polygon<T>& p)
     return true;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool contains(const Line<T>& l, const Polygon<T>& poly)
 {
@@ -445,7 +407,6 @@ inline bool contains(const Line<T>& l, const Polygon<T>& poly)
     return true;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool contains(const Line<T>& l, const Line<T>& other)
 {
@@ -456,14 +417,12 @@ inline bool contains(const Line<T>& l, const Line<T>& other)
     return true;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool contains(const Box<T>& b, const Polygon<T>& poly)
 {
     return contains(convexHull(b), poly);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool contains(const Polygon<T>& poly, const Box<T>& b)
 {
@@ -475,7 +434,6 @@ inline bool contains(const Polygon<T>& poly, const Box<T>& b)
     return true;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool contains(const Polygon<T>& poly, const Line<T>& l)
 {
@@ -486,7 +444,6 @@ inline bool contains(const Polygon<T>& poly, const Line<T>& l)
     return true;
 }
 
-// _____________________________________________________________________________
 template<template<typename> class GeometryA,
          template<typename> class GeometryB, typename T>
 inline bool contains(const std::vector<GeometryA<T>>& multigeo,
@@ -497,7 +454,6 @@ inline bool contains(const std::vector<GeometryA<T>>& multigeo,
     return true;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const LineSegment<T>& ls1, const LineSegment<T>& ls2)
 {
@@ -516,7 +472,6 @@ inline bool intersects(const LineSegment<T>& ls1, const LineSegment<T>& ls2)
               (crossProd(ls2.second, ls1) < 0))));
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const Point<T>& a, const Point<T>& b, const Point<T>& c,
                        const Point<T>& d)
@@ -525,7 +480,6 @@ inline bool intersects(const Point<T>& a, const Point<T>& b, const Point<T>& c,
     return intersects(LineSegment<T>(a, b), LineSegment<T>(c, d));
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const Line<T>& ls1, const Line<T>& ls2)
 {
@@ -542,35 +496,30 @@ inline bool intersects(const Line<T>& ls1, const Line<T>& ls2)
     return false;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const Line<T>& l, const Point<T>& p)
 {
     return contains(l, p);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const Point<T>& p, const Line<T>& l)
 {
     return intersects(l, p);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const Polygon<T>& l, const Point<T>& p)
 {
     return contains(l, p);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const Point<T>& p, const Polygon<T>& l)
 {
     return intersects(l, p);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const Box<T>& b1, const Box<T>& b2)
 {
@@ -580,14 +529,12 @@ inline bool intersects(const Box<T>& b1, const Box<T>& b2)
            b1.getUpperRight().getY() >= b2.getLowerLeft().getY();
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const Box<T>& b, const Polygon<T>& poly)
 {
     return intersects(b, poly);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const Polygon<T>& poly, const Box<T>& b)
 {
@@ -615,7 +562,6 @@ inline bool intersects(const Polygon<T>& poly, const Box<T>& b)
     return contains(poly, b) || contains(b, poly);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const LineSegment<T>& ls, const Box<T>& b)
 {
@@ -639,7 +585,6 @@ inline bool intersects(const LineSegment<T>& ls, const Box<T>& b)
     return contains(ls, b);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const LineSegment<T>& ls, const Polygon<T>& p)
 {
@@ -656,21 +601,18 @@ inline bool intersects(const LineSegment<T>& ls, const Polygon<T>& p)
     return contains(ls, p);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const Polygon<T>& p, const LineSegment<T>& ls)
 {
     return intersects(ls, p);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const Box<T>& b, const LineSegment<T>& ls)
 {
     return intersects(ls, b);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const Line<T>& l, const Box<T>& b)
 {
@@ -681,28 +623,24 @@ inline bool intersects(const Line<T>& l, const Box<T>& b)
     return false;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const Box<T>& b, const Line<T>& l)
 {
     return intersects(l, b);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const Point<T>& p, const Box<T>& b)
 {
     return contains(p, b);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool intersects(const Box<T>& b, const Point<T>& p)
 {
     return intersects(p, b);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Point<T> intersection(T p1x, T p1y, T q1x, T q1y, T p2x, T p2y, T q2x,
                              T q2y)
@@ -723,7 +661,6 @@ inline Point<T> intersection(T p1x, T p1y, T q1x, T q1y, T p2x, T p2y, T q2x,
     return Point<T>(p1x + (q1x - p1x) * u, p1y + (q1y - p1y) * u);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Point<T> intersection(const Point<T>& p1, const Point<T>& q1,
                              const Point<T>& p2, const Point<T>& q2)
@@ -735,7 +672,6 @@ inline Point<T> intersection(const Point<T>& p1, const Point<T>& q1,
                         p2.getY(), q2.getX(), q2.getY());
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Point<T> intersection(const LineSegment<T>& s1,
                              const LineSegment<T>& s2)
@@ -743,7 +679,6 @@ inline Point<T> intersection(const LineSegment<T>& s1,
     return intersection(s1.first, s1.second, s2.first, s2.second);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool lineIntersects(T p1x, T p1y, T q1x, T q1y, T p2x, T p2y, T q2x,
                            T q2y)
@@ -756,7 +691,6 @@ inline bool lineIntersects(T p1x, T p1y, T q1x, T q1y, T p2x, T p2y, T q2x,
     return a > EPSILON || a < -EPSILON;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline bool lineIntersects(const Point<T>& p1, const Point<T>& q1,
                            const Point<T>& p2, const Point<T>& q2)
@@ -768,7 +702,6 @@ inline bool lineIntersects(const Point<T>& p1, const Point<T>& q1,
                           p2.getY(), q2.getX(), q2.getY());
 }
 
-// _____________________________________________________________________________
 inline double angBetween(double p1x, double p1y, double q1x, double q1y)
 {
     double dY = q1y - p1y;
@@ -776,34 +709,29 @@ inline double angBetween(double p1x, double p1y, double q1x, double q1y)
     return atan2(dY, dX);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double angBetween(const Point<T>& p1, const Point<T>& q1)
 {
     return angBetween(p1.getX(), p1.getY(), q1.getX(), q1.getY());
 }
 
-// _____________________________________________________________________________
 inline double dist(double x1, double y1, double x2, double y2)
 {
     return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double dist(const LineSegment<T>& ls, const Point<T>& p)
 {
     return distToSegment(ls, p);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double dist(const Point<T>& p, const LineSegment<T>& ls)
 {
     return dist(ls, p);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double dist(const LineSegment<T>& ls1, const LineSegment<T>& ls2)
 {
@@ -815,7 +743,6 @@ inline double dist(const LineSegment<T>& ls1, const LineSegment<T>& ls2)
     return std::min(d1, std::min(d2, (std::min(d3, d4))));
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double dist(const Point<T>& p, const Line<T>& l)
 {
@@ -829,14 +756,12 @@ inline double dist(const Point<T>& p, const Line<T>& l)
     return d;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double dist(const Line<T>& l, const Point<T>& p)
 {
     return dist(p, l);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double dist(const LineSegment<T>& ls, const Line<T>& l)
 {
@@ -850,14 +775,12 @@ inline double dist(const LineSegment<T>& ls, const Line<T>& l)
     return d;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double dist(const Line<T>& l, const LineSegment<T>& ls)
 {
     return dist(ls, l);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double dist(const Line<T>& la, const Line<T>& lb)
 {
@@ -871,7 +794,6 @@ inline double dist(const Line<T>& la, const Line<T>& lb)
     return d;
 }
 
-// _____________________________________________________________________________
 inline double innerProd(double x1, double y1, double x2, double y2, double x3,
                         double y3)
 {
@@ -886,7 +808,6 @@ inline double innerProd(double x1, double y1, double x2, double y2, double x3,
     return theta * (180 / M_PI);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double innerProd(const Point<T>& a, const Point<T>& b,
                         const Point<T>& c)
@@ -894,14 +815,12 @@ inline double innerProd(const Point<T>& a, const Point<T>& b,
     return innerProd(a.getX(), a.getY(), b.getX(), b.getY(), c.getX(), c.getY());
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double crossProd(const Point<T>& a, const Point<T>& b)
 {
     return a.getX() * b.getY() - b.getX() * a.getY();
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double crossProd(const Point<T>& p, const LineSegment<T>& ls)
 {
@@ -911,14 +830,12 @@ inline double crossProd(const Point<T>& p, const LineSegment<T>& ls)
             Point<T>(p.getX() - ls.first.getX(), p.getY() - ls.first.getY()));
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double dist(const Point<T>& p1, const Point<T>& p2)
 {
     return dist(p1.getX(), p1.getY(), p2.getX(), p2.getY());
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Point<T> pointFromWKT(std::string wkt)
 {
@@ -937,7 +854,6 @@ inline Point<T> pointFromWKT(std::string wkt)
     throw std::runtime_error("Could not parse WKT");
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Line<T> lineFromWKT(std::string wkt)
 {
@@ -962,7 +878,6 @@ inline Line<T> lineFromWKT(std::string wkt)
     throw std::runtime_error("Could not parse WKT");
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline std::string getWKT(const Point<T>& p)
 {
@@ -971,7 +886,6 @@ inline std::string getWKT(const Point<T>& p)
     return ss.str();
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline std::string getWKT(const std::vector<Point<T>>& p)
 {
@@ -986,7 +900,6 @@ inline std::string getWKT(const std::vector<Point<T>>& p)
     return ss.str();
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline std::string getWKT(const Line<T>& l)
 {
@@ -1001,7 +914,6 @@ inline std::string getWKT(const Line<T>& l)
     return ss.str();
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline std::string getWKT(const std::vector<Line<T>>& ls)
 {
@@ -1024,14 +936,12 @@ inline std::string getWKT(const std::vector<Line<T>>& ls)
     return ss.str();
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline std::string getWKT(const LineSegment<T>& l)
 {
     return getWKT(Line<T>{l.first, l.second});
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline std::string getWKT(const Box<T>& l)
 {
@@ -1046,7 +956,6 @@ inline std::string getWKT(const Box<T>& l)
     return ss.str();
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline std::string getWKT(const Polygon<T>& p)
 {
@@ -1061,7 +970,6 @@ inline std::string getWKT(const Polygon<T>& p)
     return ss.str();
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline std::string getWKT(const std::vector<Polygon<T>>& ls)
 {
@@ -1086,7 +994,6 @@ inline std::string getWKT(const std::vector<Polygon<T>>& ls)
     return ss.str();
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double len(const Point<T>& g)
 {
@@ -1094,7 +1001,6 @@ inline double len(const Point<T>& g)
     return 0;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double len(const Line<T>& g)
 {
@@ -1103,7 +1009,6 @@ inline double len(const Line<T>& g)
     return ret;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Point<T> simplify(const Point<T>& g, double d)
 {
@@ -1111,7 +1016,6 @@ inline Point<T> simplify(const Point<T>& g, double d)
     return g;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline LineSegment<T> simplify(const LineSegment<T>& g, double d)
 {
@@ -1119,7 +1023,6 @@ inline LineSegment<T> simplify(const LineSegment<T>& g, double d)
     return g;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Box<T> simplify(const Box<T>& g, double d)
 {
@@ -1127,7 +1030,6 @@ inline Box<T> simplify(const Box<T>& g, double d)
     return g;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline RotatedBox<T> simplify(const RotatedBox<T>& g, double d)
 {
@@ -1135,7 +1037,6 @@ inline RotatedBox<T> simplify(const RotatedBox<T>& g, double d)
     return g;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Line<T> simplify(const Line<T>& g, double d)
 {
@@ -1164,7 +1065,6 @@ inline Line<T> simplify(const Line<T>& g, double d)
     return Line<T>{g.front(), g.back()};
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Polygon<T> simplify(const Polygon<T>& g, double d)
 {
@@ -1174,7 +1074,6 @@ inline Polygon<T> simplify(const Polygon<T>& g, double d)
     return Polygon<T>(simple);
 }
 
-// _____________________________________________________________________________
 inline double distToSegment(double lax, double lay, double lbx, double lby,
                             double px, double py)
 {
@@ -1195,7 +1094,6 @@ inline double distToSegment(double lax, double lay, double lbx, double lby,
     return dist(px, py, lax + t * (lbx - lax), lay + t * (lby - lay));
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double distToSegment(const Point<T>& la, const Point<T>& lb,
                             const Point<T>& p)
@@ -1204,7 +1102,6 @@ inline double distToSegment(const Point<T>& la, const Point<T>& lb,
                          p.getY());
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double distToSegment(const LineSegment<T>& ls, const Point<T>& p)
 {
@@ -1212,7 +1109,6 @@ inline double distToSegment(const LineSegment<T>& ls, const Point<T>& p)
                          ls.second.getY(), p.getX(), p.getY());
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Point<T> projectOn(const Point<T>& a, const Point<T>& b,
                           const Point<T>& c)
@@ -1248,7 +1144,6 @@ inline Point<T> projectOn(const Point<T>& a, const Point<T>& b,
     return ret;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double parallelity(const Box<T>& box, const Line<T>& line)
 {
@@ -1282,7 +1177,6 @@ inline double parallelity(const Box<T>& box, const Line<T>& line)
     return 1 - (ret / (M_PI / 4));
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double parallelity(const Box<T>& box, const MultiLine<T>& multiline)
 {
@@ -1295,7 +1189,6 @@ inline double parallelity(const Box<T>& box, const MultiLine<T>& multiline)
     return ret / static_cast<float>(multiline.size());
 }
 
-// _____________________________________________________________________________
 template<template<typename> class Geometry, typename T>
 inline RotatedBox<T> getOrientedEnvelope(Geometry<T> pol)
 {
@@ -1323,7 +1216,6 @@ inline RotatedBox<T> getOrientedEnvelope(Geometry<T> pol)
     return RotatedBox<T>(tmpBox, -rotateDeg, center);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Box<T> extendBox(const Box<T>& a, Box<T> b)
 {
@@ -1332,7 +1224,6 @@ inline Box<T> extendBox(const Box<T>& a, Box<T> b)
     return b;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Box<T> extendBox(const Point<T>& p, Box<T> b)
 {
@@ -1344,14 +1235,12 @@ inline Box<T> extendBox(const Point<T>& p, Box<T> b)
     return b;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Box<T> getBoundingBox(const Point<T>& p)
 {
     return Box<T>(p, p);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Box<T> getBoundingBox(const Line<T>& l)
 {
@@ -1360,7 +1249,6 @@ inline Box<T> getBoundingBox(const Line<T>& l)
     return ret;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Box<T> getBoundingBox(const Polygon<T>& pol)
 {
@@ -1369,7 +1257,6 @@ inline Box<T> getBoundingBox(const Polygon<T>& pol)
     return ret;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Box<T> getBoundingBox(const LineSegment<T>& ls)
 {
@@ -1379,14 +1266,12 @@ inline Box<T> getBoundingBox(const LineSegment<T>& ls)
     return b;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Box<T> getBoundingBox(const Box<T>& b)
 {
     return b;
 }
 
-// _____________________________________________________________________________
 template<template<typename> class Geometry, typename T>
 inline Box<T> getBoundingBox(const std::vector<Geometry<T>>& multigeo)
 {
@@ -1395,28 +1280,24 @@ inline Box<T> getBoundingBox(const std::vector<Geometry<T>>& multigeo)
     return b;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Polygon<T> convexHull(const Point<T>& p)
 {
     return Polygon<T>({p});
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Polygon<T> convexHull(const Box<T>& b)
 {
     return Polygon<T>(b);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Polygon<T> convexHull(const LineSegment<T>& b)
 {
     return Polygon<T>(Line<T>{b.first, b.second});
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Polygon<T> convexHull(const RotatedBox<T>& b)
 {
@@ -1425,7 +1306,6 @@ inline Polygon<T> convexHull(const RotatedBox<T>& b)
     return p;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline size_t convexHullImpl(const MultiPoint<T>& a, size_t p1, size_t p2,
                              Line<T>* h)
@@ -1453,7 +1333,6 @@ inline size_t convexHullImpl(const MultiPoint<T>& a, size_t p1, size_t p2,
     return in + convexHullImpl(a, p2 + in - 1, p2 + in, h);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Polygon<T> convexHull(const MultiPoint<T>& l)
 {
@@ -1477,14 +1356,12 @@ inline Polygon<T> convexHull(const MultiPoint<T>& l)
     return Polygon<T>(hull);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Polygon<T> convexHull(const Polygon<T>& p)
 {
     return convexHull(p.getOuter());
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Polygon<T> convexHull(const MultiLine<T>& ls)
 {
@@ -1493,7 +1370,6 @@ inline Polygon<T> convexHull(const MultiLine<T>& ls)
     return convexHull(mp);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Box<T> extendBox(const Line<T>& l, Box<T> b)
 {
@@ -1501,7 +1377,6 @@ inline Box<T> extendBox(const Line<T>& l, Box<T> b)
     return b;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Box<T> extendBox(const LineSegment<T>& ls, Box<T> b)
 {
@@ -1510,14 +1385,12 @@ inline Box<T> extendBox(const LineSegment<T>& ls, Box<T> b)
     return b;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Box<T> extendBox(const Polygon<T>& ls, Box<T> b)
 {
     return extendBox(ls.getOuter(), b);
 }
 
-// _____________________________________________________________________________
 template<template<typename> class Geometry, typename T>
 inline Box<T> extendBox(const std::vector<Geometry<T>>& multigeom, Box<T> b)
 {
@@ -1525,7 +1398,6 @@ inline Box<T> extendBox(const std::vector<Geometry<T>>& multigeom, Box<T> b)
     return b;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double area(const Point<T>& b)
 {
@@ -1533,7 +1405,6 @@ inline double area(const Point<T>& b)
     return 0;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double area(const LineSegment<T>& b)
 {
@@ -1541,7 +1412,6 @@ inline double area(const LineSegment<T>& b)
     return 0;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double area(const Line<T>& b)
 {
@@ -1549,7 +1419,6 @@ inline double area(const Line<T>& b)
     return 0;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double area(const Box<T>& b)
 {
@@ -1557,7 +1426,6 @@ inline double area(const Box<T>& b)
            (b.getUpperRight().getY() - b.getLowerLeft().getY());
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double area(const Polygon<T>& b)
 {
@@ -1573,7 +1441,6 @@ inline double area(const Polygon<T>& b)
     return fabs(ret / 2.0);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double commonArea(const Box<T>& ba, const Box<T>& bb)
 {
@@ -1586,7 +1453,6 @@ inline double commonArea(const Box<T>& ba, const Box<T>& bb)
     return (r - l) * (t - b);
 }
 
-// _____________________________________________________________________________
 template<template<typename> class Geometry, typename T>
 inline RotatedBox<T> getFullEnvelope(std::vector<Geometry<T>> pol)
 {
@@ -1615,7 +1481,6 @@ inline RotatedBox<T> getFullEnvelope(std::vector<Geometry<T>> pol)
     return RotatedBox<T>(tmpBox, rotateDeg, center);
 }
 
-// _____________________________________________________________________________
 template<template<typename> class Geometry, typename T>
 inline RotatedBox<T> getFullEnvelope(const Geometry<T> pol)
 {
@@ -1624,7 +1489,6 @@ inline RotatedBox<T> getFullEnvelope(const Geometry<T> pol)
     return getFullEnvelope(mult);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline RotatedBox<T> getOrientedEnvelopeAvg(MultiLine<T> ml)
 {
@@ -1665,7 +1529,6 @@ inline RotatedBox<T> getOrientedEnvelopeAvg(MultiLine<T> ml)
     return rbox;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Line<T> densify(const Line<T>& l, double d)
 {
@@ -1694,7 +1557,6 @@ inline Line<T> densify(const Line<T>& l, double d)
     return ret;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double frechetDistC(size_t i, size_t j, const Line<T>& p,
                            const Line<T>& q,
@@ -1722,7 +1584,6 @@ inline double frechetDistC(size_t i, size_t j, const Line<T>& p,
     return ca[i][j];
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double frechetDist(const Line<T>& a, const Line<T>& b, double d)
 {
@@ -1739,7 +1600,6 @@ inline double frechetDist(const Line<T>& a, const Line<T>& b, double d)
     return fd;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double accFrechetDistC(const Line<T>& a, const Line<T>& b, double d)
 {
@@ -1768,7 +1628,6 @@ inline double accFrechetDistC(const Line<T>& a, const Line<T>& b, double d)
     return ca[p.size() - 1][q.size() - 1];
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Point<T> latLngToWebMerc(T lat, T lng)
 {
@@ -1779,7 +1638,6 @@ inline Point<T> latLngToWebMerc(T lat, T lng)
     return Point<T>(x, y);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline Point<T> webMercToLatLng(T x, T y)
 {
@@ -1789,7 +1647,6 @@ inline Point<T> webMercToLatLng(T x, T y)
     return Point<T>(lon, lat);
 }
 
-// _____________________________________________________________________________
 template<typename G1, typename G2>
 inline double webMercMeterDist(const G1& a, const G2& b)
 {
@@ -1802,7 +1659,6 @@ inline double webMercMeterDist(const G1& a, const G2& b)
     return util::geo::dist(a, b) * cos((latA + latB) / 2.0);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 inline double webMercLen(const Line<T>& g)
 {
@@ -1811,7 +1667,6 @@ inline double webMercLen(const Line<T>& g)
     return ret;
 }
 
-// _____________________________________________________________________________
 template<typename G>
 inline double webMercDistFactor(const G& a)
 {

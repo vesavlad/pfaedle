@@ -5,13 +5,13 @@
 #ifndef UTIL_GEO_POLYLINE_H_
 #define UTIL_GEO_POLYLINE_H_
 
+#include <util/geo/Geo.h>
 #include <cfloat>
 #include <ostream>
 #include <iomanip>
 #include <string>
 #include <set>
 #include <vector>
-#include "Geo.h"
 
 namespace util::geo
 {
@@ -25,10 +25,17 @@ template<typename T>
 struct LinePoint
 {
     LinePoint() :
-        lastIndex(0), totalPos(-1), p() {}
+        lastIndex(0),
+        totalPos(-1),
+        p()
+    {}
 
     LinePoint(size_t i, double pos, const Point<T>& p) :
-        lastIndex(i), totalPos(pos), p(p) {}
+        lastIndex(i),
+        totalPos(pos), 
+        p(p)
+    {}
+
     size_t lastIndex;
     double totalPos;
     Point<T> p;
@@ -141,25 +148,21 @@ private:
     Line<T> _line;
 };
 
-// _____________________________________________________________________________
 template<typename T>
 PolyLine<T>::PolyLine()
 {}
 
-// _____________________________________________________________________________
 template<typename T>
 PolyLine<T>::PolyLine(const Point<T>& from, const Point<T>& to)
 {
     *this << from << to;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 PolyLine<T>::PolyLine(const Line<T>& l) :
     _line(l)
 {}
 
-// _____________________________________________________________________________
 template<typename T>
 PolyLine<T>& PolyLine<T>::operator<<(const Point<T>& p)
 {
@@ -167,7 +170,6 @@ PolyLine<T>& PolyLine<T>::operator<<(const Point<T>& p)
     return *this;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 PolyLine<T>& PolyLine<T>::operator>>(const Point<T>& p)
 {
@@ -175,14 +177,12 @@ PolyLine<T>& PolyLine<T>::operator>>(const Point<T>& p)
     return *this;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 void PolyLine<T>::reverse()
 {
     std::reverse(_line.begin(), _line.end());
 }
 
-// _____________________________________________________________________________
 template<typename T>
 PolyLine<T> PolyLine<T>::getReversed() const
 {
@@ -191,14 +191,12 @@ PolyLine<T> PolyLine<T>::getReversed() const
     return ret;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 const Line<T>& PolyLine<T>::getLine() const
 {
     return _line;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 PolyLine<T> PolyLine<T>::getPerpOffsetted(double units) const
 {
@@ -207,7 +205,6 @@ PolyLine<T> PolyLine<T>::getPerpOffsetted(double units) const
     return p;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 void PolyLine<T>::offsetPerp(double units)
 {
@@ -294,7 +291,6 @@ void PolyLine<T>::offsetPerp(double units)
     fixTopology(fabs(2 * 3.14 * units));
 }
 
-// _____________________________________________________________________________
 template<typename T>
 PolyLine<T> PolyLine<T>::getSegment(double a, double b) const
 {
@@ -310,7 +306,6 @@ PolyLine<T> PolyLine<T>::getSegment(double a, double b) const
     return getSegment(start, end);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 PolyLine<T> PolyLine<T>::getSegmentAtDist(double a, double b) const
 {
@@ -326,7 +321,6 @@ PolyLine<T> PolyLine<T>::getSegmentAtDist(double a, double b) const
     return getSegment(start, end);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 PolyLine<T> PolyLine<T>::getSegment(const Point<T>& a,
                                     const Point<T>& b) const
@@ -337,7 +331,6 @@ PolyLine<T> PolyLine<T>::getSegment(const Point<T>& a,
     return getSegment(start, end);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 PolyLine<T> PolyLine<T>::getSegment(const LinePoint<T>& start,
                                     const LinePoint<T>& end) const
@@ -358,7 +351,6 @@ PolyLine<T> PolyLine<T>::getSegment(const LinePoint<T>& start,
     return ret;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 LinePoint<T> PolyLine<T>::getPointAtDist(double atDist) const
 {
@@ -390,7 +382,6 @@ LinePoint<T> PolyLine<T>::getPointAtDist(double atDist) const
     return LinePoint<T>(_line.size() - 1, 1, _line.back());
 }
 
-// _____________________________________________________________________________
 template<typename T>
 LinePoint<T> PolyLine<T>::getPointAt(double at) const
 {
@@ -398,7 +389,6 @@ LinePoint<T> PolyLine<T>::getPointAt(double at) const
     return getPointAtDist(at);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 Point<T> PolyLine<T>::interpolate(const Point<T>& a, const Point<T>& b,
                                   double p) const
@@ -412,28 +402,24 @@ Point<T> PolyLine<T>::interpolate(const Point<T>& a, const Point<T>& b,
                     a.getY() + (n2 * p));
 }
 
-// _____________________________________________________________________________
 template<typename T>
 double PolyLine<T>::distTo(const PolyLine<T>& g) const
 {
     return dist(_line, g.getLine());
 }
 
-// _____________________________________________________________________________
 template<typename T>
 double PolyLine<T>::distTo(const Point<T>& p) const
 {
     return dist(_line, p);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 double PolyLine<T>::getLength() const
 {
     return len(_line);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 PolyLine<T> PolyLine<T>::average(const std::vector<const PolyLine<T>*>& lines,
                                  const std::vector<double>& weights)
@@ -499,14 +485,12 @@ PolyLine<T> PolyLine<T>::average(const std::vector<const PolyLine<T>*>& lines,
     return ret;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 PolyLine<T> PolyLine<T>::average(const std::vector<const PolyLine<T>*>& lines)
 {
     return average(lines, std::vector<double>());
 }
 
-// _____________________________________________________________________________
 template<typename T>
 std::pair<size_t, double> PolyLine<T>::nearestSegmentAfter(const Point<T>& p,
                                                            size_t a) const
@@ -552,21 +536,18 @@ std::pair<size_t, double> PolyLine<T>::nearestSegmentAfter(const Point<T>& p,
     return std::pair<size_t, double>(smallest, smallestDist);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 std::pair<size_t, double> PolyLine<T>::nearestSegment(const Point<T>& p) const
 {
     return nearestSegmentAfter(p, 0);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 LinePoint<T> PolyLine<T>::projectOn(const Point<T>& p) const
 {
     return projectOnAfter(p, 0);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 LinePoint<T> PolyLine<T>::projectOnAfter(const Point<T>& p, size_t a) const
 {
@@ -583,14 +564,12 @@ LinePoint<T> PolyLine<T>::projectOnAfter(const Point<T>& p, size_t a) const
     return LinePoint<T>(bc.first, bc.second, ret);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 void PolyLine<T>::simplify(double d)
 {
     _line = geo::simplify(_line, d);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 void PolyLine<T>::smoothenOutliers(double d)
 {
@@ -609,7 +588,6 @@ void PolyLine<T>::smoothenOutliers(double d)
     }
 }
 
-// _____________________________________________________________________________
 template<typename T>
 bool PolyLine<T>::equals(const PolyLine<T>& rhs) const
 {
@@ -618,7 +596,6 @@ bool PolyLine<T>::equals(const PolyLine<T>& rhs) const
     return equals(rhs, 100);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 bool PolyLine<T>::operator==(const PolyLine<T>& rhs) const
 {
@@ -627,7 +604,6 @@ bool PolyLine<T>::operator==(const PolyLine<T>& rhs) const
     return equals(rhs, 100);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 bool PolyLine<T>::equals(const PolyLine<T>& rhs, double dmax) const
 {
@@ -649,7 +625,6 @@ bool PolyLine<T>::equals(const PolyLine<T>& rhs, double dmax) const
     return true;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 bool PolyLine<T>::contains(const PolyLine<T>& rhs, double dmax) const
 {
@@ -667,7 +642,6 @@ bool PolyLine<T>::contains(const PolyLine<T>& rhs, double dmax) const
     return true;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 void PolyLine<T>::move(double vx, double vy)
 {
@@ -678,7 +652,6 @@ void PolyLine<T>::move(double vx, double vy)
     }
 }
 
-// _____________________________________________________________________________
 template<typename T>
 SharedSegments<T> PolyLine<T>::getSharedSegments(const PolyLine<T>& pl,
                                                  double dmax) const
@@ -812,7 +785,6 @@ SharedSegments<T> PolyLine<T>::getSharedSegments(const PolyLine<T>& pl,
     return ret;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 std::set<LinePoint<T>, LinePointCmp<T>> PolyLine<T>::getIntersections(
         const PolyLine<T>& g) const
@@ -830,7 +802,6 @@ std::set<LinePoint<T>, LinePointCmp<T>> PolyLine<T>::getIntersections(
     return ret;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 std::set<LinePoint<T>, LinePointCmp<T>> PolyLine<T>::getIntersections(
         const PolyLine<T>& p, size_t a, size_t b) const
@@ -856,7 +827,6 @@ std::set<LinePoint<T>, LinePointCmp<T>> PolyLine<T>::getIntersections(
     return ret;
 }
 
-// _____________________________________________________________________________
 template<typename T>
 PolyLine<T> PolyLine<T>::getOrthoLineAtDist(double d, double length) const
 {
@@ -873,14 +843,12 @@ PolyLine<T> PolyLine<T>::getOrthoLineAtDist(double d, double length) const
     return PolyLine(Point<T>(angleX1, angleY1), Point<T>(angleX2, angleY2));
 }
 
-// _____________________________________________________________________________
 template<typename T>
 void PolyLine<T>::empty()
 {
     _line.empty();
 }
 
-// _____________________________________________________________________________
 template<typename T>
 std::pair<double, double> PolyLine<T>::getSlopeBetween(double ad,
                                                        double bd) const
@@ -896,7 +864,6 @@ std::pair<double, double> PolyLine<T>::getSlopeBetween(double ad,
     return std::pair<double, double>(dx, dy);
 }
 
-// _____________________________________________________________________________
 template<typename T>
 std::pair<double, double> PolyLine<T>::getSlopeBetweenDists(double ad,
                                                             double bd) const
@@ -904,7 +871,6 @@ std::pair<double, double> PolyLine<T>::getSlopeBetweenDists(double ad,
     return getSlopeBetween(ad / getLength(), bd / getLength());
 }
 
-// _____________________________________________________________________________
 template<typename T>
 std::string PolyLine<T>::getWKT() const
 {
@@ -914,7 +880,6 @@ std::string PolyLine<T>::getWKT() const
     return ss.str();
 }
 
-// _____________________________________________________________________________
 template<typename T>
 void PolyLine<T>::fixTopology(double maxl)
 {
@@ -947,7 +912,6 @@ void PolyLine<T>::fixTopology(double maxl)
     }
 }
 
-// _____________________________________________________________________________
 template<typename T>
 void PolyLine<T>::applyChaikinSmooth(size_t depth)
 {
@@ -975,14 +939,12 @@ void PolyLine<T>::applyChaikinSmooth(size_t depth)
     }
 }
 
-// _____________________________________________________________________________
 template<typename T>
 const Point<T>& PolyLine<T>::front() const
 {
     return _line.front();
 }
 
-// _____________________________________________________________________________
 template<typename T>
 const Point<T>& PolyLine<T>::back() const
 {

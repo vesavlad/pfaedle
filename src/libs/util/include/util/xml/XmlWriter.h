@@ -10,82 +10,91 @@
 #include <stack>
 #include <string>
 
-namespace util {
-namespace xml {
+namespace util::xml
+{
 
-class XmlWriterException : public std::exception {
- public:
-  XmlWriterException(std::string msg) : _msg(msg) {}
-  ~XmlWriterException() noexcept override {}
+class XmlWriterException : public std::exception
+{
+public:
+    XmlWriterException(std::string msg) :
+        _msg(msg) {}
+    ~XmlWriterException() noexcept override = default;
 
-  const char* what() const noexcept override { return _msg.c_str(); };
+    const char* what() const noexcept override { return _msg.c_str(); };
 
- private:
-  std::string _msg;
+private:
+    std::string _msg;
 };
 
 // simple XML writer class without much overhead
-class XmlWriter {
- public:
-  explicit XmlWriter(std::ostream& out);
-  XmlWriter(std::ostream& out, bool pretty);
-  XmlWriter(std::ostream& out, bool pretty, size_t indent);
-  ~XmlWriter()= default;
+class XmlWriter
+{
+public:
+    explicit XmlWriter(std::ostream& out);
+    XmlWriter(std::ostream& out, bool pretty);
+    XmlWriter(std::ostream& out, bool pretty, size_t indent);
+    ~XmlWriter() = default;
 
-  // open tag without attributes
-  void openTag(const std::string& tag);
+    // open tag without attributes
+    void openTag(const std::string& tag);
 
-  // open tag with single attribute (for convenience...)
-  void openTag(const std::string& tag, const std::string& key,
-               const std::string& val);
+    // open tag with single attribute (for convenience...)
+    void openTag(const std::string& tag,
+                 const std::string& key,
+                 const std::string& val);
 
-  // open tag with attribute list
-  void openTag(const std::string& tag,
-               const std::map<std::string, std::string>& attrs);
+    // open tag with attribute list
+    void openTag(const std::string& tag,
+                 const std::map<std::string, std::string>& attrs);
 
-  // open comment
-  void openComment();
+    // open comment
+    void openComment();
 
-  // write text
-  void writeText(const std::string& text);
+    // write text
+    void writeText(const std::string& text);
 
-  // close tag
-  void closeTag();
+    // close tag
+    void closeTag();
 
-  // close all open tags, essentially closing the document
-  void closeTags();
+    // close all open tags, essentially closing the document
+    void closeTags();
 
- private:
-  enum XML_NODE_T { TAG, TEXT, COMMENT };
+private:
+    enum XML_NODE_T
+    {
+        TAG,
+        TEXT,
+        COMMENT
+    };
 
-  struct XmlNode {
-    XmlNode(XML_NODE_T t, const std::string& pload, bool hanging)
-        : t(t), pload(pload), hanging(hanging) {}
-    XML_NODE_T t;
-    std::string pload;
-    bool hanging;
-  };
+    struct XmlNode
+    {
+        XmlNode(XML_NODE_T t, std::string pload, bool hanging) :
+            t(t), pload(std::move(pload)), hanging(hanging) {}
+        XML_NODE_T t;
+        std::string pload;
+        bool hanging;
+    };
 
-  std::ostream& _out;
-  std::stack<XmlNode> _nstack;
+    std::ostream& _out;
+    std::stack<XmlNode> _nstack;
 
-  bool _pretty;
-  size_t _indent;
+    bool _pretty;
+    size_t _indent;
 
-  // handles indentation
-  void doIndent();
+    // handles indentation
+    void doIndent();
 
-  // close "hanging" tags
-  void closeHanging();
+    // close "hanging" tags
+    void closeHanging();
 
-  // pushes XML escaped text to stream
-  void putEsced(std::ostream& out, const std::string& str, char quot);
+    // pushes XML escaped text to stream
+    void putEsced(std::ostream& out, const std::string& str, char quot);
 
-  // checks tag names for validiy
-  void checkTagName(const std::string& str) const;
+    // checks tag names for validiy
+    void checkTagName(const std::string& str) const;
 };
 
-}  // namespace xml
 }  // namespace util
 
 #endif  // UTIL_XML_XMLWRITER_H_

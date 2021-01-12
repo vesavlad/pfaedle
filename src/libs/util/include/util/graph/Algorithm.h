@@ -13,10 +13,6 @@
 namespace util::graph
 {
 
-using util::graph::Graph;
-using util::graph::Node;
-using util::graph::Edge;
-
 // collection of general graph algorithms
 class Algorithm
 {

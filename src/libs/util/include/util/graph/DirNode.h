@@ -51,19 +51,16 @@ private:
     bool adjOutContains(const Edge<N, E>* e) const;
 };
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 DirNode<N, E>::DirNode() :
     _pl()
 {}
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 DirNode<N, E>::DirNode(const N& pl) :
     _pl(pl)
 {}
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 DirNode<N, E>::~DirNode()
 {
@@ -106,7 +103,6 @@ DirNode<N, E>::~DirNode()
     }
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 void DirNode<N, E>::addEdge(Edge<N, E>* e)
 {
@@ -122,7 +118,6 @@ void DirNode<N, E>::addEdge(Edge<N, E>* e)
     }
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 void DirNode<N, E>::removeEdge(Edge<N, E>* e)
 {
@@ -138,84 +133,72 @@ void DirNode<N, E>::removeEdge(Edge<N, E>* e)
     }
 }
 //
-// _____________________________________________________________________________
 template<typename N, typename E>
 bool DirNode<N, E>::hasEdgeIn(const Edge<N, E>* e) const
 {
     return e->getTo() == this;
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 bool DirNode<N, E>::hasEdgeOut(const Edge<N, E>* e) const
 {
     return e->getFrom() == this;
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 bool DirNode<N, E>::hasEdge(const Edge<N, E>* e) const
 {
     return hasEdgeOut(e) || hasEdgeIn(e);
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 const std::vector<Edge<N, E>*>& DirNode<N, E>::getAdjList() const
 {
     return _adjListOut;
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 const std::vector<Edge<N, E>*>& DirNode<N, E>::getAdjListOut() const
 {
     return _adjListOut;
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 const std::vector<Edge<N, E>*>& DirNode<N, E>::getAdjListIn() const
 {
     return _adjListIn;
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 size_t DirNode<N, E>::getDeg() const
 {
     return _adjListOut.size();
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 size_t DirNode<N, E>::getInDeg() const
 {
     return _adjListIn.size();
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 size_t DirNode<N, E>::getOutDeg() const
 {
     return _adjListOut.size();
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 N& DirNode<N, E>::pl()
 {
     return _pl;
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 const N& DirNode<N, E>::pl() const
 {
     return _pl;
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 bool DirNode<N, E>::adjInContains(const Edge<N, E>* e) const
 {
@@ -224,7 +207,6 @@ bool DirNode<N, E>::adjInContains(const Edge<N, E>* e) const
     return false;
 }
 
-// _____________________________________________________________________________
 template<typename N, typename E>
 bool DirNode<N, E>::adjOutContains(const Edge<N, E>* e) const
 {

@@ -25,47 +25,47 @@ public:
     template<typename T>
     void print(const Point<T>& p, const json::Val& attrs)
     {
-        _wr.obj();
-        _wr.keyVal("type", "Feature");
+        writter_.obj();
+        writter_.keyVal("type", "Feature");
 
-        _wr.key("geometry");
-        _wr.obj();
-        _wr.keyVal("type", "Point");
-        _wr.key("coordinates");
-        _wr.arr();
-        _wr.val(p.getX());
-        _wr.val(p.getY());
-        _wr.close();
-        _wr.close();
-        _wr.key("properties");
-        _wr.val(attrs);
-        _wr.close();
+        writter_.key("geometry");
+        writter_.obj();
+        writter_.keyVal("type", "Point");
+        writter_.key("coordinates");
+        writter_.arr();
+        writter_.val(p.getX());
+        writter_.val(p.getY());
+        writter_.close();
+        writter_.close();
+        writter_.key("properties");
+        writter_.val(attrs);
+        writter_.close();
     }
 
     template<typename T>
     void print(const Line<T>& l, const json::Val& attrs)
     {
         if (l.empty()) return;
-        _wr.obj();
-        _wr.keyVal("type", "Feature");
+        writter_.obj();
+        writter_.keyVal("type", "Feature");
 
-        _wr.key("geometry");
-        _wr.obj();
-        _wr.keyVal("type", "LineString");
-        _wr.key("coordinates");
-        _wr.arr();
+        writter_.key("geometry");
+        writter_.obj();
+        writter_.keyVal("type", "LineString");
+        writter_.key("coordinates");
+        writter_.arr();
         for (auto p : l)
         {
-            _wr.arr();
-            _wr.val(p.getX());
-            _wr.val(p.getY());
-            _wr.close();
+            writter_.arr();
+            writter_.val(p.getX());
+            writter_.val(p.getY());
+            writter_.close();
         }
-        _wr.close();
-        _wr.close();
-        _wr.key("properties");
-        _wr.val(attrs);
-        _wr.close();
+        writter_.close();
+        writter_.close();
+        writter_.key("properties");
+        writter_.val(attrs);
+        writter_.close();
     }
 
     template<typename T>
@@ -88,7 +88,7 @@ public:
     void flush();
 
 private:
-    json::Writer _wr;
+    json::Writer writter_;
 };
 }
 

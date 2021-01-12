@@ -5,8 +5,8 @@
 #ifndef UTIL_GEO_LINE_H_
 #define UTIL_GEO_LINE_H_
 
+#include <util/geo/Point.h>
 #include <vector>
-#include "./Point.h"
 
 namespace util::geo
 {

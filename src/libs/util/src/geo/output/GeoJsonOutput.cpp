@@ -8,28 +8,28 @@ using namespace util::geo::output;
 
 // _____________________________________________________________________________
 GeoJsonOutput::GeoJsonOutput(std::ostream& str) :
-    _wr(str, 10, true)
+    writter_(str, 10, true)
 {
-    _wr.obj();
-    _wr.keyVal("type", "FeatureCollection");
-    _wr.key("features");
-    _wr.arr();
+    writter_.obj();
+    writter_.keyVal("type", "FeatureCollection");
+    writter_.key("features");
+    writter_.arr();
 }
 
 // _____________________________________________________________________________
 GeoJsonOutput::GeoJsonOutput(std::ostream& str, const json::Val& attrs) :
-    _wr(str, 10, true)
+    writter_(str, 10, true)
 {
-    _wr.obj();
-    _wr.keyVal("type", "FeatureCollection");
-    _wr.key("properties");
-    _wr.val(attrs);
-    _wr.key("features");
-    _wr.arr();
+    writter_.obj();
+    writter_.keyVal("type", "FeatureCollection");
+    writter_.key("properties");
+    writter_.val(attrs);
+    writter_.key("features");
+    writter_.arr();
 }
 
 // _____________________________________________________________________________
 GeoJsonOutput::~GeoJsonOutput() { flush(); }
 
 // _____________________________________________________________________________
-void GeoJsonOutput::flush() { _wr.closeAll(); }
+void GeoJsonOutput::flush() { writter_.closeAll(); }

@@ -27,14 +27,12 @@ static int pow10[10] = {
         1, 10, 100, 1000, 10000,
         100000, 1000000, 10000000, 100000000, 1000000000};
 
-// _____________________________________________________________________________
 inline uint64_t factorial(uint64_t n)
 {
     if (n == 1) return n;
     return n * factorial(n - 1);
 }
 
-// _____________________________________________________________________________
 inline uint64_t atoul(const char* p)
 {
     uint64_t ret = 0;
@@ -47,7 +45,6 @@ inline uint64_t atoul(const char* p)
     return ret;
 }
 
-// _____________________________________________________________________________
 inline bool isFloatingPoint(const std::string& str)
 {
     std::stringstream ss(str);
@@ -56,7 +53,6 @@ inline bool isFloatingPoint(const std::string& str)
     return ss.eof() && !ss.fail();
 }
 
-// _____________________________________________________________________________
 inline double atof(const char* p, uint8_t mn)
 {
     // this atof implementation works only on "normal" float strings like
@@ -96,10 +92,8 @@ inline double atof(const char* p, uint8_t mn)
     return ret;
 }
 
-// _____________________________________________________________________________
 inline double atof(const char* p) { return atof(p, 38); }
 
-// _____________________________________________________________________________
 inline std::string getHomeDir()
 {
     // parse implicit paths
@@ -130,7 +124,6 @@ inline std::string getHomeDir()
     return ret;
 }
 
-// _____________________________________________________________________________
 inline std::string getTmpDir()
 {
     // first, check if an env variable is set
