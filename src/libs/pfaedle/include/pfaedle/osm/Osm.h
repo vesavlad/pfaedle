@@ -20,10 +20,14 @@ using AttrMap = std::unordered_map<std::string, std::string>;
 using Attr = std::pair<std::string, std::string>;
 using OsmIdList = std::vector<osmid>;
 
-struct OsmRel
+struct OsmElement
 {
     osmid id;
     AttrMap attrs;
+};
+
+struct OsmRel: public OsmElement
+{
     std::vector<osmid> nodes;
     std::vector<osmid> ways;
 
@@ -34,22 +38,18 @@ struct OsmRel
     uint64_t dropFlags;
 };
 
-struct OsmWay
+struct OsmWay: public OsmElement
 {
-    osmid id;
-    AttrMap attrs;
     std::vector<osmid> nodes;
 
     uint64_t keepFlags;
     uint64_t dropFlags;
 };
 
-struct OsmNode
+struct OsmNode: public OsmElement
 {
-    osmid id;
     double lat;
     double lng;
-    AttrMap attrs;
 
     uint64_t keepFlags;
     uint64_t dropFlags;
