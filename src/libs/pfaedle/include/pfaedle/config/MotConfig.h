@@ -17,7 +17,7 @@ struct MotConfig
 {
     router::MOTs mots;
     osm::OsmReadOpts osmBuildOpts;
-    router::RoutingOpts routingOpts;
+    router::RoutingOptions routingOpts;
     std::map<std::string, std::string> unproced;
 };
 

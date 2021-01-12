@@ -285,7 +285,7 @@ int app::run()
         LOG(INFO) << "Calculating shapes for mots " << mot_str;
 
         pfaedle::router::FeedStops f_stops =
-                pfaedle::router::writeMotStops(&feeds_.front(), used_mots, cfg_.shapeTripId);
+                pfaedle::router::writeMotStops(feeds_.front(), used_mots, cfg_.shapeTripId);
 
         pfaedle::osm::Restrictor restr;
         pfaedle::trgraph::Graph graph;

@@ -7,7 +7,7 @@
 #include <set>
 
 using ad::cppgtfs::gtfs::Stop;
-using pfaedle::router::NodeCandGroup;
+using pfaedle::router::NodeCandidateGroup;
 using pfaedle::trgraph::Node;
 using pfaedle::trgraph::StatGroup;
 
@@ -41,7 +41,7 @@ void StatGroup::merge(StatGroup* other)
 }
 
 // _____________________________________________________________________________
-const NodeCandGroup& StatGroup::getNodeCands(const Stop* s) const
+const NodeCandidateGroup& StatGroup::getNodeCands(const Stop* s) const
 {
     return _stopNodePens.at(s);
 }
@@ -97,7 +97,7 @@ void StatGroup::writePens(const trgraph::Normalizer& platformNorm,
     {
         for (auto* n : _nodes)
         {
-            _stopNodePens[s].push_back(router::NodeCand{
+            _stopNodePens[s].push_back(router::NodeCandidate{
                     n, getPen(s, n, platformNorm, trackPen, distPenFac, nonOsmPen)});
         }
     }

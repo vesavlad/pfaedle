@@ -12,29 +12,37 @@
 #include "util/geo/Geo.h"
 #include "pfaedle/Def.h"
 
-using util::geograph::GeoNodePL;
+namespace pfaedle::router
+{
 
+class NodePL
+{
+public:
+    NodePL() :
+        _n(nullptr)
+    {}
 
-namespace pfaedle {
-namespace router {
+    NodePL(const pfaedle::trgraph::Node* n) :
+        _n(n)
+    {}
 
-class NodePL {
- public:
-  NodePL() : _n(nullptr) {}
-  NodePL(const pfaedle::trgraph::Node* n) : _n(n) {}  // NOLINT
+    const POINT* getGeom() const
+    {
+        return !_n ? nullptr : _n->pl().getGeom();
+    }
 
-  const POINT* getGeom() const {
-    return !_n ? nullptr : _n->pl().getGeom();
-  }
-  util::json::Dict getAttrs() const {
-    if (_n) return _n->pl().getAttrs();
-    return util::json::Dict();
-  }
+    util::json::Dict getAttrs() const
+    {
+        if (_n)
+        {
+            return _n->pl().getAttrs();
+        }
+        return util::json::Dict();
+    }
 
- private:
-  const pfaedle::trgraph::Node* _n;
+private:
+    const pfaedle::trgraph::Node* _n;
 };
-}  // namespace router
 }  // namespace pfaedle
 
 #endif  // PFAEDLE_ROUTER_NODEPL_H_

@@ -58,9 +58,9 @@ public:
 
     void shape(pfaedle::netgraph::Graph& ng);
 
-    const NodeCandGroup& getNodeCands(const ad::cppgtfs::gtfs::Stop& s) const;
+    const NodeCandidateGroup& getNodeCands(const ad::cppgtfs::gtfs::Stop& s) const;
 
-    LINE shapeL(const router::NodeCandRoute& ncr,
+    LINE shapeL(const router::NodeCandidateRoute& ncr,
                 const router::RoutingAttrs& rAttrs);
     LINE shapeL(pfaedle::gtfs::Trip& trip);
 
@@ -93,7 +93,7 @@ private:
                   const ad::cppgtfs::gtfs::Shape& s,
                   const std::vector<double>& dists);
 
-    router::NodeCandRoute getNCR(pfaedle::gtfs::Trip& trip) const;
+    router::NodeCandidateRoute getNCR(pfaedle::gtfs::Trip& trip) const;
     double avgHopDist(pfaedle::gtfs::Trip& trip) const;
 
     const router::RoutingAttrs& getRAttrs(const pfaedle::gtfs::Trip& trip) const;
@@ -104,7 +104,7 @@ private:
     bool routingEqual(const ad::cppgtfs::gtfs::Stop& a,
                       const ad::cppgtfs::gtfs::Stop& b);
 
-    router::EdgeListHops route(const router::NodeCandRoute& ncr,
+    router::EdgeListHops route(const router::NodeCandidateRoute& ncr,
                                const router::RoutingAttrs& rAttrs) const;
 
 private:
@@ -120,7 +120,7 @@ private:
 
     router::FeedStops& _stops;
 
-    NodeCandGroup _emptyNCG;
+    NodeCandidateGroup _emptyNCG;
 
     size_t _curShpCnt;
     size_t _numThreads;

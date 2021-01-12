@@ -15,44 +15,57 @@
 #include "cppgtfs/gtfs/Route.h"
 #include "util/Misc.h"
 
-namespace pfaedle {
-namespace gtfs {
+namespace pfaedle::gtfs
+{
 
-class Route {
- public:
-  using Ref = Route *;
-  static std::string getId(Ref r) { return r->getId(); }
+class Route
+{
+public:
+    using Ref = Route*;
+    static std::string getId(Ref r)
+    {
+        return r->getId();
+    }
 
-  Route() {}
+    Route()
+    {}
 
-  Route(const std::string& id, ad::cppgtfs::gtfs::Agency* agency,
-        const std::string& short_name, const std::string& long_name, const std::string& desc,
-        ad::cppgtfs::gtfs::flat::Route::TYPE type, const std::string& url,
-        uint32_t color, uint32_t text_color)
-      : _id(id), _short_name(short_name), _long_name(long_name), _type(type) {
-    UNUSED(agency);
-    UNUSED(desc);
-    UNUSED(url);
-    UNUSED(color);
-    UNUSED(text_color);
-  }
+    Route(const std::string& id,
+          ad::cppgtfs::gtfs::Agency* agency,
+          const std::string& short_name,
+          const std::string& long_name,
+          const std::string& desc,
+          ad::cppgtfs::gtfs::flat::Route::TYPE type,
+          const std::string& url,
+          uint32_t color,
+          uint32_t text_color) :
+        _id(id),
+        _short_name(short_name),
+        _long_name(long_name),
+        _type(type)
+    {
+        UNUSED(agency);
+        UNUSED(desc);
+        UNUSED(url);
+        UNUSED(color);
+        UNUSED(text_color);
+    }
 
-  const std::string& getId() const { return _id; }
+    const std::string& getId() const { return _id; }
 
-  const std::string& getShortName() const { return _short_name; }
+    const std::string& getShortName() const { return _short_name; }
 
-  const std::string& getLongName() const { return _long_name; }
+    const std::string& getLongName() const { return _long_name; }
 
-  ad::cppgtfs::gtfs::flat::Route::TYPE getType() const { return _type; }
+    ad::cppgtfs::gtfs::flat::Route::TYPE getType() const { return _type; }
 
- private:
-  string _id;
-  string _short_name;
-  string _long_name;
-  ad::cppgtfs::gtfs::flat::Route::TYPE _type;
+private:
+    string _id;
+    string _short_name;
+    string _long_name;
+    ad::cppgtfs::gtfs::flat::Route::TYPE _type;
 };
 
-}  // namespace gtfs
 }  // namespace pfaedle
 
 #endif  // PFAEDLE_GTFS_ROUTE_H_

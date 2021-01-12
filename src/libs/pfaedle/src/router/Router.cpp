@@ -34,10 +34,10 @@ using pfaedle::router::EdgeListHops;
 using pfaedle::router::HopBand;
 using pfaedle::router::NCostFunc;
 using pfaedle::router::NDistHeur;
-using pfaedle::router::NodeCandRoute;
+using pfaedle::router::NodeCandidateRoute;
 using pfaedle::router::Router;
 using pfaedle::router::RoutingAttrs;
-using pfaedle::router::RoutingOpts;
+using pfaedle::router::RoutingOptions;
 using util::geo::webMercMeterDist;
 using util::graph::Dijkstra;
 using util::graph::EDijkstra;
@@ -133,7 +133,7 @@ double CostFunc::transitLineCmp(const trgraph::EdgePayload& e) const
 }
 
 // _____________________________________________________________________________
-NDistHeur::NDistHeur(const RoutingOpts& rOpts,
+NDistHeur::NDistHeur(const RoutingOptions& rOpts,
                      const std::set<trgraph::Node*>& tos) :
     _rOpts(rOpts),
     _maxCentD(0)
@@ -159,7 +159,7 @@ NDistHeur::NDistHeur(const RoutingOpts& rOpts,
 }
 
 // _____________________________________________________________________________
-DistHeur::DistHeur(uint8_t minLvl, const RoutingOpts& rOpts,
+DistHeur::DistHeur(uint8_t minLvl, const RoutingOptions& rOpts,
                    const std::set<trgraph::Edge*>& tos) :
     _rOpts(rOpts),
     _lvl(minLvl), _maxCentD(0)
@@ -236,7 +236,7 @@ Router::~Router()
 }
 
 // _____________________________________________________________________________
-bool Router::compConned(const EdgeCandGroup& a, const EdgeCandGroup& b) const
+bool Router::compConned(const EdgeCandidateGroup& a, const EdgeCandidateGroup& b) const
 {
     for (auto n1 : a)
     {
@@ -251,8 +251,8 @@ bool Router::compConned(const EdgeCandGroup& a, const EdgeCandGroup& b) const
 }
 
 // _____________________________________________________________________________
-HopBand Router::getHopBand(const EdgeCandGroup& a, const EdgeCandGroup& b,
-                           const RoutingAttrs& rAttrs, const RoutingOpts& rOpts,
+HopBand Router::getHopBand(const EdgeCandidateGroup& a, const EdgeCandidateGroup& b,
+                           const RoutingAttrs& rAttrs, const RoutingOptions& rOpts,
                            const osm::Restrictor& rest) const
 {
     assert(a.size());
@@ -331,9 +331,9 @@ HopBand Router::getHopBand(const EdgeCandGroup& a, const EdgeCandGroup& b,
 }
 
 // _____________________________________________________________________________
-EdgeListHops Router::routeGreedy(const NodeCandRoute& route,
+EdgeListHops Router::routeGreedy(const NodeCandidateRoute& route,
                                  const RoutingAttrs& rAttrs,
-                                 const RoutingOpts& rOpts,
+                                 const RoutingOptions& rOpts,
                                  const osm::Restrictor& rest) const
 {
     if (route.size() < 2) return EdgeListHops();
@@ -375,9 +375,9 @@ EdgeListHops Router::routeGreedy(const NodeCandRoute& route,
 }
 
 // _____________________________________________________________________________
-EdgeListHops Router::routeGreedy2(const NodeCandRoute& route,
+EdgeListHops Router::routeGreedy2(const NodeCandidateRoute& route,
                                   const RoutingAttrs& rAttrs,
-                                  const RoutingOpts& rOpts,
+                                  const RoutingOptions& rOpts,
                                   const osm::Restrictor& rest) const
 {
     if (route.size() < 2) return EdgeListHops();
@@ -424,8 +424,8 @@ EdgeListHops Router::routeGreedy2(const NodeCandRoute& route,
 }
 
 // _____________________________________________________________________________
-EdgeListHops Router::route(const EdgeCandRoute& route,
-                           const RoutingAttrs& rAttrs, const RoutingOpts& rOpts,
+EdgeListHops Router::route(const EdgeCandidateRoute& route,
+                           const RoutingAttrs& rAttrs, const RoutingOptions& rOpts,
                            const osm::Restrictor& rest) const
 {
     router::Graph cg;
@@ -433,8 +433,8 @@ EdgeListHops Router::route(const EdgeCandRoute& route,
 }
 
 // _____________________________________________________________________________
-EdgeListHops Router::route(const EdgeCandRoute& route,
-                           const RoutingAttrs& rAttrs, const RoutingOpts& rOpts,
+EdgeListHops Router::route(const EdgeCandidateRoute& route,
+                           const RoutingAttrs& rAttrs, const RoutingOptions& rOpts,
                            const osm::Restrictor& rest,
                            router::Graph* cgraph) const
 {
@@ -575,8 +575,8 @@ EdgeListHops Router::route(const EdgeCandRoute& route,
 }
 
 // _____________________________________________________________________________
-EdgeListHops Router::route(const NodeCandRoute& route,
-                           const RoutingAttrs& rAttrs, const RoutingOpts& rOpts,
+EdgeListHops Router::route(const NodeCandidateRoute& route,
+                           const RoutingAttrs& rAttrs, const RoutingOptions& rOpts,
                            const osm::Restrictor& rest) const
 {
     router::Graph cg;
@@ -584,18 +584,22 @@ EdgeListHops Router::route(const NodeCandRoute& route,
 }
 
 // _____________________________________________________________________________
-EdgeListHops Router::route(const NodeCandRoute& route,
-                           const RoutingAttrs& rAttrs, const RoutingOpts& rOpts,
+EdgeListHops Router::route(const NodeCandidateRoute& route,
+                           const RoutingAttrs& rAttrs, const RoutingOptions& rOpts,
                            const osm::Restrictor& rest,
                            router::Graph* cgraph) const
 {
-    EdgeCandRoute r;
+    EdgeCandidateRoute r;
     for (auto& nCands : route)
     {
         r.emplace_back();
         for (auto n : nCands)
+        {
             for (auto* e : n.nd->getAdjListOut())
-                r.back().push_back(EdgeCand{e, n.pen});
+            {
+                r.back().push_back(EdgeCandidate{e, n.pen});
+            }
+        }
     }
 
     return Router::route(r, rAttrs, rOpts, rest, cgraph);
@@ -607,7 +611,7 @@ void Router::hops(trgraph::Edge* from, const std::set<trgraph::Edge*>& froms,
                   const trgraph::StatGroup* tgGrp,
                   const std::unordered_map<trgraph::Edge*, EdgeList*>& edgesRet,
                   std::unordered_map<trgraph::Edge*, EdgeCost>* rCosts,
-                  const RoutingAttrs& rAttrs, const RoutingOpts& rOpts,
+                  const RoutingAttrs& rAttrs, const RoutingOptions& rOpts,
                   const osm::Restrictor& rest, HopBand hopB) const
 {
     std::set<trgraph::Edge*> rem;

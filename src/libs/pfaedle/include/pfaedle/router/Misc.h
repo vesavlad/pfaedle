@@ -5,32 +5,33 @@
 #ifndef PFAEDLE_ROUTER_MISC_H_
 #define PFAEDLE_ROUTER_MISC_H_
 
+#include <cppgtfs/gtfs/Feed.h>
+#include <cppgtfs/gtfs/Stop.h>
+#include <cppgtfs/gtfs/Route.h>
+#include <pfaedle/gtfs/Feed.h>
+#include <pfaedle/trgraph/Graph.h>
+
 #include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "cppgtfs/gtfs/Feed.h"
-#include "cppgtfs/gtfs/Stop.h"
-#include "cppgtfs/gtfs/Route.h"
-#include "pfaedle/gtfs/Feed.h"
-#include "pfaedle/trgraph/Graph.h"
 
 namespace pfaedle::router
 {
 
-struct NodeCand
+struct NodeCandidate
 {
     trgraph::Node* nd;
     double pen;
 };
 
-struct EdgeCand
+struct EdgeCandidate
 {
     trgraph::Edge* e;
     double pen;
 };
 
-struct RoutingOpts
+struct RoutingOptions
 {
     double fullTurnPunishFac{2000};
     double fullTurnAngle{45};
@@ -47,8 +48,7 @@ struct RoutingOpts
     bool noSelfHops{true};
 };
 
-// _____________________________________________________________________________
-inline bool operator==(const RoutingOpts& a, const RoutingOpts& b)
+inline bool operator==(const RoutingOptions& a, const RoutingOptions& b)
 {
     return fabs(a.fullTurnPunishFac - b.fullTurnPunishFac) < 0.01 &&
            fabs(a.fullTurnAngle - b.fullTurnAngle) < 0.01 &&
@@ -74,14 +74,18 @@ inline bool operator==(const RoutingOpts& a, const RoutingOpts& b)
 struct EdgeCost
 {
     EdgeCost() :
-        _cost(0) {}
+        _cost(0)
+    {}
+
     explicit EdgeCost(double cost) :
-        _cost(cost) {}
+        _cost(cost)
+    {}
+
     EdgeCost(double mDist, double mDistLvl1, double mDistLvl2, double mDistLvl3,
              double mDistLvl4, double mDistLvl5, double mDistLvl6,
              double mDistLvl7, uint32_t fullTurns, int32_t passThru,
              double oneWayMeters, size_t oneWayEdges, double lineUnmatchedMeters,
-             double noLinesMeters, double reachPen, const RoutingOpts* o)
+             double noLinesMeters, double reachPen, const RoutingOptions* o)
     {
         if (!o)
         {
@@ -102,53 +106,56 @@ struct EdgeCost
         }
     }
 
-    double _cost;
+    double getValue() const
+    {
+        return _cost;
+    }
 
-    double getValue() const { return _cost; }
+private:
+    double _cost;
 };
 
-// _____________________________________________________________________________
 inline EdgeCost operator+(const EdgeCost& a, const EdgeCost& b)
 {
     return EdgeCost(a.getValue() + b.getValue());
 }
 
-// _____________________________________________________________________________
 inline bool operator<=(const EdgeCost& a, const EdgeCost& b)
 {
     return a.getValue() <= b.getValue();
 }
 
-// _____________________________________________________________________________
 inline bool operator==(const EdgeCost& a, const EdgeCost& b)
 {
     return a.getValue() == b.getValue();
 }
 
-// _____________________________________________________________________________
 inline bool operator>(const EdgeCost& a, const EdgeCost& b)
 {
     return a.getValue() > b.getValue();
 }
 
-// _____________________________________________________________________________
 template<typename F>
 inline bool angSmaller(const Point<F>& f, const Point<F>& m, const Point<F>& t,
                        double ang)
 {
-    if (util::geo::innerProd(m, f, t) < ang) return 1;
-    return 0;
+    if (util::geo::innerProd(m, f, t) < ang)
+    {
+        return true;
+    }
+
+    return false;
 }
 
 using NodeSet = std::set<trgraph::Node*>;
 using EdgeSet = std::set<trgraph::Edge*>;
 using FeedStops = std::unordered_map<const ad::cppgtfs::gtfs::Stop*, trgraph::Node*>;
 
-using NodeCandGroup = std::vector<NodeCand>;
-using NodeCandRoute = std::vector<NodeCandGroup>;
+using NodeCandidateGroup = std::vector<NodeCandidate>;
+using NodeCandidateRoute = std::vector<NodeCandidateGroup>;
 
-using EdgeCandGroup = std::vector<EdgeCand>;
-using EdgeCandRoute = std::vector<EdgeCandGroup>;
+using EdgeCandidateGroup = std::vector<EdgeCandidate>;
+using EdgeCandidateRoute = std::vector<EdgeCandidateGroup>;
 
 using EdgeList = std::vector<trgraph::Edge*>;
 using NodeList = std::vector<trgraph::Node*>;
@@ -164,24 +171,29 @@ using EdgeListHops = std::vector<EdgeListHop>;
 
 using MOTs = std::set<ad::cppgtfs::gtfs::Route::TYPE>;
 
-// _____________________________________________________________________________
 inline MOTs motISect(const MOTs& a, const MOTs& b)
 {
     MOTs ret;
     for (auto mot : a)
-        if (b.count(mot)) ret.insert(mot);
+    {
+        if (b.count(mot))
+        {
+            ret.insert(mot);
+        }
+    }
     return ret;
 }
 
-// _____________________________________________________________________________
-inline pfaedle::router::FeedStops writeMotStops(const pfaedle::gtfs::Feed* feed,
-                                                const MOTs mots,
+inline pfaedle::router::FeedStops writeMotStops(const pfaedle::gtfs::Feed& feed,
+                                                const MOTs& mots,
                                                 const std::string& tid)
 {
     pfaedle::router::FeedStops ret;
-    for (auto t : feed->getTrips())
+    for (auto t : feed.getTrips())
     {
-        if (!tid.empty() && t.getId() != tid) continue;
+        if (!tid.empty() && t.getId() != tid)
+            continue;
+
         if (mots.count(t.getRoute()->getType()))
         {
             for (auto st : t.getStopTimes())
@@ -189,8 +201,7 @@ inline pfaedle::router::FeedStops writeMotStops(const pfaedle::gtfs::Feed* feed,
                 // if the station has type STATION_ENTRANCE, use the parent
                 // station for routing. Normally, this should not occur, as
                 // this is not allowed in stop_times.txt
-                if (st.getStop()->getLocationType() ==
-                            ad::cppgtfs::gtfs::flat::Stop::STATION_ENTRANCE &&
+                if (st.getStop()->getLocationType() == ad::cppgtfs::gtfs::flat::Stop::STATION_ENTRANCE &&
                     st.getStop()->getParentStation())
                 {
                     ret[st.getStop()->getParentStation()] = nullptr;
@@ -205,14 +216,16 @@ inline pfaedle::router::FeedStops writeMotStops(const pfaedle::gtfs::Feed* feed,
     return ret;
 }
 
-// _____________________________________________________________________________
 inline std::string getMotStr(const MOTs& mots)
 {
     bool first = false;
     std::string motStr;
     for (const auto& mot : mots)
     {
-        if (first) motStr += ", ";
+        if (first)
+        {
+            motStr += ", ";
+        }
         motStr += "<" + ad::cppgtfs::gtfs::flat::Route::getTypeString(mot) + ">";
         first = true;
     }

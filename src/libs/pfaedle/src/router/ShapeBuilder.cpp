@@ -44,8 +44,8 @@ using pfaedle::osm::BBoxIdx;
 using pfaedle::router::Clusters;
 using pfaedle::router::EdgeListHops;
 using pfaedle::router::FeedStops;
-using pfaedle::router::NodeCandGroup;
-using pfaedle::router::NodeCandRoute;
+using pfaedle::router::NodeCandidateGroup;
+using pfaedle::router::NodeCandidateRoute;
 using pfaedle::router::RoutingAttrs;
 using pfaedle::router::ShapeBuilder;
 using util::geo::latLngToWebMerc;
@@ -79,7 +79,7 @@ ShapeBuilder::ShapeBuilder(pfaedle::gtfs::Feed& feed,
 }
 
 // _____________________________________________________________________________
-const NodeCandGroup& ShapeBuilder::getNodeCands(const Stop& s) const
+const NodeCandidateGroup& ShapeBuilder::getNodeCands(const Stop& s) const
 {
     if (_stops.find(&s) == _stops.end() || _stops.at(&s) == nullptr)
         return _emptyNCG;
@@ -88,7 +88,7 @@ const NodeCandGroup& ShapeBuilder::getNodeCands(const Stop& s) const
 }
 
 // _____________________________________________________________________________
-LINE ShapeBuilder::shapeL(const router::NodeCandRoute& ncr,
+LINE ShapeBuilder::shapeL(const router::NodeCandidateRoute& ncr,
                           const router::RoutingAttrs& rAttrs)
 {
     try
@@ -137,7 +137,7 @@ LINE ShapeBuilder::shapeL(Trip& trip)
 }
 
 // _____________________________________________________________________________
-EdgeListHops ShapeBuilder::route(const router::NodeCandRoute& ncr,
+EdgeListHops ShapeBuilder::route(const router::NodeCandidateRoute& ncr,
                                  const router::RoutingAttrs& rAttrs) const
 {
     router::Graph g;
@@ -522,9 +522,9 @@ void ShapeBuilder::getGtfsBox(const Feed& feed, const MOTs& mots,
 }
 
 // _____________________________________________________________________________
-NodeCandRoute ShapeBuilder::getNCR(Trip& trip) const
+NodeCandidateRoute ShapeBuilder::getNCR(Trip& trip) const
 {
-    router::NodeCandRoute ncr(trip.getStopTimes().size());
+    router::NodeCandidateRoute ncr(trip.getStopTimes().size());
 
     size_t i = 0;
 

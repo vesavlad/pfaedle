@@ -48,7 +48,7 @@ class StatGroup {
   void merge(StatGroup* other);
 
   // Return node candidates for stop s from this group
-  const router::NodeCandGroup& getNodeCands(const Stop* s) const;
+  const router::NodeCandidateGroup& getNodeCands(const Stop* s) const;
 
   // Write the penalties for all stops contained in this group so far.
   void writePens(const trgraph::Normalizer& platformNorm, double trackPen,
@@ -60,7 +60,7 @@ class StatGroup {
 
   // for each stop in this group, a penalty for each of the nodes here, based on
   // its distance and optionally the track number
-  std::unordered_map<const Stop*, router::NodeCandGroup> _stopNodePens;
+  std::unordered_map<const Stop*, router::NodeCandidateGroup> _stopNodePens;
 
   double getPen(const Stop* s, trgraph::Node* n,
                 const trgraph::Normalizer& norm, double trackPen,

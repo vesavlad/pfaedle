@@ -18,6 +18,8 @@ template<typename N, typename E>
 class Node
 {
 public:
+    virtual ~Node() = default;
+
     virtual const std::vector<Edge<N, E>*>& getAdjList() const = 0;
     virtual const std::vector<Edge<N, E>*>& getAdjListOut() const = 0;
     virtual const std::vector<Edge<N, E>*>& getAdjListIn() const = 0;
@@ -33,8 +35,6 @@ public:
     // add edge to this node's adjacency lists
     virtual void addEdge(Edge<N, E>* e) = 0;
     virtual void removeEdge(Edge<N, E>* e) = 0;
-
-    virtual ~Node() = default;
 
     virtual N& pl() = 0;
     virtual const N& pl() const = 0;

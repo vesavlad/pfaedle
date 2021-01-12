@@ -9,35 +9,43 @@
 #include "cppgtfs/gtfs/Service.h"
 #include "util/Misc.h"
 
-namespace pfaedle {
-namespace gtfs {
+namespace pfaedle::gtfs
+{
 
-class Service {
- public:
-  using Ref = std::string;
-  static std::string getId(Ref r) { return r; }
+class Service
+{
+public:
+    using Ref = std::string;
+    static std::string getId(Ref r)
+    {
+        return r;
+    }
 
-  explicit Service(const string& id) : _id(id) {}
-  Service(const string& id, uint8_t serviceDays,
-          ad::cppgtfs::gtfs::ServiceDate start,
-          ad::cppgtfs::gtfs::ServiceDate end)
-      : _id(id) {
-    UNUSED(serviceDays);
-    UNUSED(start);
-    UNUSED(end);
-  }
+    explicit Service(const std::string& id) :
+        _id(id)
+    {}
 
-  const std::string& getId() const { return _id; }
-  void addException(const ad::cppgtfs::gtfs::ServiceDate& d,
-                    ad::cppgtfs::gtfs::Service::EXCEPTION_TYPE t) {
-    UNUSED(d);
-    UNUSED(t);
-  }
+    Service(const string& id, uint8_t serviceDays,
+            ad::cppgtfs::gtfs::ServiceDate start,
+            ad::cppgtfs::gtfs::ServiceDate end) :
+        _id(id)
+    {
+        UNUSED(serviceDays);
+        UNUSED(start);
+        UNUSED(end);
+    }
 
- private:
-  std::string _id;
+    const std::string& getId() const { return _id; }
+    void addException(const ad::cppgtfs::gtfs::ServiceDate& d,
+                      ad::cppgtfs::gtfs::Service::EXCEPTION_TYPE t)
+    {
+        UNUSED(d);
+        UNUSED(t);
+    }
+
+private:
+    std::string _id;
 };
-}  // namespace gtfs
 }  // namespace pfaedle
 
 #endif  // PFAEDLE_GTFS_SERVICE_H_
