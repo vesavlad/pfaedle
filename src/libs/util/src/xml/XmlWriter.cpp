@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <map>
 #include <ostream>
-#include <stack>
 #include <string>
 
 using namespace util;
@@ -17,15 +16,15 @@ using std::ostream;
 using std::string;
 
 // _____________________________________________________________________________
-XmlWriter::XmlWriter(std::ostream* out) :
+XmlWriter::XmlWriter(std::ostream& out) :
     _out(out), _pretty(false), _indent(4) {}
 
 // _____________________________________________________________________________
-XmlWriter::XmlWriter(std::ostream* out, bool pret) :
+XmlWriter::XmlWriter(std::ostream& out, bool pret) :
     _out(out), _pretty(pret), _indent(4) {}
 
 // _____________________________________________________________________________
-XmlWriter::XmlWriter(std::ostream* out, bool pret, size_t indent) :
+XmlWriter::XmlWriter(std::ostream& out, bool pret, size_t indent) :
     _out(out), _pretty(pret), _indent(indent) {}
 
 // _____________________________________________________________________________
@@ -40,15 +39,15 @@ void XmlWriter::openTag(const string& tag, const map<string, string>& attrs)
     closeHanging();
     doIndent();
 
-    *_out << "<" << tag;
+    _out << "<" << tag;
 
     for (const auto& kv : attrs)
     {
-        *_out << " ";
+        _out << " ";
         putEsced(_out, kv.first, '"');
-        *_out << "=\"";
+        _out << "=\"";
         putEsced(_out, kv.second, '"');
-        *_out << "\"";
+        _out << "\"";
     }
 
     _nstack.push(XmlNode(TAG, tag, true));
@@ -77,7 +76,7 @@ void XmlWriter::openComment()
     closeHanging();
     doIndent();
 
-    *_out << "<!-- ";
+    _out << "<!-- ";
 
     _nstack.push(XmlNode(COMMENT, "", false));
 }
@@ -105,13 +104,13 @@ void XmlWriter::closeTag()
     {
         _nstack.pop();
         doIndent();
-        *_out << " -->";
+        _out << " -->";
     }
     else if (_nstack.top().t == TAG)
     {
         if (_nstack.top().hanging)
         {
-            *_out << " />";
+            _out << " />";
             _nstack.pop();
         }
         else
@@ -119,7 +118,7 @@ void XmlWriter::closeTag()
             string tag = _nstack.top().pload;
             _nstack.pop();
             doIndent();
-            *_out << "</" << tag << ">";
+            _out << "</" << tag << ">";
         }
     }
 }
@@ -135,8 +134,9 @@ void XmlWriter::doIndent()
 {
     if (_pretty)
     {
-        *_out << std::endl;
-        for (size_t i = 0; i < _nstack.size() * _indent; i++) *_out << " ";
+        _out << std::endl;
+        for (size_t i = 0; i < _nstack.size() * _indent; i++)
+            _out << " ";
     }
 }
 
@@ -147,7 +147,7 @@ void XmlWriter::closeHanging()
 
     if (_nstack.top().hanging)
     {
-        *_out << ">";
+        _out << ">";
         _nstack.top().hanging = false;
     }
     else if (_nstack.top().t == TEXT)
@@ -157,28 +157,28 @@ void XmlWriter::closeHanging()
 }
 
 // _____________________________________________________________________________
-void XmlWriter::putEsced(ostream* out, const string& str, char quot)
+void XmlWriter::putEsced(ostream& out, const string& str, char quot)
 {
     if (!_nstack.empty() && _nstack.top().t == COMMENT)
     {
-        *out << str;
+        out << str;
         return;
     }
 
     for (const char& c : str)
     {
         if (quot == '"' && c == '"')
-            *out << "&quot;";
+            out << "&quot;";
         else if (quot == '\'' && c == '\'')
-            *out << "&apos;";
+            out << "&apos;";
         else if (c == '<')
-            *out << "&lt;";
+            out << "&lt;";
         else if (c == '>')
-            *out << "&gt;";
+            out << "&gt;";
         else if (c == '&')
-            *out << "&amp;";
+            out << "&amp;";
         else
-            *out << c;
+            out << c;
     }
 }
 

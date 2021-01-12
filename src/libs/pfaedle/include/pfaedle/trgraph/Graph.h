@@ -15,19 +15,18 @@ using util::geo::Grid;
 using util::geo::Point;
 using util::geo::Line;
 
-namespace pfaedle {
-namespace trgraph {
+namespace pfaedle::trgraph
+{
 
 /*
  * A graph for physical transit networks
-*/
-typedef util::graph::Edge<NodePayload, EdgePayload> Edge;
-typedef util::graph::Node<NodePayload, EdgePayload> Node;
-typedef util::graph::DirGraph<NodePayload, EdgePayload> Graph;
-typedef Grid<Node*, Point, PFAEDLE_PRECISION> NodeGrid;
-typedef Grid<Edge*, Line, PFAEDLE_PRECISION> EdgeGrid;
+ */
+using Edge = util::graph::Edge<NodePayload, EdgePayload>;
+using Node = util::graph::Node<NodePayload, EdgePayload>;
+using Graph = util::graph::DirGraph<NodePayload, EdgePayload>;
+using NodeGrid = Grid<Node*, Point, PFAEDLE_PRECISION>;
+using EdgeGrid = Grid<Edge*, Line, PFAEDLE_PRECISION>;
 
-}  // namespace trgraph
 }  // namespace pfaedle
 
 #endif  // PFAEDLE_TRGRAPH_GRAPH_H_

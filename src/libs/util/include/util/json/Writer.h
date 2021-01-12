@@ -73,10 +73,10 @@ typedef std::map<std::string, Val> Dict;
 class Writer
 {
 public:
-    explicit Writer(std::ostream* out);
-    Writer(std::ostream* out, size_t prec);
-    Writer(std::ostream* out, size_t prec, bool pretty);
-    Writer(std::ostream* out, size_t prec, bool pretty, size_t indent);
+    explicit Writer(std::ostream& out);
+    Writer(std::ostream& out, size_t prec);
+    Writer(std::ostream& out, size_t prec, bool pretty);
+    Writer(std::ostream& out, size_t prec, bool pretty, size_t indent);
     ~Writer()= default;
 
     void obj();
@@ -100,7 +100,7 @@ public:
     void closeAll();
 
 private:
-    std::ostream* _out;
+    std::ostream& _out;
 
     enum NODE_T
     {

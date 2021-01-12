@@ -183,7 +183,7 @@ void OsmBuilder::read(const std::string& path,
 }
 
 
-void OsmBuilder::overpassQryWrite(std::ostream* out,
+void OsmBuilder::overpassQryWrite(std::ostream& out,
                                   const std::vector<OsmReadOpts>& opts,
                                   const BBoxIdx& latLngBox) const
 {
@@ -204,7 +204,7 @@ void OsmBuilder::overpassQryWrite(std::ostream* out,
     NIdMultMap multNodes;
     util::xml::XmlWriter wr(out, true, 4);
 
-    *out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     wr.openComment();
     wr.writeText(" - written by pfaedle -");
     wr.closeTag();

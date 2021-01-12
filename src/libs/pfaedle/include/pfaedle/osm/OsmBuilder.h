@@ -111,7 +111,7 @@ public:
 
     // Based on the list of options, output an overpass XML query for getting
     // the data needed for routing
-    void overpassQryWrite(std::ostream* out,
+    void overpassQryWrite(std::ostream& out,
                           const std::vector<OsmReadOpts>& opts,
                           const BBoxIdx& latLngBox) const;
 

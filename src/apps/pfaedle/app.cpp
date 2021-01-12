@@ -250,7 +250,7 @@ int app::run()
                 opts.push_back(o.osmBuildOpts);
             }
         }
-        osm_builder.overpassQryWrite(&std::cout, opts, box);
+        osm_builder.overpassQryWrite(std::cout, opts, box);
         exit(static_cast<int>(ret_code::SUCCESS));
     }
     else if (cfg_.feedPaths.empty())

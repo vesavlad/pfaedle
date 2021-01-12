@@ -46,7 +46,7 @@ inline std::string getTmpFName(std::string dir, std::string postf) {
     }
     std::stringstream ss;
     ss << dir << ".pfaedle-tmp" << postf << "-" << std::rand();
-    f = ss.str().c_str();
+    f = ss.str();
   }
 
   return f;

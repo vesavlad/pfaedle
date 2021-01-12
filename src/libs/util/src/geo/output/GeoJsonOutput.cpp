@@ -8,7 +8,7 @@ using namespace util::geo::output;
 
 // _____________________________________________________________________________
 GeoJsonOutput::GeoJsonOutput(std::ostream& str) :
-    _wr(&str, 10, true)
+    _wr(str, 10, true)
 {
     _wr.obj();
     _wr.keyVal("type", "FeatureCollection");
@@ -18,7 +18,7 @@ GeoJsonOutput::GeoJsonOutput(std::ostream& str) :
 
 // _____________________________________________________________________________
 GeoJsonOutput::GeoJsonOutput(std::ostream& str, const json::Val& attrs) :
-    _wr(&str, 10, true)
+    _wr(str, 10, true)
 {
     _wr.obj();
     _wr.keyVal("type", "FeatureCollection");

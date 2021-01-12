@@ -22,83 +22,59 @@ template<typename N, typename E>
 class DirGraph : public Graph<N, E>
 {
 public:
-    explicit DirGraph();
+    explicit DirGraph() = default;
 
     using Graph<N, E>::addEdg;
 
-    Node<N, E>* addNd() override;
-    Node<N, E>* addNd(DirNode<N, E>* n);
-    Node<N, E>* addNd(const N& pl) override;
-    Edge<N, E>* addEdg(Node<N, E>* from, Node<N, E>* to, const E& p) override;
+    Node<N, E>* addNd() override
+    {
+        return addNd(new DirNode<N, E>());
+    }
+    Node<N, E>* addNd(DirNode<N, E>* n)
+    {
+        auto ins = Graph<N, E>::getNds()->insert(n);
+        return *ins.first;
+    }
+    Node<N, E>* addNd(const N& pl) override
+    {
+        return addNd(new DirNode<N, E>(pl));
+    }
+    Edge<N, E>* addEdg(Node<N, E>* from, Node<N, E>* to, const E& p) override
+    {
+        Edge<N, E>* e = Graph<N, E>::getEdg(from, to);
+        if (!e)
+        {
+            e = new Edge<N, E>(from, to, p);
+            from->addEdge(e);
+            to->addEdge(e);
+        }
+        return e;
+    }
 
-    Node<N, E>* mergeNds(Node<N, E>* a, Node<N, E>* b) override;
+    Node<N, E>* mergeNds(Node<N, E>* a, Node<N, E>* b) override
+    {
+        for (auto e : a->getAdjListOut())
+        {
+            if (e->getTo() != b)
+            {
+                addEdg(b, e->getTo(), e->pl());
+            }
+        }
+
+        for (auto e : a->getAdjListIn())
+        {
+            if (e->getFrom() != b)
+            {
+                addEdg(e->getFrom(), b, e->pl());
+            }
+        }
+
+        DirGraph<N, E>::delNd(a);
+
+        return b;
+    }
 };
 
-// _____________________________________________________________________________
-template<typename N, typename E>
-DirGraph<N, E>::DirGraph() = default;
-
-// _____________________________________________________________________________
-template<typename N, typename E>
-Node<N, E>* DirGraph<N, E>::addNd(const N& pl)
-{
-    return addNd(new DirNode<N, E>(pl));
-}
-
-// _____________________________________________________________________________
-template<typename N, typename E>
-Node<N, E>* DirGraph<N, E>::addNd()
-{
-    return addNd(new DirNode<N, E>());
-}
-
-// _____________________________________________________________________________
-template<typename N, typename E>
-Node<N, E>* DirGraph<N, E>::addNd(DirNode<N, E>* n)
-{
-    auto ins = Graph<N, E>::getNds()->insert(n);
-    return *ins.first;
-}
-
-// _____________________________________________________________________________
-template<typename N, typename E>
-Edge<N, E>* DirGraph<N, E>::addEdg(Node<N, E>* from, Node<N, E>* to,
-                                   const E& p)
-{
-    Edge<N, E>* e = Graph<N, E>::getEdg(from, to);
-    if (!e)
-    {
-        e = new Edge<N, E>(from, to, p);
-        from->addEdge(e);
-        to->addEdge(e);
-    }
-    return e;
-}
-
-// _____________________________________________________________________________
-template<typename N, typename E>
-Node<N, E>* DirGraph<N, E>::mergeNds(Node<N, E>* a, Node<N, E>* b)
-{
-    for (auto e : a->getAdjListOut())
-    {
-        if (e->getTo() != b)
-        {
-            addEdg(b, e->getTo(), e->pl());
-        }
-    }
-
-    for (auto e : a->getAdjListIn())
-    {
-        if (e->getFrom() != b)
-        {
-            addEdg(e->getFrom(), b, e->pl());
-        }
-    }
-
-    DirGraph<N, E>::delNd(a);
-
-    return b;
-}
 }
 
 #endif  // UTIL_GRAPH_DIRGRAPH_H_

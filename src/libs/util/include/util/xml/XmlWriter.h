@@ -27,9 +27,9 @@ class XmlWriterException : public std::exception {
 // simple XML writer class without much overhead
 class XmlWriter {
  public:
-  explicit XmlWriter(std::ostream* out);
-  XmlWriter(std::ostream* out, bool pretty);
-  XmlWriter(std::ostream* out, bool pretty, size_t indent);
+  explicit XmlWriter(std::ostream& out);
+  XmlWriter(std::ostream& out, bool pretty);
+  XmlWriter(std::ostream& out, bool pretty, size_t indent);
   ~XmlWriter()= default;
 
   // open tag without attributes
@@ -66,7 +66,7 @@ class XmlWriter {
     bool hanging;
   };
 
-  std::ostream* _out;
+  std::ostream& _out;
   std::stack<XmlNode> _nstack;
 
   bool _pretty;
@@ -79,7 +79,7 @@ class XmlWriter {
   void closeHanging();
 
   // pushes XML escaped text to stream
-  void putEsced(std::ostream* out, const std::string& str, char quot);
+  void putEsced(std::ostream& out, const std::string& str, char quot);
 
   // checks tag names for validiy
   void checkTagName(const std::string& str) const;
