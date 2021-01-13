@@ -13,9 +13,13 @@
 
 #include <algorithm>
 #include <set>
-
+#if __GNUC_PREREQ(7,5)
+#include <experimental/filesystem>
+namespace filesystem = std::experimental::filesystem;
+#else
 #include <filesystem>
-//#include <boost/lexical_cast.hpp>
+namespace filesystem = std::filesystem;
+#endif
 #include "stacktrace.h"
 #include <fmt/format.h>
 
@@ -58,13 +62,13 @@ std::vector<pid_t> get_tids()
     std::vector<pid_t> tids;
     const std::string procDir = fmt::format("/proc/{}/task", pid);
 
-    if (!std::filesystem::exists(procDir))
+    if (!filesystem::exists(procDir))
     {
         return tids;
     }
-    std::vector<std::filesystem::path> paths;
-    std::copy(std::filesystem::directory_iterator(procDir),
-              std::filesystem::directory_iterator(),
+    std::vector<filesystem::path> paths;
+    std::copy(filesystem::directory_iterator(procDir),
+              filesystem::directory_iterator(),
               std::back_inserter(paths));
     for (const auto& path : paths)
     {
