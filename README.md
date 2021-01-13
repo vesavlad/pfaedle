@@ -44,9 +44,9 @@ make install
 pfaedle -x <OSM FILE> <GTFS INPUT FOLDER>
 ```
 
-A shape'd version of the input GTFS feed will be written to `./gtfs-out`.
+A get_shape'd version of the input GTFS feed will be written to `./gtfs-out`.
 
-By default, shapes are only calculated for trips that don't have a shape in the
+By default, shapes are only calculated for trips that don't have a get_shape in the
 input feed. To drop all existing shapes, use the `-D` flag.
 
 For example, you may generate (and replace existing, see -D parameter) shapes for the GTFS dataset for Freiburg like this:
@@ -93,7 +93,7 @@ docker run -i --rm \
 
 The following flags may be useful for debugging:
 
- * `-T <GTFS TRIP ID>` only calculate shape for a single trip (specified via its GTFS trip id) and output it as GeoJSON to
+ * `-T <GTFS TRIP ID>` only calculate get_shape for a single trip (specified via its GTFS trip id) and output it as GeoJSON to
    `<dbg-path>/path.json`
  * `--write-graph` write the graph used for routing as GeoJSON to
    `<dbg-path>/graph.json`

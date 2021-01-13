@@ -9,51 +9,37 @@
 #define omp_get_num_procs() 1
 #endif
 
-#include "pfaedle/router/Comp.h"
-#include "pfaedle/router/Router.h"
-#include "pfaedle/router/RoutingAttrs.h"
+#include "pfaedle/router/router.h"
+#include "pfaedle/router/routing_attributes.h"
 #include "util/geo/output/GeoGraphJsonOutput.h"
 #include "util/graph/Dijkstra.h"
 #include "util/graph/EDijkstra.h"
-#include <logging/logger.h>
 #include <algorithm>
-#include <fstream>
-#include <limits>
+#include <logging/logger.h>
 #include <map>
 #include <set>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-using pfaedle::router::CombCostFunc;
-using pfaedle::router::CostFunc;
-using pfaedle::router::DistHeur;
-using pfaedle::router::EdgeCost;
-using pfaedle::router::EdgeListHop;
-using pfaedle::router::EdgeListHops;
-using pfaedle::router::HopBand;
-using pfaedle::router::NCostFunc;
-using pfaedle::router::NDistHeur;
-using pfaedle::router::NodeCandidateRoute;
-using pfaedle::router::Router;
-using pfaedle::router::RoutingAttrs;
-using pfaedle::router::RoutingOptions;
-using util::geo::webMercMeterDist;
+
 using util::graph::Dijkstra;
 using util::graph::EDijkstra;
 
-// _____________________________________________________________________________
-EdgeCost NCostFunc::operator()(const trgraph::Node* from,
+namespace pfaedle::router
+{
+
+edge_cost NCostFunc::operator()(const trgraph::Node* from,
                                const trgraph::Edge* e,
                                const trgraph::Node* to) const
 {
     UNUSED(to);
-    if (!from) return EdgeCost();
+    if (!from) return edge_cost();
 
     int oneway = e->pl().oneWay() == 2;
     int32_t stationSkip = 0;
 
-    return EdgeCost(e->pl().lvl() == 0 ? e->pl().getLength() : 0,
+    return edge_cost(e->pl().lvl() == 0 ? e->pl().getLength() : 0,
                     e->pl().lvl() == 1 ? e->pl().getLength() : 0,
                     e->pl().lvl() == 2 ? e->pl().getLength() : 0,
                     e->pl().lvl() == 3 ? e->pl().getLength() : 0,
@@ -64,11 +50,10 @@ EdgeCost NCostFunc::operator()(const trgraph::Node* from,
                     e->pl().getLength() * oneway, oneway, 0, 0, 0, &_rOpts);
 }
 
-// _____________________________________________________________________________
-EdgeCost CostFunc::operator()(const trgraph::Edge* from, const trgraph::Node* n,
+edge_cost CostFunc::operator()(const trgraph::Edge* from, const trgraph::Node* n,
                               const trgraph::Edge* to) const
 {
-    if (!from) return EdgeCost();
+    if (!from) return edge_cost();
 
     uint32_t fullTurns = 0;
     int oneway = from->pl().oneWay() == 2;
@@ -84,7 +69,7 @@ EdgeCost CostFunc::operator()(const trgraph::Edge* from, const trgraph::Node* n,
         else if (n->getDeg() > 2)
         {
             // otherwise, only intersection angles will be punished
-            fullTurns = router::angSmaller(from->pl().backHop(), *n->pl().getGeom(),
+            fullTurns = angSmaller(from->pl().backHop(), *n->pl().getGeom(),
                                            to->pl().frontHop(), _rOpts.fullTurnAngle);
         }
 
@@ -98,10 +83,10 @@ EdgeCost CostFunc::operator()(const trgraph::Edge* from, const trgraph::Node* n,
     }
 
     double transitLinePen = transitLineCmp(from->pl());
-    bool noLines = (_rAttrs.shortName.empty() && _rAttrs.toString.empty() &&
-                    _rAttrs.fromString.empty() && from->pl().getLines().empty());
+    bool noLines = (_rAttrs.short_name.empty() && _rAttrs.to.empty() &&
+                    _rAttrs.from.empty() && from->pl().getLines().empty());
 
-    return EdgeCost(from->pl().lvl() == 0 ? from->pl().getLength() : 0,
+    return edge_cost(from->pl().lvl() == 0 ? from->pl().getLength() : 0,
                     from->pl().lvl() == 1 ? from->pl().getLength() : 0,
                     from->pl().lvl() == 2 ? from->pl().getLength() : 0,
                     from->pl().lvl() == 3 ? from->pl().getLength() : 0,
@@ -114,11 +99,10 @@ EdgeCost CostFunc::operator()(const trgraph::Edge* from, const trgraph::Node* n,
                     noLines ? from->pl().getLength() : 0, 0, &_rOpts);
 }
 
-// _____________________________________________________________________________
 double CostFunc::transitLineCmp(const trgraph::EdgePayload& e) const
 {
-    if (_rAttrs.shortName.empty() && _rAttrs.toString.empty() &&
-        _rAttrs.fromString.empty())
+    if (_rAttrs.short_name.empty() && _rAttrs.to.empty() &&
+        _rAttrs.from.empty())
         return 0;
     double best = 1;
     for (const auto* l : e.getLines())
@@ -132,8 +116,7 @@ double CostFunc::transitLineCmp(const trgraph::EdgePayload& e) const
     return best;
 }
 
-// _____________________________________________________________________________
-NDistHeur::NDistHeur(const RoutingOptions& rOpts,
+NDistHeur::NDistHeur(const routing_options& rOpts,
                      const std::set<trgraph::Node*>& tos) :
     _rOpts(rOpts),
     _maxCentD(0)
@@ -153,13 +136,12 @@ NDistHeur::NDistHeur(const RoutingOptions& rOpts,
 
     for (auto to : tos)
     {
-        double cur = webMercMeterDist(*to->pl().getGeom(), _center);
+        double cur = util::geo::webMercMeterDist(*to->pl().getGeom(), _center);
         if (cur > _maxCentD) _maxCentD = cur;
     }
 }
 
-// _____________________________________________________________________________
-DistHeur::DistHeur(uint8_t minLvl, const RoutingOptions& rOpts,
+DistHeur::DistHeur(uint8_t minLvl, const routing_options& rOpts,
                    const std::set<trgraph::Edge*>& tos) :
     _rOpts(rOpts),
     _lvl(minLvl), _maxCentD(0)
@@ -179,44 +161,40 @@ DistHeur::DistHeur(uint8_t minLvl, const RoutingOptions& rOpts,
 
     for (auto to : tos)
     {
-        double cur = webMercMeterDist(*to->getFrom()->pl().getGeom(), _center) *
+        double cur = util::geo::webMercMeterDist(*to->getFrom()->pl().getGeom(), _center) *
                      _rOpts.levelPunish[_lvl];
         if (cur > _maxCentD) _maxCentD = cur;
     }
 }
 
-// _____________________________________________________________________________
-EdgeCost DistHeur::operator()(const trgraph::Edge* a,
+edge_cost DistHeur::operator()(const trgraph::Edge* a,
                               const std::set<trgraph::Edge*>& b) const
 {
     UNUSED(b);
-    double cur = webMercMeterDist(*a->getFrom()->pl().getGeom(), _center) *
+    double cur = util::geo::webMercMeterDist(*a->getFrom()->pl().getGeom(), _center) *
                  _rOpts.levelPunish[_lvl];
 
-    return EdgeCost(cur - _maxCentD, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, nullptr);
+    return edge_cost(cur - _maxCentD, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, nullptr);
 }
 
-// _____________________________________________________________________________
-EdgeCost NDistHeur::operator()(const trgraph::Node* a,
+edge_cost NDistHeur::operator()(const trgraph::Node* a,
                                const std::set<trgraph::Node*>& b) const
 {
     UNUSED(b);
-    double cur = webMercMeterDist(*a->pl().getGeom(), _center);
+    double cur = util::geo::webMercMeterDist(*a->pl().getGeom(), _center);
 
-    return EdgeCost(cur - _maxCentD, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, nullptr);
+    return edge_cost(cur - _maxCentD, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, nullptr);
 }
 
-// _____________________________________________________________________________
-double CombCostFunc::operator()(const router::Edge* from, const router::Node* n,
-                                const router::Edge* to) const
+double CombCostFunc::operator()(const edge* from, const node* n,
+                                const edge* to) const
 {
     UNUSED(n);
     UNUSED(from);
     return to->pl().getCost().getValue();
 }
 
-// _____________________________________________________________________________
-Router::Router(size_t numThreads, bool caching) :
+router::router(size_t numThreads, bool caching) :
     _cache(numThreads),
     _caching(caching)
 {
@@ -226,8 +204,7 @@ Router::Router(size_t numThreads, bool caching) :
     }
 }
 
-// _____________________________________________________________________________
-Router::~Router()
+router::~router()
 {
     for (auto & i : _cache)
     {
@@ -235,8 +212,7 @@ Router::~Router()
     }
 }
 
-// _____________________________________________________________________________
-bool Router::compConned(const EdgeCandidateGroup& a, const EdgeCandidateGroup& b) const
+bool router::compConned(const edge_candidate_group& a, const edge_candidate_group& b) const
 {
     for (auto n1 : a)
     {
@@ -250,9 +226,8 @@ bool Router::compConned(const EdgeCandidateGroup& a, const EdgeCandidateGroup& b
     return false;
 }
 
-// _____________________________________________________________________________
-HopBand Router::getHopBand(const EdgeCandidateGroup& a, const EdgeCandidateGroup& b,
-                           const RoutingAttrs& rAttrs, const RoutingOptions& rOpts,
+HopBand router::getHopBand(const edge_candidate_group& a, const edge_candidate_group& b,
+                           const routing_attributes& rAttrs, const routing_options& rOpts,
                            const osm::Restrictor& rest) const
 {
     assert(a.size());
@@ -263,7 +238,7 @@ HopBand Router::getHopBand(const EdgeCandidateGroup& a, const EdgeCandidateGroup
     {
         for (auto j : b)
         {
-            double d = webMercMeterDist(*i.e->getFrom()->pl().getGeom(),
+            double d = util::geo::webMercMeterDist(*i.e->getFrom()->pl().getGeom(),
                                         *j.e->getFrom()->pl().getGeom());
             if (d > pend) pend = d;
         }
@@ -286,8 +261,8 @@ HopBand Router::getHopBand(const EdgeCandidateGroup& a, const EdgeCandidateGroup
     LOG(TRACE) << "Doing pilot run between " << from.size() << "->" << to.size()
                 << " edge candidates";
 
-    EdgeList el;
-    EdgeCost ret = costF.inf();
+    edge_list el;
+    edge_cost ret = costF.inf();
     DistHeur distH(0, rOpts, to);
 
     if (compConned(a, b))
@@ -310,7 +285,7 @@ HopBand Router::getHopBand(const EdgeCandidateGroup& a, const EdgeCandidateGroup
 
     for (auto e : to)
     {
-        double d = webMercMeterDist(*el.front()->getFrom()->pl().getGeom(),
+        double d = util::geo::webMercMeterDist(*el.front()->getFrom()->pl().getGeom(),
                                     *e->getTo()->pl().getGeom());
         if (d > maxStrD) maxStrD = d;
     }
@@ -330,14 +305,14 @@ HopBand Router::getHopBand(const EdgeCandidateGroup& a, const EdgeCandidateGroup
     return HopBand{minD, maxD, el.front(), maxStrD};
 }
 
-// _____________________________________________________________________________
-EdgeListHops Router::routeGreedy(const NodeCandidateRoute& route,
-                                 const RoutingAttrs& rAttrs,
-                                 const RoutingOptions& rOpts,
+edge_list_hops router::routeGreedy(const node_candidate_route& route,
+                                 const routing_attributes& rAttrs,
+                                 const routing_options& rOpts,
                                  const osm::Restrictor& rest) const
 {
-    if (route.size() < 2) return EdgeListHops();
-    EdgeListHops ret(route.size() - 1);
+    if (route.size() < 2)
+        return edge_list_hops();
+    edge_list_hops ret(route.size() - 1);
 
     for (size_t i = 0; i < route.size() - 1; i++)
     {
@@ -351,8 +326,8 @@ EdgeListHops Router::routeGreedy(const NodeCandidateRoute& route,
         NCostFunc cost(rAttrs, rOpts, rest, tgGrp);
         NDistHeur dist(rOpts, to);
 
-        NodeList nodesRet;
-        EdgeListHop hop;
+        node_list nodesRet;
+        edge_list_hop hop;
         Dijkstra::shortestPath(from, to, cost, dist, &hop.edges, &nodesRet);
 
         if (nodesRet.size() > 1)
@@ -374,14 +349,13 @@ EdgeListHops Router::routeGreedy(const NodeCandidateRoute& route,
     return ret;
 }
 
-// _____________________________________________________________________________
-EdgeListHops Router::routeGreedy2(const NodeCandidateRoute& route,
-                                  const RoutingAttrs& rAttrs,
-                                  const RoutingOptions& rOpts,
+edge_list_hops router::routeGreedy2(const node_candidate_route& route,
+                                  const routing_attributes& rAttrs,
+                                  const routing_options& rOpts,
                                   const osm::Restrictor& rest) const
 {
-    if (route.size() < 2) return EdgeListHops();
-    EdgeListHops ret(route.size() - 1);
+    if (route.size() < 2) return edge_list_hops();
+    edge_list_hops ret(route.size() - 1);
 
     for (size_t i = 0; i < route.size() - 1; i++)
     {
@@ -401,8 +375,8 @@ EdgeListHops Router::routeGreedy2(const NodeCandidateRoute& route,
         NCostFunc cost(rAttrs, rOpts, rest, tgGrp);
         NDistHeur dist(rOpts, to);
 
-        NodeList nodesRet;
-        EdgeListHop hop;
+        node_list nodesRet;
+        edge_list_hop hop;
         Dijkstra::shortestPath(from, to, cost, dist, &hop.edges, &nodesRet);
         if (nodesRet.size() > 1)
         {
@@ -423,28 +397,26 @@ EdgeListHops Router::routeGreedy2(const NodeCandidateRoute& route,
     return ret;
 }
 
-// _____________________________________________________________________________
-EdgeListHops Router::route(const EdgeCandidateRoute& route,
-                           const RoutingAttrs& rAttrs, const RoutingOptions& rOpts,
+edge_list_hops router::route(const edge_candidate_route& route,
+                           const routing_attributes& rAttrs, const routing_options& rOpts,
                            const osm::Restrictor& rest) const
 {
-    router::Graph cg;
-    return Router::route(route, rAttrs, rOpts, rest, &cg);
+    graph cg;
+    return router::route(route, rAttrs, rOpts, rest, &cg);
 }
 
-// _____________________________________________________________________________
-EdgeListHops Router::route(const EdgeCandidateRoute& route,
-                           const RoutingAttrs& rAttrs, const RoutingOptions& rOpts,
+edge_list_hops router::route(const edge_candidate_route& route,
+                           const routing_attributes& rAttrs, const routing_options& rOpts,
                            const osm::Restrictor& rest,
-                           router::Graph* cgraph) const
+                           graph* cgraph) const
 {
     if (route.size() < 2)
-        return EdgeListHops();
-    EdgeListHops ret(route.size() - 1);
+        return edge_list_hops();
+    edge_list_hops ret(route.size() - 1);
 
     CombCostFunc ccost(rOpts);
-    router::Node* source = cgraph->addNd();
-    router::Node* sink = cgraph->addNd();
+    node* source = cgraph->addNd();
+    node* sink = cgraph->addNd();
     CombNodeMap nodes;
     CombNodeMap nextNodes;
 
@@ -456,7 +428,7 @@ EdgeListHops Router::route(const EdgeCandidateRoute& route,
         nodes[e] = cgraph->addNd(i.e->getFrom());
         cgraph->addEdg(source, nodes[e])
                 ->pl()
-                .setCost(EdgeCost(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                .setCost(edge_cost(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                   i.pen, nullptr));
     }
 
@@ -477,13 +449,13 @@ EdgeListHops Router::route(const EdgeCandidateRoute& route,
 
         for (auto eFr : froms)
         {
-            router::Node* cNodeFr = nodes.find(eFr)->second;
+            node* cNodeFr = nodes.find(eFr)->second;
 
-            EdgeSet tos;
-            std::map<trgraph::Edge*, router::Edge*> edges;
+            edge_set tos;
+            std::map<trgraph::Edge*, edge*> edges;
             std::map<trgraph::Edge*, double> pens;
-            std::unordered_map<trgraph::Edge*, EdgeList*> edgeLists;
-            std::unordered_map<trgraph::Edge*, EdgeCost> costs;
+            std::unordered_map<trgraph::Edge*, edge_list*> edgeLists;
+            std::unordered_map<trgraph::Edge*, edge_cost> costs;
 
             assert(route[i + 1].size());
 
@@ -529,7 +501,7 @@ EdgeListHops Router::route(const EdgeCandidateRoute& route,
                         << TOOK(t1, TIME()) << "ms (tput: " << itPerSec << " its/ms)";
             for (auto& kv : edges)
             {
-                kv.second->pl().setCost(EdgeCost(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, pens[kv.first], nullptr) + costs[kv.first]);
+                kv.second->pl().setCost(edge_cost(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, pens[kv.first], nullptr) + costs[kv.first]);
 
                 if (rOpts.popReachEdge && !kv.second->pl().getEdges()->empty())
                 {
@@ -550,7 +522,7 @@ EdgeListHops Router::route(const EdgeCandidateRoute& route,
                 << " average tput was " << (itPerSecTot / n) << " its/ms";
 
     iters = EDijkstra::ITERS;
-    std::vector<router::Edge*> res;
+    std::vector<edge*> res;
     EDijkstra::shortestPath(source, sink, ccost, &res);
     size_t j = 0;
 
@@ -564,7 +536,7 @@ EdgeListHops Router::route(const EdgeCandidateRoute& route,
             assert(e->pl().frontNode());
             assert(e->pl().backNode());
 
-            ret[j] = EdgeListHop{std::move(*e->pl().getEdges()), e->pl().frontNode(),
+            ret[j] = edge_list_hop{std::move(*e->pl().getEdges()), e->pl().frontNode(),
                                  e->pl().backNode()};
             j++;
         }
@@ -574,22 +546,20 @@ EdgeListHops Router::route(const EdgeCandidateRoute& route,
     return ret;
 }
 
-// _____________________________________________________________________________
-EdgeListHops Router::route(const NodeCandidateRoute& route,
-                           const RoutingAttrs& rAttrs, const RoutingOptions& rOpts,
+edge_list_hops router::route(const node_candidate_route& route,
+                           const routing_attributes& rAttrs, const routing_options& rOpts,
                            const osm::Restrictor& rest) const
 {
-    router::Graph cg;
-    return Router::route(route, rAttrs, rOpts, rest, &cg);
+    graph cg;
+    return router::route(route, rAttrs, rOpts, rest, &cg);
 }
 
-// _____________________________________________________________________________
-EdgeListHops Router::route(const NodeCandidateRoute& route,
-                           const RoutingAttrs& rAttrs, const RoutingOptions& rOpts,
+edge_list_hops router::route(const node_candidate_route& route,
+                           const routing_attributes& rAttrs, const routing_options& rOpts,
                            const osm::Restrictor& rest,
-                           router::Graph* cgraph) const
+                           graph* cgraph) const
 {
-    EdgeCandidateRoute r;
+    edge_candidate_route r;
     for (auto& nCands : route)
     {
         r.emplace_back();
@@ -597,21 +567,20 @@ EdgeListHops Router::route(const NodeCandidateRoute& route,
         {
             for (auto* e : n.nd->getAdjListOut())
             {
-                r.back().push_back(EdgeCandidate{e, n.pen});
+                r.back().push_back(edge_candidate{e, n.pen});
             }
         }
     }
 
-    return Router::route(r, rAttrs, rOpts, rest, cgraph);
+    return router::route(r, rAttrs, rOpts, rest, cgraph);
 }
 
-// _____________________________________________________________________________
-void Router::hops(trgraph::Edge* from, const std::set<trgraph::Edge*>& froms,
+void router::hops(trgraph::Edge* from, const std::set<trgraph::Edge*>& froms,
                   const std::set<trgraph::Edge*> tos,
                   const trgraph::StatGroup* tgGrp,
-                  const std::unordered_map<trgraph::Edge*, EdgeList*>& edgesRet,
-                  std::unordered_map<trgraph::Edge*, EdgeCost>* rCosts,
-                  const RoutingAttrs& rAttrs, const RoutingOptions& rOpts,
+                  const std::unordered_map<trgraph::Edge*, edge_list*>& edgesRet,
+                  std::unordered_map<trgraph::Edge*, edge_cost>* rCosts,
+                  const routing_attributes& rAttrs, const routing_options& rOpts,
                   const osm::Restrictor& rest, HopBand hopB) const
 {
     std::set<trgraph::Edge*> rem;
@@ -652,17 +621,16 @@ void Router::hops(trgraph::Edge* from, const std::set<trgraph::Edge*>& froms,
     }
 }
 
-// _____________________________________________________________________________
-void Router::nestedCache(const EdgeList* el,
+void router::nestedCache(const edge_list* el,
                          const std::set<trgraph::Edge*>& froms,
                          const CostFunc& cost,
-                         const RoutingAttrs& rAttrs) const
+                         const routing_attributes& rAttrs) const
 {
     if (!_caching) return;
     if (el->empty()) return;
     // iterate over result edges backwards
-    EdgeList curEdges;
-    EdgeCost curCost;
+    edge_list curEdges;
+    edge_cost curCost;
 
     size_t j = 0;
 
@@ -677,19 +645,18 @@ void Router::nestedCache(const EdgeList* el,
 
         if (froms.count(*i))
         {
-            EdgeCost startC = cost(nullptr, nullptr, *i) + curCost;
+            edge_cost startC = cost(nullptr, nullptr, *i) + curCost;
             cache(*i, el->front(), startC, &curEdges, rAttrs);
             j++;
         }
     }
 }
 
-// _____________________________________________________________________________
-std::set<pfaedle::trgraph::Edge*> Router::getCachedHops(
+std::set<pfaedle::trgraph::Edge*> router::getCachedHops(
         trgraph::Edge* from, const std::set<trgraph::Edge*>& tos,
-        const std::unordered_map<trgraph::Edge*, EdgeList*>& edgesRet,
-        std::unordered_map<trgraph::Edge*, EdgeCost>* rCosts,
-        const RoutingAttrs& rAttrs) const
+        const std::unordered_map<trgraph::Edge*, edge_list*>& edgesRet,
+        std::unordered_map<trgraph::Edge*, edge_cost>* rCosts,
+        const routing_attributes& rAttrs) const
 {
     std::set<trgraph::Edge*> ret;
     for (auto to : tos)
@@ -709,15 +676,15 @@ std::set<pfaedle::trgraph::Edge*> Router::getCachedHops(
     return ret;
 }
 
-// _____________________________________________________________________________
-void Router::cache(trgraph::Edge* from, trgraph::Edge* to, const EdgeCost& c,
-                   EdgeList* edges, const RoutingAttrs& rAttrs) const
+void router::cache(trgraph::Edge* from, trgraph::Edge* to, const edge_cost& c,
+                   edge_list* edges, const routing_attributes& rAttrs) const
 {
     if (!_caching) return;
     if (from == to) return;
     (*_cache[omp_get_thread_num()])[rAttrs][from][to] =
-            std::pair<EdgeCost, EdgeList>(c, *edges);
+            std::pair<edge_cost, edge_list>(c, *edges);
 }
 
-// _____________________________________________________________________________
-size_t Router::getCacheNumber() const { return _cache.size(); }
+size_t router::getCacheNumber() const { return _cache.size(); }
+
+}

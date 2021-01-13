@@ -217,7 +217,7 @@ int app::run()
         pfaedle::osm::BBoxIdx box(BOX_PADDING);
         for (size_t i = 0; i < cfg_.feedPaths.size(); i++)
         {
-            pfaedle::router::ShapeBuilder::getGtfsBox(feeds_[i], cmd_cfg_mots, cfg_.shapeTripId, true, box);
+            pfaedle::router::shape_builder::get_gtfs_box(feeds_[i], cmd_cfg_mots, cfg_.shapeTripId, true, box);
         }
         pfaedle::osm::OsmBuilder osm_builder;
         std::vector<pfaedle::osm::OsmReadOpts> opts;
@@ -239,7 +239,7 @@ int app::run()
         pfaedle::osm::BBoxIdx box(BOX_PADDING);
         for (size_t i = 0; i < cfg_.feedPaths.size(); i++)
         {
-            pfaedle::router::ShapeBuilder::getGtfsBox(feeds_[i], cmd_cfg_mots, cfg_.shapeTripId, true, box);
+            pfaedle::router::shape_builder::get_gtfs_box(feeds_[i], cmd_cfg_mots, cfg_.shapeTripId, true, box);
         }
 
         pfaedle::osm::OsmBuilder osm_builder;
@@ -283,18 +283,18 @@ int app::run()
         if (mot_cfg_reader_.get_configs().size() > 1)
             file_post = get_file_name_mot_str(used_mots);
 
-        const std::string mot_str = pfaedle::router::getMotStr(used_mots);
+        const std::string mot_str = pfaedle::router::get_mot_str(used_mots);
         LOG(INFO) << "Calculating shapes for mots " << mot_str;
 
-        pfaedle::router::FeedStops f_stops =
-                pfaedle::router::writeMotStops(feeds_.front(), used_mots, cfg_.shapeTripId);
+        pfaedle::router::feed_stops f_stops =
+                pfaedle::router::write_mot_stops(feeds_.front(), used_mots, cfg_.shapeTripId);
 
         pfaedle::osm::Restrictor restr;
         pfaedle::trgraph::Graph graph;
         pfaedle::osm::OsmBuilder osm_builder;
 
         pfaedle::osm::BBoxIdx box(BOX_PADDING);
-        pfaedle::router::ShapeBuilder::getGtfsBox(feeds_.front(), cmd_cfg_mots, cfg_.shapeTripId, cfg_.dropShapes, box);
+        pfaedle::router::shape_builder::get_gtfs_box(feeds_.front(), cmd_cfg_mots, cfg_.shapeTripId, cfg_.dropShapes, box);
 
         if (!f_stops.empty())
         {
@@ -320,7 +320,7 @@ int app::run()
             }
         }
 
-        pfaedle::router::ShapeBuilder shape_builder(feeds_.front(),
+        pfaedle::router::shape_builder shape_builder(feeds_.front(),
                                                     eval_feed,
                                                     cmd_cfg_mots,
                                                     mot_cfg,
@@ -336,7 +336,7 @@ int app::run()
             util::geo::output::GeoGraphJsonOutput out;
             mkdir(cfg_.dbgOutputPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
             std::ofstream fstr(cfg_.dbgOutputPath + "/graph.json");
-            out.printLatLng(shape_builder.getGraph(), fstr);
+            out.printLatLng(shape_builder.get_graph(), fstr);
             fstr.close();
         }
 
@@ -347,7 +347,7 @@ int app::run()
             std::ofstream pstr(cfg_.dbgOutputPath + "/path.json");
             util::geo::output::GeoJsonOutput o(pstr);
 
-            auto l = shape_builder.shapeL(*single_trip);
+            auto l = shape_builder.get_shape_line(*single_trip);
 
             // reproject to WGS84 to match RFC 7946
             o.printLatLng(l, {});
@@ -358,8 +358,8 @@ int app::run()
             exit(static_cast<int>(ret_code::SUCCESS));
         }
 
-        pfaedle::netgraph::Graph ng;
-        shape_builder.shape(ng);
+        pfaedle::netgraph::graph ng;
+        shape_builder.get_shape(ng);
 
         if (cfg_.buildTransitGraph)
         {

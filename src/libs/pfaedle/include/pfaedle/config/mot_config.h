@@ -6,7 +6,7 @@
 #define PFAEDLE_CONFIG_MOTCONFIG_H_
 
 #include "pfaedle/osm/OsmBuilder.h"
-#include "pfaedle/router/Router.h"
+#include "pfaedle/router/router.h"
 #include <map>
 #include <string>
 
@@ -17,7 +17,7 @@ struct mot_config
 {
     router::MOTs mots;
     osm::OsmReadOpts osmBuildOpts;
-    router::RoutingOptions routingOpts;
+    router::routing_options routingOpts;
     std::map<std::string, std::string> unproced;
 };
 

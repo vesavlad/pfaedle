@@ -5,14 +5,14 @@
 #ifndef PFAEDLE_TRGRAPH_EDGEPL_H_
 #define PFAEDLE_TRGRAPH_EDGEPL_H_
 
+#include "pfaedle/Def.h"
+#include "pfaedle/router/comp.h"
+#include "util/geo/Geo.h"
+#include "util/geo/GeoGraph.h"
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-#include "pfaedle/Def.h"
-#include "pfaedle/router/Comp.h"
-#include "util/geo/Geo.h"
-#include "util/geo/GeoGraph.h"
 
 namespace pfaedle::trgraph
 {

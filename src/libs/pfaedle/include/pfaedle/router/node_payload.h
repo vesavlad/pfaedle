@@ -15,14 +15,14 @@
 namespace pfaedle::router
 {
 
-class NodePL
+class node_payload
 {
 public:
-    NodePL() :
+    node_payload() :
         _n(nullptr)
     {}
 
-    NodePL(const pfaedle::trgraph::Node* n) :
+    node_payload(const pfaedle::trgraph::Node* n) :
         _n(n)
     {}
 

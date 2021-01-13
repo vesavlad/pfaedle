@@ -20,19 +20,19 @@
 namespace pfaedle::router
 {
 
-struct NodeCandidate
+struct node_candidate
 {
     trgraph::Node* nd;
     double pen;
 };
 
-struct EdgeCandidate
+struct edge_candidate
 {
     trgraph::Edge* e;
     double pen;
 };
 
-struct RoutingOptions
+struct routing_options
 {
     double fullTurnPunishFac{2000};
     double fullTurnAngle{45};
@@ -49,7 +49,7 @@ struct RoutingOptions
     bool noSelfHops{true};
 };
 
-inline bool operator==(const RoutingOptions& a, const RoutingOptions& b)
+inline bool operator==(const routing_options& a, const routing_options& b)
 {
     return fabs(a.fullTurnPunishFac - b.fullTurnPunishFac) < 0.01 &&
            fabs(a.fullTurnAngle - b.fullTurnAngle) < 0.01 &&
@@ -72,21 +72,21 @@ inline bool operator==(const RoutingOptions& a, const RoutingOptions& b)
            a.popReachEdge == b.popReachEdge && a.noSelfHops == b.noSelfHops;
 }
 
-struct EdgeCost
+struct edge_cost
 {
-    EdgeCost() :
+    edge_cost() :
         _cost(0)
     {}
 
-    explicit EdgeCost(double cost) :
+    explicit edge_cost(double cost) :
         _cost(cost)
     {}
 
-    EdgeCost(double mDist, double mDistLvl1, double mDistLvl2, double mDistLvl3,
+    edge_cost(double mDist, double mDistLvl1, double mDistLvl2, double mDistLvl3,
              double mDistLvl4, double mDistLvl5, double mDistLvl6,
              double mDistLvl7, uint32_t fullTurns, int32_t passThru,
              double oneWayMeters, size_t oneWayEdges, double lineUnmatchedMeters,
-             double noLinesMeters, double reachPen, const RoutingOptions* o)
+             double noLinesMeters, double reachPen, const routing_options* o)
     {
         if (!o)
         {
@@ -116,22 +116,22 @@ private:
     double _cost;
 };
 
-inline EdgeCost operator+(const EdgeCost& a, const EdgeCost& b)
+inline edge_cost operator+(const edge_cost& a, const edge_cost& b)
 {
-    return EdgeCost(a.getValue() + b.getValue());
+    return edge_cost(a.getValue() + b.getValue());
 }
 
-inline bool operator<=(const EdgeCost& a, const EdgeCost& b)
+inline bool operator<=(const edge_cost& a, const edge_cost& b)
 {
     return a.getValue() <= b.getValue();
 }
 
-inline bool operator==(const EdgeCost& a, const EdgeCost& b)
+inline bool operator==(const edge_cost& a, const edge_cost& b)
 {
     return a.getValue() == b.getValue();
 }
 
-inline bool operator>(const EdgeCost& a, const EdgeCost& b)
+inline bool operator>(const edge_cost& a, const edge_cost& b)
 {
     return a.getValue() > b.getValue();
 }
@@ -150,37 +150,37 @@ inline bool angSmaller(const util::geo::Point<F>& f,
     return false;
 }
 
-using NodeSet = std::set<trgraph::Node*>;
-using EdgeSet = std::set<trgraph::Edge*>;
-using FeedStops = std::unordered_map<const ad::cppgtfs::gtfs::Stop*, trgraph::Node*>;
+using node_set = std::set<trgraph::Node*>;
+using edge_set = std::set<trgraph::Edge*>;
+using feed_stops = std::unordered_map<const ad::cppgtfs::gtfs::Stop*, trgraph::Node*>;
 
-using NodeCandidateGroup = std::vector<NodeCandidate>;
-using NodeCandidateRoute = std::vector<NodeCandidateGroup>;
+using node_candidate_group = std::vector<node_candidate>;
+using node_candidate_route = std::vector<node_candidate_group>;
 
-using EdgeCandidateGroup = std::vector<EdgeCandidate>;
-using EdgeCandidateRoute = std::vector<EdgeCandidateGroup>;
+using edge_candidate_group = std::vector<edge_candidate>;
+using edge_candidate_route = std::vector<edge_candidate_group>;
 
-using EdgeList = std::vector<trgraph::Edge*>;
-using NodeList = std::vector<trgraph::Node*>;
+using edge_list = std::vector<trgraph::Edge*>;
+using node_list = std::vector<trgraph::Node*>;
 
-struct EdgeListHop
+struct edge_list_hop
 {
-    EdgeList edges;
+    edge_list edges;
     const trgraph::Node* start;
     const trgraph::Node* end;
 };
 
-using EdgeListHops = std::vector<EdgeListHop>;
+using edge_list_hops = std::vector<edge_list_hop>;
 
 using MOTs = std::set<ad::cppgtfs::gtfs::Route::TYPE>;
 
 MOTs motISect(const MOTs& a, const MOTs& b);
 
-pfaedle::router::FeedStops writeMotStops(const pfaedle::gtfs::Feed& feed,
+pfaedle::router::feed_stops write_mot_stops(const pfaedle::gtfs::Feed& feed,
                                                 const MOTs& mots,
                                                 const std::string& tid);
 
-std::string getMotStr(const MOTs& mots);
+std::string get_mot_str(const MOTs& mots);
 }  // namespace pfaedle
 
 #endif  // PFAEDLE_ROUTER_MISC_H_

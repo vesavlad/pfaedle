@@ -3,7 +3,7 @@
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
 #include "pfaedle/trgraph/StatInfo.h"
-#include "pfaedle/router/Comp.h"
+#include "pfaedle/router/comp.h"
 #include "pfaedle/trgraph/StatGroup.h"
 
 using pfaedle::trgraph::StatGroup;

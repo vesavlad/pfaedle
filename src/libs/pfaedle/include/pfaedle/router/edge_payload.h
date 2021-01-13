@@ -6,21 +6,18 @@
 #define PFAEDLE_ROUTER_EDGEPL_H_
 
 #include <map>
+#include <pfaedle/Def.h>
+#include <pfaedle/router/misc.h>
 #include <string>
-#include "pfaedle/Def.h"
-#include "pfaedle/router/Misc.h"
-#include "util/geo/Geo.h"
-#include "util/geo/GeoGraph.h"
-
-using util::geograph::GeoEdgePL;
+#include <util/geo/Geo.h>
+#include <util/geo/GeoGraph.h>
 
 namespace pfaedle::router
 {
-
-class EdgePL
+class edge_payload
 {
 public:
-    EdgePL() :
+    edge_payload() :
         _cost(),
         _start(nullptr),
         _end(nullptr),
@@ -30,16 +27,16 @@ public:
 
     const LINE* getGeom() const;
     util::json::Dict getAttrs() const;
-    router::EdgeList* getEdges();
-    const router::EdgeList& getEdges() const;
+    router::edge_list* getEdges();
+    const router::edge_list& getEdges() const;
 
     void setStartNode(const trgraph::Node* s);
     void setEndNode(const trgraph::Node* s);
     void setStartEdge(const trgraph::Edge* s);
     void setEndEdge(const trgraph::Edge* s);
 
-    const router::EdgeCost& getCost() const;
-    void setCost(const router::EdgeCost& c);
+    const router::edge_cost& getCost() const;
+    void setCost(const router::edge_cost& c);
 
     const POINT& frontHop() const;
     const POINT& backHop() const;
@@ -48,9 +45,9 @@ public:
     const trgraph::Node* backNode() const;
 
 private:
-    router::EdgeCost _cost;
+    router::edge_cost _cost;
     // the edges are in this field in REVERSED ORDER!
-    router::EdgeList _edges;
+    router::edge_list _edges;
     const trgraph::Node* _start;
     const trgraph::Node* _end;
     const trgraph::Edge* _startE;

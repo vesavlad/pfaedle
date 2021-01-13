@@ -1,0 +1,104 @@
+// Copyright 2018, University of Freiburg,
+// Chair of Algorithms and Data Structures.
+// Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
+
+#ifndef PFAEDLE_ROUTER_COMP_H_
+#define PFAEDLE_ROUTER_COMP_H_
+
+#include <iostream>
+#include <algorithm>
+#include <string>
+#include "util/String.h"
+
+namespace pfaedle::router
+{
+
+using util::editDist;
+
+inline double statSimi(const std::string& a, const std::string& b)
+{
+    if (a == b)
+        return 1;
+
+    if (a.empty() || b.empty())
+        return 0;
+
+    if (a.size() > b.size() + 1)
+    {
+        // check if a begins with b
+        if (a.compare(0, b.size() + 1, b + " ") == 0)
+        {
+            return 1;
+        }
+
+        // check if a ends with b
+        if (a.compare(a.size() - (b.size() + 1), b.size() + 1, " " + b) == 0)
+        {
+            return 1;
+        }
+    }
+
+    if (b.size() > a.size() + 1)
+    {
+        // check if b begins with a
+        if (b.compare(0, a.size() + 1, a + " ") == 0)
+        {
+            return 1;
+        }
+
+        // check if b ends with a
+        if (b.compare(b.size() - (a.size() + 1), a.size() + 1, " " + a) == 0)
+        {
+            return 1;
+        }
+    }
+
+    if (static_cast<double>(editDist(a, b)) / static_cast<double>(std::max(a.size(), b.size())) < 0.05)
+        return 1;
+
+    return 0;
+}
+
+inline double lineSimi(const std::string& a, const std::string& b)
+{
+    if (a == b)
+        return 1;
+
+    if (a.empty() || b.empty())
+        return 0;
+
+    if (a.size() > b.size() + 1)
+    {
+        // check if a begins with b
+        if (a.compare(0, b.size() + 1, b + " ") == 0)
+        {
+            return 1;
+        }
+
+        // check if a ends with b
+        if (a.compare(a.size() - (b.size() + 1), b.size() + 1, " " + b) == 0)
+        {
+            return 1;
+        }
+    }
+
+    if (b.size() > a.size() + 1)
+    {
+        // check if b begins with a
+        if (b.compare(0, a.size() + 1, a + " ") == 0)
+        {
+            return 1;
+        }
+
+        // check if b ends with a
+        if (b.compare(b.size() - (a.size() + 1), a.size() + 1, " " + a) == 0)
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+}  // namespace pfaedle
+
+#endif  // PFAEDLE_ROUTER_COMP_H_

@@ -12,11 +12,11 @@
 #include "pfaedle/osm/OsmIdSet.h"
 #include "pfaedle/osm/OsmReadOpts.h"
 #include "pfaedle/osm/Restrictor.h"
-#include "pfaedle/router/Router.h"
+#include "pfaedle/router/router.h"
 #include "pfaedle/trgraph/Graph.h"
+#include "pfaedle/trgraph/NodePayload.h"
 #include "pfaedle/trgraph/Normalizer.h"
 #include "pfaedle/trgraph/StatInfo.h"
-#include "pfaedle/trgraph/NodePayload.h"
 #include "util/geo/Geo.h"
 #include "util/xml/XmlWriter.h"
 
@@ -50,7 +50,7 @@ using pfaedle::trgraph::TransitEdgeLine;
 using pfaedle::trgraph::StatInfo;
 using pfaedle::trgraph::StatGroup;
 using pfaedle::trgraph::Component;
-using pfaedle::router::NodeSet;
+using pfaedle::trgraph::StatInfo;
 using ad::cppgtfs::gtfs::Stop;
 
 struct NodeCand
@@ -106,7 +106,7 @@ public:
               Graph& g,
               const BBoxIdx& box,
               size_t gridSize,
-              router::FeedStops& fs,
+              router::feed_stops& fs,
               Restrictor& res);
 
     // Based on the list of options, output an overpass XML query for getting
@@ -148,7 +148,7 @@ private:
                    const OsmIdSet& bBoxNodes,
                    NIdMap& nodes,
                    NIdMultMap& multNodes,
-                   NodeSet& orphanStations,
+                   router::node_set& orphanStations,
                    const AttrKeySet& keepAttrs,
                    const FlatRels& flatRels,
                    const OsmReadOpts& opts) const;
@@ -216,9 +216,9 @@ private:
                           Graph& g,
                           const BBoxIdx& bbox,
                           size_t gridSize,
-                          router::FeedStops& fs,
+                          router::feed_stops& fs,
                           Restrictor& res,
-                          const NodeSet& orphanStations);
+                          const router::node_set& orphanStations);
     static void writeGeoms(Graph& g);
     static void deleteOrphNds(Graph& g);
     static void deleteOrphEdgs(Graph& g, const OsmReadOpts& opts);
@@ -246,7 +246,7 @@ private:
 
     static Node* getMatchingNd(const NodePayload& s, NodeGrid& ng, double d);
 
-    static NodeSet snapStation(Graph& g, NodePayload& s, EdgeGrid& eg, NodeGrid& sng,
+    static router::node_set snapStation(Graph& g, NodePayload& s, EdgeGrid& eg, NodeGrid& sng,
                                const OsmReadOpts& opts, Restrictor& restor,
                                bool surHeur, bool orphSnap, double maxD);
 
@@ -265,7 +265,7 @@ private:
                           double maxD, int maxFullTurns, double minAngle);
     static bool keepFullTurn(const trgraph::Node* n, double ang);
 
-    static StatGroup* groupStats(const NodeSet& s);
+    static StatGroup* groupStats(const router::node_set& s);
 
     static NodePayload plFromGtfs(const Stop* s, const OsmReadOpts& ops);
 

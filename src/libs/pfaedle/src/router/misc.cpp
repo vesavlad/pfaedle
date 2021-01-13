@@ -1,8 +1,8 @@
-#include <pfaedle/router/Misc.h>
+#include <pfaedle/router/misc.h>
 
 namespace pfaedle::router
 {
-std::string getMotStr(const pfaedle::router::MOTs& mots)
+std::string get_mot_str(const pfaedle::router::MOTs& mots)
 {
     bool first = false;
     std::string motStr;
@@ -19,9 +19,9 @@ std::string getMotStr(const pfaedle::router::MOTs& mots)
     return motStr;
 }
 
-pfaedle::router::FeedStops writeMotStops(const gtfs::Feed& feed, const MOTs& mots, const string& tid)
+pfaedle::router::feed_stops write_mot_stops(const gtfs::Feed& feed, const MOTs& mots, const string& tid)
 {
-    pfaedle::router::FeedStops ret;
+    pfaedle::router::feed_stops ret;
     for (auto t : feed.getTrips())
     {
         if (!tid.empty() && t.getId() != tid)

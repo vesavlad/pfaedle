@@ -5,13 +5,13 @@
 #ifndef PFAEDLE_TRGRAPH_STATGROUP_H_
 #define PFAEDLE_TRGRAPH_STATGROUP_H_
 
-#include <string>
-#include <unordered_map>
-#include <set>
 #include "cppgtfs/gtfs/Feed.h"
-#include "pfaedle/router/Router.h"
+#include "pfaedle/router/router.h"
 #include "pfaedle/trgraph/Graph.h"
 #include "pfaedle/trgraph/Normalizer.h"
+#include <set>
+#include <string>
+#include <unordered_map>
 
 namespace pfaedle {
 namespace trgraph {
@@ -48,7 +48,7 @@ class StatGroup {
   void merge(StatGroup* other);
 
   // Return node candidates for stop s from this group
-  const router::NodeCandidateGroup& getNodeCands(const Stop* s) const;
+  const router::node_candidate_group& getNodeCands(const Stop* s) const;
 
   // Write the penalties for all stops contained in this group so far.
   void writePens(const trgraph::Normalizer& platformNorm, double trackPen,
@@ -60,7 +60,7 @@ class StatGroup {
 
   // for each stop in this group, a penalty for each of the nodes here, based on
   // its distance and optionally the track number
-  std::unordered_map<const Stop*, router::NodeCandidateGroup> _stopNodePens;
+  std::unordered_map<const Stop*, router::node_candidate_group> _stopNodePens;
 
   double getPen(const Stop* s, trgraph::Node* n,
                 const trgraph::Normalizer& norm, double trackPen,

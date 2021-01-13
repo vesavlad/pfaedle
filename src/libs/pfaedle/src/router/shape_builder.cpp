@@ -15,7 +15,7 @@
 #include "pfaedle/gtfs/Feed.h"
 #include "pfaedle/gtfs/StopTime.h"
 #include "pfaedle/osm/OsmBuilder.h"
-#include "pfaedle/router/ShapeBuilder.h"
+#include "pfaedle/router/shape_builder.h"
 #include "pfaedle/trgraph/StatGroup.h"
 #include "util/geo/Geo.h"
 #include "util/geo/output/GeoGraphJsonOutput.h"
@@ -41,27 +41,22 @@ using pfaedle::gtfs::Feed;
 using pfaedle::gtfs::StopTime;
 using pfaedle::gtfs::Trip;
 using pfaedle::osm::BBoxIdx;
-using pfaedle::router::Clusters;
-using pfaedle::router::EdgeListHops;
-using pfaedle::router::FeedStops;
-using pfaedle::router::NodeCandidateGroup;
-using pfaedle::router::NodeCandidateRoute;
-using pfaedle::router::RoutingAttrs;
-using pfaedle::router::ShapeBuilder;
 using util::geo::latLngToWebMerc;
 using util::geo::webMercMeterDist;
 using util::geo::webMercToLatLng;
 using util::geo::output::GeoGraphJsonOutput;
 
-ShapeBuilder::ShapeBuilder(pfaedle::gtfs::Feed& feed,
-             ad::cppgtfs::gtfs::Feed& evalFeed,
-             MOTs mots,
-             const config::mot_config& motCfg,
-             eval::collector& ecoll,
-             trgraph::Graph& g,
-             router::FeedStops& stops,
-             osm::Restrictor& restr,
-             const config::config& cfg):
+namespace pfaedle::router
+{
+shape_builder::shape_builder(pfaedle::gtfs::Feed& feed,
+                           ad::cppgtfs::gtfs::Feed& evalFeed,
+                           MOTs mots,
+                           const config::mot_config& motCfg,
+                           eval::collector& ecoll,
+                           trgraph::Graph& g,
+                           feed_stops& stops,
+                           osm::Restrictor& restr,
+                           const config::config& cfg) :
     _feed(feed),
     _evalFeed(evalFeed),
     _mots(std::move(mots)),
@@ -77,7 +72,7 @@ ShapeBuilder::ShapeBuilder(pfaedle::gtfs::Feed& feed,
 {
 }
 
-const NodeCandidateGroup& ShapeBuilder::getNodeCands(const Stop& s) const
+const node_candidate_group& shape_builder::getNodeCands(const Stop& s) const
 {
     if (_stops.find(&s) == _stops.end() || _stops.at(&s) == nullptr)
         return _emptyNCG;
@@ -85,12 +80,12 @@ const NodeCandidateGroup& ShapeBuilder::getNodeCands(const Stop& s) const
     return _stops.at(&s)->pl().getSI()->getGroup()->getNodeCands(&s);
 }
 
-LINE ShapeBuilder::shapeL(const router::NodeCandidateRoute& ncr,
-                          const router::RoutingAttrs& rAttrs)
+LINE shape_builder::get_shape_line(const node_candidate_route& ncr,
+                          const routing_attributes& rAttrs)
 {
     try
     {
-        const router::EdgeListHops& res = route(ncr, rAttrs);
+        const edge_list_hops& res = route(ncr, rAttrs);
 
         LINE l;
         for (const auto& hop : res)
@@ -127,19 +122,19 @@ LINE ShapeBuilder::shapeL(const router::NodeCandidateRoute& ncr,
     }
 }
 
-LINE ShapeBuilder::shapeL(Trip& trip)
+LINE shape_builder::get_shape_line(Trip& trip)
 {
-    return shapeL(getNCR(trip), getRAttrs(trip));
+    return get_shape_line(get_node_candidate_route(trip), getRAttrs(trip));
 }
 
-EdgeListHops ShapeBuilder::route(const router::NodeCandidateRoute& ncr,
-                                 const router::RoutingAttrs& rAttrs) const
+edge_list_hops shape_builder::route(const node_candidate_route& ncr,
+                                   const routing_attributes& rAttrs) const
 {
-    router::Graph g;
+    graph g;
 
     if (_cfg.solveMethod == "global")
     {
-        const router::EdgeListHops& ret = _crouter.route(ncr, rAttrs, _motCfg.routingOpts, _restr, &g);
+        const edge_list_hops& ret = _crouter.route(ncr, rAttrs, _motCfg.routingOpts, _restr, &g);
 
         // write combination graph
         if (!_cfg.shapeTripId.empty() && _cfg.writeCombGraph)
@@ -167,43 +162,43 @@ EdgeListHops ShapeBuilder::route(const router::NodeCandidateRoute& ncr,
     }
 }
 
-pfaedle::router::Shape ShapeBuilder::shape(Trip& trip) const
+pfaedle::router::shape shape_builder::get_shape(Trip& trip) const
 {
-    LOG(TRACE) << "Map-matching shape for trip #" << trip.getId() << " of mot "
-                << trip.getRoute()->getType() << "(sn=" << trip.getShortname()
-                << ", rsn=" << trip.getRoute()->getShortName()
-                << ", rln=" << trip.getRoute()->getLongName() << ")";
-    Shape ret;
-    ret.hops = route(getNCR(trip), getRAttrs(trip));
-    ret.avgHopDist = avgHopDist(trip);
+    LOG(TRACE) << "Map-matching get_shape for trip #" << trip.getId() << " of mot "
+               << trip.getRoute()->getType() << "(sn=" << trip.getShortname()
+               << ", rsn=" << trip.getRoute()->getShortName()
+               << ", rln=" << trip.getRoute()->getLongName() << ")";
+    pfaedle::router::shape ret;
+    ret.hops = route(get_node_candidate_route(trip), getRAttrs(trip));
+    ret.avgHopDist = get_average_hop_distance(trip);
 
     LOG(TRACE) << "Finished map-matching for #" << trip.getId();
 
     return ret;
 }
 
-pfaedle::router::Shape ShapeBuilder::shape(Trip& trip)
+pfaedle::router::shape shape_builder::get_shape(Trip& trip)
 {
-    LOG(TRACE) << "Map-matching shape for trip #" << trip.getId() << " of mot "
-                << trip.getRoute()->getType() << "(sn=" << trip.getShortname()
-                << ", rsn=" << trip.getRoute()->getShortName()
-                << ", rln=" << trip.getRoute()->getLongName() << ")";
+    LOG(TRACE) << "Map-matching get_shape for trip #" << trip.getId() << " of mot "
+               << trip.getRoute()->getType() << "(sn=" << trip.getShortname()
+               << ", rsn=" << trip.getRoute()->getShortName()
+               << ", rln=" << trip.getRoute()->getLongName() << ")";
 
-    Shape ret;
-    ret.hops = route(getNCR(trip), getRAttrs(trip));
-    ret.avgHopDist = avgHopDist(trip);
+    pfaedle::router::shape ret;
+    ret.hops = route(get_node_candidate_route(trip), getRAttrs(trip));
+    ret.avgHopDist = get_average_hop_distance(trip);
 
     LOG(TRACE) << "Finished map-matching for #" << trip.getId();
 
     return ret;
 }
 
-void ShapeBuilder::shape(pfaedle::netgraph::Graph& ng)
+void shape_builder::get_shape(pfaedle::netgraph::graph& ng)
 {
-    TrGraphEdgs gtfsGraph;
+    transit_graph_edges gtfsGraph;
 
     LOG(DEBUG) << "Clustering trips...";
-    Clusters clusters = clusterTrips(_feed, _mots);
+    clusters clusters = cluster_trips(_feed, _mots);
     LOG(DEBUG) << "Clustered trips into " << clusters.size() << " clusters.";
 
     std::map<std::string, size_t> shpUsage;
@@ -249,20 +244,20 @@ void ShapeBuilder::shape(pfaedle::netgraph::Graph& ng)
         }
 
         // explicitly call const version of shape here for thread safety
-        const Shape& cshp =
-                const_cast<const ShapeBuilder&>(*this).shape(*clusters[i][0]);
+        const pfaedle::router::shape& cshp =
+                const_cast<const shape_builder&>(*this).get_shape(*clusters[i][0]);
         tot_avg_dist += cshp.avgHopDist;
 
         if (_cfg.buildTransitGraph)
         {
 #pragma omp critical
             {
-                writeTransitGraph(cshp, gtfsGraph, clusters[i]);
+                write_transit_graph(cshp, gtfsGraph, clusters[i]);
             }
         }
 
         std::vector<double> distances;
-        const ad::cppgtfs::gtfs::Shape& shp = getGtfsShape(cshp, *clusters[i][0], distances);
+        const ad::cppgtfs::gtfs::Shape& shp = get_gtfs_shape(cshp, *clusters[i][0], distances);
 
         LOG(TRACE) << "Took " << EDijkstra::ITERS - iters << " iterations.";
         iters = EDijkstra::ITERS;
@@ -289,7 +284,7 @@ void ShapeBuilder::shape(pfaedle::netgraph::Graph& ng)
                     _feed.getShapes().remove(t->getShape());
                 }
             }
-            setShape(*t, shp, distances);
+            set_shape(*t, shp, distances);
         }
     }
 
@@ -310,18 +305,18 @@ void ShapeBuilder::shape(pfaedle::netgraph::Graph& ng)
     if (_cfg.buildTransitGraph)
     {
         LOG(INFO) << "Building transit network graph...";
-        buildTrGraph(gtfsGraph, ng);
+        build_transit_graph(gtfsGraph, ng);
     }
 }
 
-void ShapeBuilder::setShape(Trip& t, const ad::cppgtfs::gtfs::Shape& s, const std::vector<double>& distances)
+void shape_builder::set_shape(Trip& t, const ad::cppgtfs::gtfs::Shape& s, const std::vector<double>& dists)
 {
-    assert(distances.size() == t.getStopTimes().size());
+    assert(dists.size() == t.getStopTimes().size());
     // set distances
     size_t i = 0;
     for (const auto& st : t.getStopTimes())
     {
-        const_cast<StopTime<Stop>&>(st).setShapeDistanceTravelled(distances[i]);
+        const_cast<StopTime<Stop>&>(st).setShapeDistanceTravelled(dists[i]);
         i++;
     }
 
@@ -329,12 +324,12 @@ void ShapeBuilder::setShape(Trip& t, const ad::cppgtfs::gtfs::Shape& s, const st
     t.setShape(_feed.getShapes().add(s));
 }
 
-ad::cppgtfs::gtfs::Shape ShapeBuilder::getGtfsShape(
-        const Shape& shp,
+ad::cppgtfs::gtfs::Shape shape_builder::get_gtfs_shape(
+        const pfaedle::router::shape& shp,
         Trip& t,
         std::vector<double>& hopDists)
 {
-    ad::cppgtfs::gtfs::Shape ret(getFreeShapeId(t));
+    ad::cppgtfs::gtfs::Shape ret(get_free_shapeId(t));
 
     assert(shp.hops.size() == t.getStopTimes().size() - 1);
 
@@ -433,7 +428,7 @@ ad::cppgtfs::gtfs::Shape ShapeBuilder::getGtfsShape(
     return ret;
 }
 
-std::string ShapeBuilder::getFreeShapeId(Trip& trip)
+std::string shape_builder::get_free_shapeId(Trip& t)
 {
     std::string ret;
     std::lock_guard<std::mutex> guard(_shpMutex);
@@ -441,38 +436,38 @@ std::string ShapeBuilder::getFreeShapeId(Trip& trip)
     {
         _curShpCnt++;
         ret = "shp_";
-        ret += std::to_string(trip.getRoute()->getType());
+        ret += std::to_string(t.getRoute()->getType());
         ret += "_" + std::to_string(_curShpCnt);
     }
 
     return ret;
 }
 
-const RoutingAttrs& ShapeBuilder::getRAttrs(const Trip& trip)
+const routing_attributes& shape_builder::getRAttrs(const Trip& trip)
 {
     auto i = _rAttrs.find(&trip);
 
     if (i == _rAttrs.end())
     {
-        router::RoutingAttrs ret;
+        routing_attributes ret;
 
         const auto& lnormzer = _motCfg.osmBuildOpts.lineNormzer;
 
-        ret.shortName = lnormzer.norm(trip.getRoute()->getShortName());
+        ret.short_name = lnormzer.norm(trip.getRoute()->getShortName());
 
-        if (ret.shortName.empty())
-            ret.shortName = lnormzer.norm(trip.getShortname());
+        if (ret.short_name.empty())
+            ret.short_name = lnormzer.norm(trip.getShortname());
 
-        if (ret.shortName.empty())
-            ret.shortName = lnormzer.norm(trip.getRoute()->getLongName());
+        if (ret.short_name.empty())
+            ret.short_name = lnormzer.norm(trip.getRoute()->getLongName());
 
-        ret.fromString = _motCfg.osmBuildOpts.statNormzer.norm(
+        ret.from = _motCfg.osmBuildOpts.statNormzer.norm(
                 trip.getStopTimes().begin()->getStop()->getName());
-        ret.toString = _motCfg.osmBuildOpts.statNormzer.norm(
+        ret.to = _motCfg.osmBuildOpts.statNormzer.norm(
                 (--trip.getStopTimes().end())->getStop()->getName());
 
         return _rAttrs
-                .insert(std::pair<const Trip*, router::RoutingAttrs>(&trip, ret))
+                .insert(std::pair<const Trip*, routing_attributes>(&trip, ret))
                 .first->second;
     }
     else
@@ -481,12 +476,12 @@ const RoutingAttrs& ShapeBuilder::getRAttrs(const Trip& trip)
     }
 }
 
-const RoutingAttrs& ShapeBuilder::getRAttrs(const Trip& trip) const
+const routing_attributes& shape_builder::getRAttrs(const Trip& trip) const
 {
     return _rAttrs.find(&trip)->second;
 }
 
-void ShapeBuilder::getGtfsBox(const Feed& feed, const MOTs& mots,
+void shape_builder::get_gtfs_box(const Feed& feed, const MOTs& mots,
                               const std::string& tid, bool dropShapes,
                               osm::BBoxIdx& box)
 {
@@ -514,9 +509,9 @@ void ShapeBuilder::getGtfsBox(const Feed& feed, const MOTs& mots,
     }
 }
 
-NodeCandidateRoute ShapeBuilder::getNCR(Trip& trip) const
+node_candidate_route shape_builder::get_node_candidate_route(Trip& trip) const
 {
-    router::NodeCandidateRoute ncr(trip.getStopTimes().size());
+    node_candidate_route ncr(trip.getStopTimes().size());
 
     size_t i = 0;
 
@@ -534,7 +529,7 @@ NodeCandidateRoute ShapeBuilder::getNCR(Trip& trip) const
     return ncr;
 }
 
-double ShapeBuilder::avgHopDist(Trip& trip) const
+double shape_builder::get_average_hop_distance(Trip& trip) const
 {
     size_t i = 0;
     double sum = 0;
@@ -558,13 +553,13 @@ double ShapeBuilder::avgHopDist(Trip& trip) const
     return sum / static_cast<double>(i);
 }
 
-Clusters ShapeBuilder::clusterTrips(Feed& f, const MOTs& mots)
+clusters shape_builder::cluster_trips(Feed& f, const MOTs& mots)
 {
     // building an index [start station, end station] -> [cluster]
 
-    std::map<StopPair, std::vector<size_t>> cluster_idx;
+    std::map<stop_pair, std::vector<size_t>> cluster_idx;
 
-    Clusters ret;
+    clusters ret;
     for (auto& trip : f.getTrips())
     {
         if (!trip.getShape().empty() && !_cfg.dropShapes)
@@ -575,7 +570,7 @@ Clusters ShapeBuilder::clusterTrips(Feed& f, const MOTs& mots)
             continue;
 
         bool found = false;
-        StopPair pair(trip.getStopTimes().begin()->getStop(),
+        stop_pair pair(trip.getStopTimes().begin()->getStop(),
                       trip.getStopTimes().rbegin()->getStop());
         const auto& c = cluster_idx[pair];
 
@@ -590,7 +585,7 @@ Clusters ShapeBuilder::clusterTrips(Feed& f, const MOTs& mots)
         }
         if (!found)
         {
-            ret.push_back(Cluster{&trip});
+            ret.push_back(cluster{&trip});
             // explicit call to write render attrs to cache
             getRAttrs(trip);
             cluster_idx[pair].push_back(ret.size() - 1);
@@ -600,7 +595,7 @@ Clusters ShapeBuilder::clusterTrips(Feed& f, const MOTs& mots)
     return ret;
 }
 
-bool ShapeBuilder::routingEqual(const Stop& a, const Stop& b)
+bool shape_builder::routingEqual(const Stop& a, const Stop& b)
 {
     if (&a == &b) return true;// trivial
 
@@ -622,7 +617,7 @@ bool ShapeBuilder::routingEqual(const Stop& a, const Stop& b)
     return true;
 }
 
-bool ShapeBuilder::routingEqual(Trip& a, Trip& b)
+bool shape_builder::routingEqual(Trip& a, Trip& b)
 {
     if (a.getStopTimes().size() != b.getStopTimes().size())
         return false;
@@ -642,10 +637,10 @@ bool ShapeBuilder::routingEqual(Trip& a, Trip& b)
     return true;
 }
 
-const pfaedle::trgraph::Graph& ShapeBuilder::getGraph() const { return _g; }
+const pfaedle::trgraph::Graph& shape_builder::get_graph() const { return _g; }
 
-void ShapeBuilder::writeTransitGraph(const Shape& shp, TrGraphEdgs& edgs,
-                                     const Cluster& cluster) const
+void shape_builder::write_transit_graph(const pfaedle::router::shape& shp, transit_graph_edges& edgs,
+                                     const cluster& cluster) const
 {
     for (const auto& hop : shp.hops)
     {
@@ -657,16 +652,16 @@ void ShapeBuilder::writeTransitGraph(const Shape& shp, TrGraphEdgs& edgs,
     }
 }
 
-void ShapeBuilder::buildTrGraph(TrGraphEdgs& edgs,
-                                pfaedle::netgraph::Graph& ng) const
+void shape_builder::build_transit_graph(transit_graph_edges& edgs,
+                                pfaedle::netgraph::graph& ng) const
 {
-    std::unordered_map<trgraph::Node*, pfaedle::netgraph::Node*> nodes;
+    std::unordered_map<trgraph::Node*, pfaedle::netgraph::node*> nodes;
 
     for (const auto& ep : edgs)
     {
         auto e = ep.first;
-        pfaedle::netgraph::Node* from = nullptr;
-        pfaedle::netgraph::Node* to = nullptr;
+        pfaedle::netgraph::node* from = nullptr;
+        pfaedle::netgraph::node* to = nullptr;
 
         if (nodes.count(e->getFrom()))
             from = nodes[e->getFrom()];
@@ -683,6 +678,7 @@ void ShapeBuilder::buildTrGraph(TrGraphEdgs& edgs,
             nodes[e->getTo()] = to;
         }
 
-        ng.addEdg(from, to,pfaedle::netgraph::EdgePL(*e->pl().getGeom(), ep.second));
+        ng.addEdg(from, to, pfaedle::netgraph::edge_payload(*e->pl().getGeom(), ep.second));
     }
+}
 }

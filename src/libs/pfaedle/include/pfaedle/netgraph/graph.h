@@ -5,27 +5,22 @@
 #ifndef PFAEDLE_NETGRAPH_GRAPH_H_
 #define PFAEDLE_NETGRAPH_GRAPH_H_
 
-#include "pfaedle/netgraph/NodePL.h"
-#include "pfaedle/netgraph/EdgePL.h"
-#include "util/graph/UndirGraph.h"
-
-using util::geo::Point;
-using util::geo::Line;
+#include <pfaedle/netgraph/edge_payload.h>
+#include <pfaedle/netgraph/node_payload.h>
+#include <util/graph/UndirGraph.h>
 
 
-
-namespace pfaedle {
-namespace netgraph {
+namespace pfaedle::netgraph
+{
 
 /*
  * A payload class for edges on a network graph - that is a graph
  * that exactly represents a physical public transit network
  */
-typedef util::graph::Edge<NodePL, EdgePL> Edge;
-typedef util::graph::Node<NodePL, EdgePL> Node;
-typedef util::graph::UndirGraph<NodePL, EdgePL> Graph;
+using edge = util::graph::Edge<node_payload, edge_payload>;
+using node = util::graph::Node<node_payload, edge_payload>;
+using graph = util::graph::UndirGraph<node_payload, edge_payload>;
 
-}  // namespace netgraph
 }  // namespace pfaedle
 
 #endif  // PFAEDLE_NETGRAPH_GRAPH_H_

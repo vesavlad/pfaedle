@@ -65,14 +65,14 @@ void OsmBuilder::read(const std::string& path,
                       Graph& g,
                       const BBoxIdx& bbox,
                       size_t gridSize,
-                      router::FeedStops& fs,
+                      router::feed_stops& fs,
                       Restrictor& res)
 {
     if (!bbox.size()) return;
 
     LOG(INFO) << "Reading OSM file " << path << " ... ";
 
-    NodeSet orphan_stations;
+    router::node_set orphan_stations;
     EdgTracks e_tracks;
     {
         OsmIdSet bboxNodes, noHupNodes;
@@ -847,7 +847,7 @@ void OsmBuilder::readNodes(pugi::xml_document& xml,
                            const OsmIdSet& bBoxNodes,
                            NIdMap& nodes,
                            NIdMultMap& multNodes,
-                           NodeSet& orphanStations,
+                           router::node_set& orphanStations,
                            const AttrKeySet& keepAttrs,
                            const FlatRels& fl,
                            const OsmReadOpts& opts) const
@@ -1332,7 +1332,7 @@ Node* OsmBuilder::depthSearch(const Edge* e, const StatInfo* si, const POINT& p,
     if (dTo <= maxD && sfunc(e->getTo(), si)) return e->getTo();
 
     NodeCandPQ pq;
-    NodeSet closed;
+    router::node_set closed;
     pq.push(NodeCand{dFrom, e->getFrom(), e, 0});
     if (e->getFrom() != e->getTo()) pq.push(NodeCand{dTo, e->getTo(), e, 0});
 
@@ -1610,7 +1610,7 @@ std::set<Node*> OsmBuilder::snapStation(Graph& g,
 }
 
 
-StatGroup* OsmBuilder::groupStats(const NodeSet& s)
+StatGroup* OsmBuilder::groupStats(const router::node_set& s)
 {
     if (s.empty())
         return nullptr;
@@ -2191,9 +2191,9 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts,
                            Graph& g,
                            const BBoxIdx& bbox,
                            size_t gridSize,
-                           router::FeedStops& fs,
+                           router::feed_stops& fs,
                            Restrictor& res,
-                           const NodeSet& orphanStations)
+                           const router::node_set& orphanStations)
 {
     NodeGrid sng = buildNodeIdx(g, gridSize, bbox.getFullWebMercBox(), true);
     EdgeGrid eg = buildEdgeIdx(g, gridSize, bbox.getFullWebMercBox());
