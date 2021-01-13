@@ -11,21 +11,16 @@
 #include "util/graph/DirGraph.h"
 #include "util/graph/UndirGraph.h"
 
-using util::geo::Grid;
-using util::geo::Point;
-using util::geo::Line;
-
 namespace pfaedle::trgraph
 {
-
 /*
  * A graph for physical transit networks
  */
 using Edge = util::graph::Edge<NodePayload, EdgePayload>;
 using Node = util::graph::Node<NodePayload, EdgePayload>;
 using Graph = util::graph::DirGraph<NodePayload, EdgePayload>;
-using NodeGrid = Grid<Node*, Point, PFAEDLE_PRECISION>;
-using EdgeGrid = Grid<Edge*, Line, PFAEDLE_PRECISION>;
+using NodeGrid = util::geo::Grid<Node*, util::geo::Point, PFAEDLE_PRECISION>;
+using EdgeGrid = util::geo::Grid<Edge*, util::geo::Line, PFAEDLE_PRECISION>;
 
 }  // namespace pfaedle
 

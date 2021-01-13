@@ -10,6 +10,7 @@
 #include <cppgtfs/gtfs/Route.h>
 #include <pfaedle/gtfs/Feed.h>
 #include <pfaedle/trgraph/Graph.h>
+#include <util/geo/Point.h>
 
 #include <set>
 #include <string>
@@ -136,9 +137,9 @@ inline bool operator>(const EdgeCost& a, const EdgeCost& b)
 }
 
 template<typename F>
-inline bool angSmaller(const Point<F>& f,
-                       const Point<F>& m,
-                       const Point<F>& t,
+inline bool angSmaller(const util::geo::Point<F>& f,
+                       const util::geo::Point<F>& m,
+                       const util::geo::Point<F>& t,
                        double ang)
 {
     if (util::geo::innerProd(m, f, t) < ang)

@@ -42,6 +42,7 @@ using pfaedle::trgraph::StatGroup;
 using pfaedle::trgraph::StatInfo;
 using pfaedle::trgraph::TransitEdgeLine;
 using util::geo::webMercMeterDist;
+using util::geo::Point;
 
 
 bool EqSearch::operator()(const Node* cand, const StatInfo* si) const
