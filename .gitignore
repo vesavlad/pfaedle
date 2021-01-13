@@ -24,3 +24,8 @@ cmake-build-*
 .clang-tidy
 deps
 logs
+abort_log.txt
+trgraph-*
+eval/osm/*osm*
+eval/gtfs/*
+eval/osmconvert
