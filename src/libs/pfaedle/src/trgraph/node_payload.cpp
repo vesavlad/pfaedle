@@ -9,9 +9,8 @@
 #include <string>
 #include <unordered_map>
 
-using pfaedle::trgraph::component;
-using pfaedle::trgraph::node_payload;
-using pfaedle::trgraph::station_info;
+namespace pfaedle::trgraph
+{
 
 // we use the adress of this dummy station info as a special value
 // of this node, meaning "is a station block". Re-using the _si field here
@@ -20,60 +19,54 @@ station_info node_payload::_blockerSI = station_info();
 
 std::unordered_map<const component*, size_t> node_payload::_comps;
 
-// _____________________________________________________________________________
 node_payload::node_payload() :
     _geom(0, 0),
     _si(nullptr),
     _component(nullptr)
 #ifdef PFAEDLE_DBG
     ,
-    _vis(0)
+    _vis(false)
 #endif
 {
 }
 
-// _____________________________________________________________________________
 node_payload::node_payload(const node_payload& pl) :
     _geom(pl._geom),
     _si(nullptr),
     _component(pl._component)
 #ifdef PFAEDLE_DBG
-    ,
-    _vis(pl._vis)
+    ,_vis(pl._vis)
 #endif
 {
-    if (pl._si) setSI(*(pl._si));
+    if (pl._si) set_si(*(pl._si));
 }
 
-// _____________________________________________________________________________
 node_payload::node_payload(const POINT& geom) :
     _geom(geom),
     _si(nullptr),
     _component(nullptr)
 #ifdef PFAEDLE_DBG
-    ,
-    _vis(0)
+    ,_vis(false)
 #endif
 {
 }
 
-// _____________________________________________________________________________
 node_payload::node_payload(const POINT& geom, const station_info& si) :
     _geom(geom),
     _si(nullptr),
     _component(nullptr)
 #ifdef PFAEDLE_DBG
-    ,
-    _vis(0)
+    ,_vis(false)
 #endif
 {
-    setSI(si);
+    set_si(si);
 }
 
-// _____________________________________________________________________________
 node_payload::~node_payload()
 {
-    if (getSI()) delete _si;
+    if (get_si())
+        delete _si;
+
     if (_component)
     {
         _comps[_component]--;
@@ -85,24 +78,27 @@ node_payload::~node_payload()
     }
 }
 
-// _____________________________________________________________________________
-void node_payload::setVisited() const
+void node_payload::set_visited() const
 {
 #ifdef PFAEDLE_DBG
     _vis = true;
 #endif
 }
 
-// _____________________________________________________________________________
-void node_payload::setNoStat() { _si = nullptr; }
-
-// _____________________________________________________________________________
-const component* node_payload::getComp() const { return _component; }
-
-// _____________________________________________________________________________
-void node_payload::setComp(const component* c)
+void node_payload::set_no_statistics()
 {
-    if (_component == c) return;
+    _si = nullptr;
+}
+
+const component* node_payload::get_component() const
+{
+    return _component;
+}
+
+void node_payload::set_component(const component* c)
+{
+    if (_component == c)
+        return;
     _component = c;
 
     // NOT thread safe!
@@ -112,29 +108,32 @@ void node_payload::setComp(const component* c)
         _comps[c]++;
 }
 
-// _____________________________________________________________________________
-const POINT* node_payload::getGeom() const { return &_geom; }
+const POINT* node_payload::get_geom() const
+{
+    return &_geom;
+}
 
-// _____________________________________________________________________________
-void node_payload::setGeom(const POINT& geom) { _geom = geom; }
+void node_payload::set_geom(const POINT& geom)
+{
+    _geom = geom;
+}
 
-// _____________________________________________________________________________
-util::json::Dict node_payload::getAttrs() const
+util::json::Dict node_payload::get_attrs() const
 {
     util::json::Dict obj;
     obj["component"] = std::to_string(reinterpret_cast<size_t>(_component));
 #ifdef PFAEDLE_DBG
     obj["dijkstra_vis"] = _vis ? "yes" : "no";
 #endif
-    if (getSI())
+    if (get_si())
     {
         obj["station_info_ptr"] = util::toString(_si);
-        obj["station_name"] = _si->getName();
-        obj["station_alt_names"] = util::implode(_si->getAltNames(), ",");
-        obj["from_osm"] = _si->isFromOsm() ? "yes" : "no";
-        obj["station_platform"] = _si->getTrack();
+        obj["station_name"] = _si->get_name();
+        obj["station_alt_names"] = util::implode(_si->get_alternative_names(), ",");
+        obj["from_osm"] = _si->is_from_osm() ? "yes" : "no";
+        obj["station_platform"] = _si->get_track();
         obj["station_group"] =
-                std::to_string(reinterpret_cast<size_t>(_si->getGroup()));
+                std::to_string(reinterpret_cast<size_t>(_si->get_group()));
 
 #ifdef PFAEDLE_STATION_IDS
         // only print this in debug mode
@@ -142,39 +141,46 @@ util::json::Dict node_payload::getAttrs() const
 #endif
 
 
-        std::stringstream gtfsIds;
-        if (_si->getGroup())
+        std::stringstream gtfs_ids;
+        if (_si->get_group())
         {
-            for (auto* s : _si->getGroup()->getStops())
+            for (auto* s : _si->get_group()->get_stops())
             {
-                gtfsIds << s->getId() << " (" << s->getName() << "),";
+                gtfs_ids << s->getId() << " (" << s->getName() << "),";
             }
         }
 
-        obj["station_group_stops"] = gtfsIds.str();
+        obj["station_group_stops"] = gtfs_ids.str();
     }
     return obj;
 }
 
-// _____________________________________________________________________________
-void node_payload::setSI(const station_info& si) { _si = new station_info(si); }
-
-// _____________________________________________________________________________
-const station_info* node_payload::getSI() const
+void node_payload::set_si(const station_info& si)
 {
-    if (isBlocker()) return nullptr;
+    _si = new station_info(si);
+}
+
+const station_info* node_payload::get_si() const
+{
+    if (is_blocker())
+        return nullptr;
     return _si;
 }
 
-// _____________________________________________________________________________
-station_info* node_payload::getSI()
+station_info* node_payload::get_si()
 {
-    if (isBlocker()) return nullptr;
+    if (is_blocker())
+        return nullptr;
     return _si;
 }
 
-// _____________________________________________________________________________
-void node_payload::setBlocker() { _si = &_blockerSI; }
+void node_payload::set_blocker()
+{
+    _si = &_blockerSI;
+}
 
-// _____________________________________________________________________________
-bool node_payload::isBlocker() const { return _si == &_blockerSI; }
+bool node_payload::is_blocker() const
+{
+    return _si == &_blockerSI;
+}
+}

@@ -24,7 +24,7 @@ station_info::station_info(const station_info& si) :
     _fromOsm(si._fromOsm),
     _group(nullptr)
 {
-    setGroup(si._group);
+    set_group(si._group);
 #ifdef PFAEDLE_STATION_IDS
     _id = si._id;
 #endif
@@ -51,7 +51,7 @@ void station_info::unRefGroup(station_group* g)
     }
 }
 
-void station_info::setGroup(station_group* g)
+void station_info::set_group(station_group* g)
 {
     if (_group == g) return;
     unRefGroup(_group);
@@ -65,31 +65,31 @@ void station_info::setGroup(station_group* g)
         _groups[g]++;
 }
 
-station_group* station_info::getGroup() const { return _group; }
+station_group* station_info::get_group() const { return _group; }
 
-const std::string& station_info::getName() const { return _name; }
+const std::string& station_info::get_name() const { return _name; }
 
-const std::string& station_info::getTrack() const { return _track; }
+const std::string& station_info::get_track() const { return _track; }
 
-bool station_info::isFromOsm() const { return _fromOsm; }
+bool station_info::is_from_osm() const { return _fromOsm; }
 
-void station_info::setIsFromOsm(bool is) { _fromOsm = is; }
+void station_info::set_is_from_osm(bool is) { _fromOsm = is; }
 
 double station_info::simi(const station_info* other) const
 {
     if (!other) return 0;
-    if (router::statSimi(_name, other->getName()) > 0.5) return 1;
+    if (router::statSimi(_name, other->get_name()) > 0.5) return 1;
 
     for (const auto& a : _altNames)
     {
-        if (router::statSimi(a, other->getName()) > 0.5) return 1;
-        for (const auto& b : other->getAltNames())
+        if (router::statSimi(a, other->get_name()) > 0.5) return 1;
+        for (const auto& b : other->get_alternative_names())
         {
             if (router::statSimi(a, b) > 0.5) return 1;
         }
     }
 
-    for (const auto& b : other->getAltNames())
+    for (const auto& b : other->get_alternative_names())
     {
         if (router::statSimi(_name, b) > 0.5) return 1;
     }
@@ -97,15 +97,15 @@ double station_info::simi(const station_info* other) const
     return 0;
 }
 
-const std::vector<std::string>& station_info::getAltNames() const
+const std::vector<std::string>& station_info::get_alternative_names() const
 {
     return _altNames;
 }
 
-void station_info::addAltName(const std::string& name)
+void station_info::add_alternative_name(const std::string& name)
 {
     _altNames.push_back(name);
 }
 
-void station_info::setTrack(const std::string& tr) { _track = tr; }
+void station_info::set_track(const std::string& tr) { _track = tr; }
 }

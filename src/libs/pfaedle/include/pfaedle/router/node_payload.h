@@ -26,16 +26,16 @@ public:
         _n(n)
     {}
 
-    const POINT* getGeom() const
+    const POINT* get_geom() const
     {
-        return !_n ? nullptr : _n->pl().getGeom();
+        return !_n ? nullptr : _n->pl().get_geom();
     }
 
-    util::json::Dict getAttrs() const
+    util::json::Dict get_attrs() const
     {
         if (_n)
         {
-            return _n->pl().getAttrs();
+            return _n->pl().get_attrs();
         }
         return util::json::Dict();
     }

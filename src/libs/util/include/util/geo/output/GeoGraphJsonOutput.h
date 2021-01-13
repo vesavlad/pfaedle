@@ -53,23 +53,23 @@ private:
         // first pass, nodes
         for (util::graph::Node<N, E>* n : outG.getNds())
         {
-            if (!n->pl().getGeom()) continue;
+            if (!n->pl().get_geom()) continue;
 
             json::Dict props{{"id", util::toString(n)},
                              {"deg", util::toString(n->getDeg())},
                              {"deg_out", util::toString(n->getOutDeg())},
                              {"deg_in", util::toString(n->getInDeg())}};
 
-            auto addProps = n->pl().getAttrs();
+            auto addProps = n->pl().get_attrs();
             props.insert(addProps.begin(), addProps.end());
 
             if (proj)
             {
-                json_output.printLatLng(*n->pl().getGeom(), props);
+                json_output.printLatLng(*n->pl().get_geom(), props);
             }
             else
             {
-                json_output.print(*n->pl().getGeom(), props);
+                json_output.print(*n->pl().get_geom(), props);
             }
         }
 
@@ -84,17 +84,17 @@ private:
                                  {"to", util::toString(e->getTo())},
                                  {"id", util::toString(e)}};
 
-                auto addProps = e->pl().getAttrs();
+                auto addProps = e->pl().get_attrs();
                 props.insert(addProps.begin(), addProps.end());
 
-                if (!e->pl().getGeom() || e->pl().getGeom()->empty())
+                if (!e->pl().get_geom() || e->pl().get_geom()->empty())
                 {
-                    if (e->getFrom()->pl().getGeom())
+                    if (e->getFrom()->pl().get_geom())
                     {
-                        auto a = *e->getFrom()->pl().getGeom();
-                        if (e->getTo()->pl().getGeom())
+                        auto a = *e->getFrom()->pl().get_geom();
+                        if (e->getTo()->pl().get_geom())
                         {
-                            auto b = *e->getTo()->pl().getGeom();
+                            auto b = *e->getTo()->pl().get_geom();
                             if (proj)
                             {
                                 json_output.printLatLng(createLine(a, b), props);
@@ -110,11 +110,11 @@ private:
                 {
                     if (proj)
                     {
-                        json_output.printLatLng(*e->pl().getGeom(), props);
+                        json_output.printLatLng(*e->pl().get_geom(), props);
                     }
                     else
                     {
-                        json_output.print(*e->pl().getGeom(), props);
+                        json_output.print(*e->pl().get_geom(), props);
                     }
                 }
             }

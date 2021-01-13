@@ -7,7 +7,7 @@
 
 #include <cppgtfs/gtfs/Feed.h>
 #include <pfaedle/definitions.h>
-#include <pfaedle/osm/BBoxIdx.h>
+#include <pfaedle/osm/bounding_box.h>
 #include <pfaedle/osm/osm_filter.h>
 #include <pfaedle/osm/osm_id_set.h>
 #include <pfaedle/osm/osm_read_options.h>
@@ -66,8 +66,8 @@ struct block_search_functor : public search_functor
 {
     bool operator()(const trgraph::node* n, const trgraph::station_info* si) const override
     {
-        if (n->pl().getSI() && n->pl().getSI()->simi(si) < 0.5) return true;
-        return n->pl().isBlocker();
+        if (n->pl().get_si() && n->pl().get_si()->simi(si) < 0.5) return true;
+        return n->pl().is_blocker();
     }
 };
 
@@ -91,7 +91,7 @@ public:
     void read(const std::string& path,
               const osm_read_options& opts,
               trgraph::graph& g,
-              const BBoxIdx& box,
+              const bounding_box& box,
               size_t gridSize,
               router::feed_stops& fs,
               restrictor& res);
@@ -100,7 +100,7 @@ public:
     // the data needed for routing
     void overpass_query_write(std::ostream& out,
                               const std::vector<osm_read_options>& opts,
-                              const BBoxIdx& latLngBox) const;
+                              const bounding_box& latLngBox) const;
 
     // Based on the list of options, read an OSM file from in and output an
     // OSM file to out which contains exactly the entities that are needed
@@ -108,12 +108,12 @@ public:
     void filter_write(const std::string& in,
                       const std::string& out,
                       const std::vector<osm_read_options>& opts,
-                      const BBoxIdx& box);
+                      const bounding_box& box);
 
 private:
     int filter_nodes(pugi::xml_document& xml, osm_id_set& nodes,
                      osm_id_set& noHupNodes, const osm_filter& filter,
-                     const BBoxIdx& bbox) const;
+                     const bounding_box& bbox) const;
 
     void read_relations(pugi::xml_document& xml,
                         relation_list& rels,
@@ -194,14 +194,14 @@ private:
                    const osm_id_set& bBoxNodes, const osm_filter& filter,
                    const flat_relations& fl) const;
 
-    std::optional<trgraph::station_info> get_stat_info(trgraph::node* node, osmid nid, const POINT& pos,
+    std::optional<trgraph::station_info> get_station_info(trgraph::node* node, osmid nid, const POINT& pos,
                                                        const attribute_map& m, station_attribute_groups* groups,
                                                        const relation_map& nodeRels, const relation_list& rels,
                                                        const osm_read_options& ops) const;
 
     static void snap_stats(const osm_read_options& opts,
                            trgraph::graph& g,
-                           const BBoxIdx& bbox,
+                           const bounding_box& bbox,
                            size_t gridSize,
                            router::feed_stops& fs,
                            restrictor& res,
@@ -254,13 +254,13 @@ private:
 
     static trgraph::station_group* group_stats(const router::node_set& s);
 
-    static trgraph::node_payload plFromGtfs(const Stop* s, const osm_read_options& ops);
+    static trgraph::node_payload payload_from_gtfs(const Stop* s, const osm_read_options& ops);
 
     std::vector<trgraph::transit_edge_line*> get_lines(const std::vector<size_t>& edgeRels,
                                                        const relation_list& rels,
                                                        const osm_read_options& ops);
 
-    void getKeptAttrKeys(const osm_read_options& opts, attribute_key_set sets[3]) const;
+    void get_kept_attribute_keys(const osm_read_options& opts, attribute_key_set sets[]) const;
 
 
     void process_restrictions(osmid nid, osmid wid, const restrictions& rawRests, trgraph::edge* e,

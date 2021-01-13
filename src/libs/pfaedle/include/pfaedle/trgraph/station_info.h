@@ -27,41 +27,41 @@ public:
     ~station_info();
 
     // Return this stops names.
-    const std::string& getName() const;
+    const std::string& get_name() const;
 
     // Return this stops track or empty string, if none.
-    const std::string& getTrack() const;
+    const std::string& get_track() const;
 
     // Add an alternative name for this station.
-    void addAltName(const std::string& name);
+    void add_alternative_name(const std::string& name);
 
     // Return all alternative names for this station.
-    const std::vector<std::string>& getAltNames() const;
+    const std::vector<std::string>& get_alternative_names() const;
 
     // Set the track of this stop.
-    void setTrack(const std::string& tr);
+    void set_track(const std::string& tr);
 
     // Return the similarity between this stop and other
     double simi(const station_info* other) const;
 
     // Set this stations group.
-    void setGroup(station_group* g);
+    void set_group(station_group* g);
 
     // Return this stations group.
-    station_group* getGroup() const;
+    station_group* get_group() const;
 
     // True if this stop was from osm
-    bool isFromOsm() const;
+    bool is_from_osm() const;
 
     // Set this stop as coming from osm
-    void setIsFromOsm(bool is);
+    void set_is_from_osm(bool is);
 
 #ifdef PFAEDLE_STATION_IDS
-    const std::string& getId() const
+    const std::string& get_id() const
     {
         return _id;
     }
-    void setId(const std::string& id) { _id = id; }
+    void set_id(const std::string& id) { _id = id; }
 #endif
 
 private:

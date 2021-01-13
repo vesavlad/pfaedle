@@ -24,11 +24,11 @@ public:
         _geom = geom;
     }// NOLINT
 
-    const POINT* getGeom() const
+    const POINT* get_geom() const
     {
         return &_geom;
     }
-    util::json::Dict getAttrs() const
+    util::json::Dict get_attrs() const
     {
         return util::json::Dict();
     }

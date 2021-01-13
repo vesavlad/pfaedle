@@ -25,24 +25,24 @@ public:
         _endE(nullptr)
     {}
 
-    const LINE* getGeom() const;
-    util::json::Dict getAttrs() const;
-    router::edge_list* getEdges();
-    const router::edge_list& getEdges() const;
+    const LINE* get_geom() const;
+    util::json::Dict get_attrs() const;
+    router::edge_list* get_edges();
+    const router::edge_list& get_edges() const;
 
-    void setStartNode(const trgraph::node* s);
-    void setEndNode(const trgraph::node* s);
-    void setStartEdge(const trgraph::edge* s);
-    void setEndEdge(const trgraph::edge* s);
+    void set_start_node(const trgraph::node* s);
+    void set_end_node(const trgraph::node* s);
+    void set_start_edge(const trgraph::edge* s);
+    void set_end_edge(const trgraph::edge* s);
 
-    const router::edge_cost& getCost() const;
-    void setCost(const router::edge_cost& c);
+    const router::edge_cost& get_cost() const;
+    void set_cost(const router::edge_cost& c);
 
     const POINT& frontHop() const;
     const POINT& backHop() const;
 
-    const trgraph::node* frontNode() const;
-    const trgraph::node* backNode() const;
+    const trgraph::node* front_node() const;
+    const trgraph::node* back_node() const;
 
 private:
     router::edge_cost _cost;

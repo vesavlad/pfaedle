@@ -35,37 +35,37 @@ public:
     ~node_payload();
 
     // Return the geometry of this node.
-    const POINT* getGeom() const;
-    void setGeom(const POINT& geom);
+    const POINT* get_geom() const;
+    void set_geom(const POINT& geom);
 
     // Fill obj with k/v pairs describing the parameters of this payload.
-    util::json::Dict getAttrs() const;
+    util::json::Dict get_attrs() const;
 
     // Set the station info for this node
-    void setSI(const station_info& si);
+    void set_si(const station_info& si);
 
     // Return the station info for this node
-    const station_info* getSI() const;
-    station_info* getSI();
+    const station_info* get_si() const;
+    station_info* get_si();
 
     // Delete the station info for this node
-    void setNoStat();
+    void set_no_statistics();
 
     // Get the component of this node
-    const component* getComp() const;
+    const component* get_component() const;
 
     // Set the component of this node
-    void setComp(const component* c);
+    void set_component(const component* c);
 
     // Make this node a blocker
-    void setBlocker();
+    void set_blocker();
 
     // Check if this node is a blocker
-    bool isBlocker() const;
+    bool is_blocker() const;
 
     // Mark this node as visited (usefull for counting search space in Dijkstra)
     // (only works for DEBUG build type)
-    void setVisited() const;
+    void set_visited() const;
 
 private:
     POINT _geom;

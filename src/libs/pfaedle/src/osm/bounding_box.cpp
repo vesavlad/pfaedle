@@ -2,18 +2,18 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include <pfaedle/osm/BBoxIdx.h>
+#include <pfaedle/osm/bounding_box.h>
 
 namespace pfaedle::osm
 {
 
-BBoxIdx::BBoxIdx(double padding) :
+bounding_box::bounding_box(double padding) :
     _padding(padding),
     _size(0)
 {}
 
 
-void BBoxIdx::add(BOX box)
+void bounding_box::add(BOX box)
 {
     // division by 83.000m is only correct here around a latitude deg of 25,
     // but should be a good heuristic. 1 deg is around 63km at latitude deg of 44,
@@ -25,19 +25,19 @@ void BBoxIdx::add(BOX box)
 }
 
 
-size_t BBoxIdx::size() const
+size_t bounding_box::size() const
 {
     return _size;
 }
 
 
-bool BBoxIdx::contains(const POINT& p) const
+bool bounding_box::contains(const POINT& p) const
 {
     return tree_has(p, _root);
 }
 
 
-BOX BBoxIdx::get_full_web_merc_box() const
+BOX bounding_box::get_full_web_merc_box() const
 {
     return BOX(
             util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(
@@ -47,13 +47,13 @@ BOX BBoxIdx::get_full_web_merc_box() const
 }
 
 
-BOX BBoxIdx::get_full_box() const
+BOX bounding_box::get_full_box() const
 {
     return _root.box;
 }
 
 
-std::vector<BOX> BBoxIdx::get_leafs() const
+std::vector<BOX> bounding_box::get_leafs() const
 {
     std::vector<util::geo::Box<double>> ret;
     get_leafs_rec(_root, &ret);
@@ -61,7 +61,7 @@ std::vector<BOX> BBoxIdx::get_leafs() const
 }
 
 
-void BBoxIdx::get_leafs_rec(const BBoxIdxNd& nd, std::vector<BOX>* ret) const
+void bounding_box::get_leafs_rec(const node& nd, std::vector<BOX>* ret) const
 {
     if (nd.childs.empty())
     {
@@ -76,7 +76,7 @@ void BBoxIdx::get_leafs_rec(const BBoxIdxNd& nd, std::vector<BOX>* ret) const
 }
 
 
-bool BBoxIdx::tree_has(const POINT& p, const BBoxIdxNd& nd) const
+bool bounding_box::tree_has(const POINT& p, const node& nd) const
 {
     if (nd.childs.empty())
         return util::geo::contains(p, nd.box);
@@ -91,7 +91,7 @@ bool BBoxIdx::tree_has(const POINT& p, const BBoxIdxNd& nd) const
 }
 
 
-void BBoxIdx::add_to_tree(const BOX& box, BBoxIdxNd* nd, size_t lvl)
+void bounding_box::add_to_tree(const BOX& box, node* nd, size_t lvl)
 {
     double best_common_area = 0;
     ssize_t best_child = -1;

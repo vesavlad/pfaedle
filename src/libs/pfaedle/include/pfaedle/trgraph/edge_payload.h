@@ -53,20 +53,20 @@ public:
     edge_payload(const edge_payload& pl, bool geoFlat);
 
     // Return the geometry of this edge.
-    const LINE* getGeom() const;
-    LINE* getGeom();
+    const LINE* get_geom() const;
+    LINE* get_geom();
 
     // Extends this edge payload's geometry by Point p
-    void addPoint(const POINT& p);
+    void add_point(const POINT& p);
 
     // Fill obj with k/v pairs describing the parameters of this payload.
-    util::json::Dict getAttrs() const;
+    util::json::Dict get_attrs() const;
 
     // Return the length in meters stored for this edge payload
-    double getLength() const;
+    double get_length() const;
 
     // Set the length in meters for this edge payload
-    void setLength(double d);
+    void set_length(double d);
 
     // Set this edge as a one way node, either in the default direction of
     // the edge (no arg), or the direction specified in dir
@@ -74,34 +74,34 @@ public:
     void setOneWay(uint8_t dir);
 
     // Mark this payload' edge as having some restrictions
-    void setRestricted();
+    void set_restricted();
 
     // Mark this payload' edge as being secondary to an inversed partner
-    void setRev();
+    void set_reversed();
 
     // True if this edge is secondary to an inversed partner
-    bool isRev() const;
+    bool is_reversed() const;
 
     // True if this edge is restricted
-    bool isRestricted() const;
+    bool is_restricted() const;
 
     // Set the level of this edge.
-    void setLvl(uint8_t lvl);
+    void set_level(uint8_t lvl);
 
     // Return the level of this edge.
-    uint8_t lvl() const;
+    uint8_t level() const;
 
     // Return the one-way code stored for this edge.
     uint8_t oneWay() const;
 
     // Add a TransitedgeLine to this payload's edge
-    void addLine(const transit_edge_line* l);
+    void add_line(const transit_edge_line* l);
 
     // Add multiple TransitedgeLine objects to this payload's edge
-    void addLines(const std::vector<transit_edge_line*>& l);
+    void add_lines(const std::vector<transit_edge_line*>& l);
 
     // Return the TransitEdgeLines stored for this payload
-    const std::vector<const transit_edge_line*>& getLines() const;
+    const std::vector<const transit_edge_line*>& get_lines() const;
 
     // Returns the last hop of the payload - this is the (n-2)th point in
     // the payload geometry of length n > 1

@@ -214,7 +214,7 @@ int app::run()
     if (!cfg_.writeOsm.empty())
     {
         LOG(INFO) << "Writing filtered XML to " << cfg_.writeOsm << " ...";
-        pfaedle::osm::BBoxIdx box(BOX_PADDING);
+        pfaedle::osm::bounding_box box(BOX_PADDING);
         for (size_t i = 0; i < cfg_.feedPaths.size(); i++)
         {
             pfaedle::router::shape_builder::get_gtfs_box(feeds_[i], cmd_cfg_mots, cfg_.shapeTripId, true, box);
@@ -236,7 +236,7 @@ int app::run()
     }
     else if (cfg_.writeOverpass)
     {
-        pfaedle::osm::BBoxIdx box(BOX_PADDING);
+        pfaedle::osm::bounding_box box(BOX_PADDING);
         for (size_t i = 0; i < cfg_.feedPaths.size(); i++)
         {
             pfaedle::router::shape_builder::get_gtfs_box(feeds_[i], cmd_cfg_mots, cfg_.shapeTripId, true, box);
@@ -293,7 +293,7 @@ int app::run()
         pfaedle::trgraph::graph graph;
         pfaedle::osm::osm_builder osm_builder;
 
-        pfaedle::osm::BBoxIdx box(BOX_PADDING);
+        pfaedle::osm::bounding_box box(BOX_PADDING);
         pfaedle::router::shape_builder::get_gtfs_box(feeds_.front(), cmd_cfg_mots, cfg_.shapeTripId, cfg_.dropShapes, box);
 
         if (!f_stops.empty())
@@ -312,7 +312,7 @@ int app::run()
         {
             if (feed_stop.second)
             {
-                feed_stop.second->pl().getSI()->getGroup()->writePens(
+                feed_stop.second->pl().get_si()->get_group()->write_penalties(
                         mot_cfg.osmBuildOpts.trackNormzer,
                         mot_cfg.routingOpts.platformUnmatchedPen,
                         mot_cfg.routingOpts.stationDistPenFactor,

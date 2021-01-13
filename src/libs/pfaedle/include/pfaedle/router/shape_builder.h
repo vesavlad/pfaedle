@@ -73,7 +73,7 @@ public:
                              const MOTs& mots,
                              const std::string& tid,
                              bool dropShapes,
-                             osm::BBoxIdx& box);
+                             osm::bounding_box& box);
 
 private:
     clusters cluster_trips(pfaedle::gtfs::Feed& f, const MOTs& mots);

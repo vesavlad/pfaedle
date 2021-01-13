@@ -20,7 +20,7 @@ using pfaedle::trgraph::normalizer;
 normalizer::normalizer(const ReplRules& rules) :
     _rulesOrig(rules)
 {
-    buildRules(rules);
+    build_rules(rules);
 }
 
 // _____________________________________________________________________________
@@ -82,7 +82,7 @@ bool normalizer::operator==(const normalizer& b) const
 }
 
 // _____________________________________________________________________________
-void normalizer::buildRules(const ReplRules& rules)
+void normalizer::build_rules(const ReplRules& rules)
 {
     for (const auto& rule : rules)
     {

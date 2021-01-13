@@ -40,7 +40,7 @@ using ad::cppgtfs::gtfs::Stop;
 using pfaedle::gtfs::Feed;
 using pfaedle::gtfs::StopTime;
 using pfaedle::gtfs::Trip;
-using pfaedle::osm::BBoxIdx;
+using pfaedle::osm::bounding_box;
 using util::geo::latLngToWebMerc;
 using util::geo::webMercMeterDist;
 using util::geo::webMercToLatLng;
@@ -79,7 +79,7 @@ const node_candidate_group& shape_builder::getNodeCands(const Stop& s) const
     if (_stops.find(&s) == _stops.end() || _stops.at(&s) == nullptr)
         return _emptyNCG;
 
-    return _stops.at(&s)->pl().getSI()->getGroup()->getNodeCands(&s);
+    return _stops.at(&s)->pl().get_si()->get_group()->get_node_candidates(&s);
 }
 
 LINE shape_builder::get_shape_line(const node_candidate_route& ncr,
@@ -95,21 +95,21 @@ LINE shape_builder::get_shape_line(const node_candidate_route& ncr,
             const trgraph::node* last = hop.start;
             if (hop.edges.empty())
             {
-                l.push_back(*hop.start->pl().getGeom());
-                l.push_back(*hop.end->pl().getGeom());
+                l.push_back(*hop.start->pl().get_geom());
+                l.push_back(*hop.end->pl().get_geom());
             }
             for (auto i = hop.edges.rbegin(); i != hop.edges.rend(); i++)
             {
                 const auto* e = *i;
-                if ((e->getFrom() == last) ^ e->pl().isRev())
+                if ((e->getFrom() == last) ^ e->pl().is_reversed())
                 {
-                    l.insert(l.end(), e->pl().getGeom()->begin(),
-                             e->pl().getGeom()->end());
+                    l.insert(l.end(), e->pl().get_geom()->begin(),
+                             e->pl().get_geom()->end());
                 }
                 else
                 {
-                    l.insert(l.end(), e->pl().getGeom()->rbegin(),
-                             e->pl().getGeom()->rend());
+                    l.insert(l.end(), e->pl().get_geom()->rbegin(),
+                             e->pl().get_geom()->rend());
                 }
                 last = e->getOtherNd(last);
             }
@@ -346,15 +346,15 @@ ad::cppgtfs::gtfs::Shape shape_builder::get_gtfs_shape(
         if (hop.edges.empty())
         {
             POINT ll = webMercToLatLng<PFAEDLE_PRECISION>(
-                    hop.start->pl().getGeom()->getX(),
-                    hop.start->pl().getGeom()->getY());
+                    hop.start->pl().get_geom()->getX(),
+                    hop.start->pl().get_geom()->getY());
 
             if (dist > -0.5)
-                dist += webMercMeterDist(last, *hop.start->pl().getGeom());
+                dist += webMercMeterDist(last, *hop.start->pl().get_geom());
             else
                 dist = 0;
 
-            last = *hop.start->pl().getGeom();
+            last = *hop.start->pl().get_geom();
 
             if (dist - lastDist > 0.01)
             {
@@ -363,14 +363,14 @@ ad::cppgtfs::gtfs::Shape shape_builder::get_gtfs_shape(
                 lastDist = dist;
             }
 
-            dist += webMercMeterDist(last, *hop.end->pl().getGeom());
-            last = *hop.end->pl().getGeom();
+            dist += webMercMeterDist(last, *hop.end->pl().get_geom());
+            last = *hop.end->pl().get_geom();
 
             if (dist - lastDist > 0.01)
             {
                 ll = webMercToLatLng<PFAEDLE_PRECISION>(
-                        hop.end->pl().getGeom()->getX(),
-                        hop.end->pl().getGeom()->getY());
+                        hop.end->pl().get_geom()->getX(),
+                        hop.end->pl().get_geom()->getY());
                 ret.addPoint(ShapePoint(ll.getY(), ll.getX(), dist, seq));
                 seq++;
                 lastDist = dist;
@@ -381,11 +381,11 @@ ad::cppgtfs::gtfs::Shape shape_builder::get_gtfs_shape(
         {
             const auto* e = *i;
 
-            if ((e->getFrom() == l) ^ e->pl().isRev())
+            if ((e->getFrom() == l) ^ e->pl().is_reversed())
             {
-                for (size_t i = 0; i < e->pl().getGeom()->size(); i++)
+                for (size_t i = 0; i < e->pl().get_geom()->size(); i++)
                 {
-                    const POINT& cur = (*e->pl().getGeom())[i];
+                    const POINT& cur = (*e->pl().get_geom())[i];
                     if (dist > -0.5)
                         dist += webMercMeterDist(last, cur);
                     else
@@ -403,9 +403,9 @@ ad::cppgtfs::gtfs::Shape shape_builder::get_gtfs_shape(
             }
             else
             {
-                for (int64_t i = e->pl().getGeom()->size() - 1; i >= 0; i--)
+                for (int64_t i = e->pl().get_geom()->size() - 1; i >= 0; i--)
                 {
-                    const POINT& cur = (*e->pl().getGeom())[i];
+                    const POINT& cur = (*e->pl().get_geom())[i];
                     if (dist > -0.5)
                         dist += webMercMeterDist(last, cur);
                     else
@@ -485,7 +485,7 @@ const routing_attributes& shape_builder::getRAttrs(const Trip& trip) const
 
 void shape_builder::get_gtfs_box(const Feed& feed, const MOTs& mots,
                               const std::string& tid, bool dropShapes,
-                              osm::BBoxIdx& box)
+                              osm::bounding_box& box)
 {
     for (const auto& t : feed.getTrips())
     {
@@ -648,7 +648,7 @@ void shape_builder::write_transit_graph(const pfaedle::router::shape& shp, trans
     {
         for (const auto* e : hop.edges)
         {
-            if (e->pl().isRev()) e = _g.getEdg(e->getTo(), e->getFrom());
+            if (e->pl().is_reversed()) e = _g.getEdg(e->getTo(), e->getFrom());
             edgs[e].insert(cluster.begin(), cluster.end());
         }
     }
@@ -671,16 +671,16 @@ void shape_builder::build_transit_graph(transit_graph_edges& edgs,
             to = nodes[e->getTo()];
         if (!from)
         {
-            from = ng.addNd(*e->getFrom()->pl().getGeom());
+            from = ng.addNd(*e->getFrom()->pl().get_geom());
             nodes[e->getFrom()] = from;
         }
         if (!to)
         {
-            to = ng.addNd(*e->getTo()->pl().getGeom());
+            to = ng.addNd(*e->getTo()->pl().get_geom());
             nodes[e->getTo()] = to;
         }
 
-        ng.addEdg(from, to, pfaedle::netgraph::edge_payload(*e->pl().getGeom(), ep.second));
+        ng.addEdg(from, to, pfaedle::netgraph::edge_payload(*e->pl().get_geom(), ep.second));
     }
 }
 }

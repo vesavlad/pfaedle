@@ -52,7 +52,7 @@ private:
     mutable std::unordered_map<std::string, std::string> _cache;
     mutable std::mutex _mutex;
 
-    void buildRules(const ReplRules& rules);
+    void build_rules(const ReplRules& rules);
 };
 }  // namespace pfaedle
 

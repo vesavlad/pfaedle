@@ -31,12 +31,12 @@ public:
             _tripShortNames.insert(t->getShortname());
         }
     }
-    const LINE* getGeom() const
+    const LINE* get_geom() const
     {
         return &_l;
     }
 
-    util::json::Dict getAttrs() const
+    util::json::Dict get_attrs() const
     {
         util::json::Dict obj;
         obj["num_trips"] = static_cast<int>(_trips.size());

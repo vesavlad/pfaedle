@@ -8,33 +8,35 @@
 
 namespace pfaedle::router
 {
-edge_list* edge_payload::getEdges() { return &_edges; }
+edge_list* edge_payload::get_edges() { return &_edges; }
 
-const edge_list& edge_payload::getEdges() const { return _edges; }
+const edge_list& edge_payload::get_edges() const { return _edges; }
 
 const POINT& edge_payload::frontHop() const
 {
-    if (_edges.empty()) return *_end->pl().getGeom();
+    if (_edges.empty())
+        return *_end->pl().get_geom();
     return _edges.back()->pl().frontHop();
 }
 
 const POINT& edge_payload::backHop() const
 {
-    if (_edges.empty()) return *_start->pl().getGeom();
+    if (_edges.empty())
+        return *_start->pl().get_geom();
     return _edges.front()->pl().backHop();
 }
 
-const trgraph::node* edge_payload::backNode() const
+const trgraph::node* edge_payload::back_node() const
 {
     return _end;
 }
 
-const trgraph::node* edge_payload::frontNode() const
+const trgraph::node* edge_payload::front_node() const
 {
     return _start;
 }
 
-const LINE* edge_payload::getGeom() const
+const LINE* edge_payload::get_geom() const
 {
     if (_edges.empty()) return nullptr;
     if (_geom.empty())
@@ -43,15 +45,15 @@ const LINE* edge_payload::getGeom() const
         for (auto i = _edges.rbegin(); i != _edges.rend(); i++)
         {
             const auto e = *i;
-            if ((e->getFrom() == l) ^ e->pl().isRev())
+            if ((e->getFrom() == l) ^ e->pl().is_reversed())
             {
-                _geom.insert(_geom.end(), e->pl().getGeom()->begin(),
-                             e->pl().getGeom()->end());
+                _geom.insert(_geom.end(), e->pl().get_geom()->begin(),
+                             e->pl().get_geom()->end());
             }
             else
             {
-                _geom.insert(_geom.end(), e->pl().getGeom()->rbegin(),
-                             e->pl().getGeom()->rend());
+                _geom.insert(_geom.end(), e->pl().get_geom()->rbegin(),
+                             e->pl().get_geom()->rend());
             }
             l = e->getOtherNd(l);
         }
@@ -60,19 +62,19 @@ const LINE* edge_payload::getGeom() const
     return &_geom;
 }
 
-void edge_payload::setStartNode(const trgraph::node* s) { _start = s; }
+void edge_payload::set_start_node(const trgraph::node* s) { _start = s; }
 
-void edge_payload::setEndNode(const trgraph::node* e) { _end = e; }
+void edge_payload::set_end_node(const trgraph::node* s) { _end = s; }
 
-void edge_payload::setStartEdge(const trgraph::edge* s) { _startE = s; }
+void edge_payload::set_start_edge(const trgraph::edge* s) { _startE = s; }
 
-void edge_payload::setEndEdge(const trgraph::edge* e) { _endE = e; }
+void edge_payload::set_end_edge(const trgraph::edge* s) { _endE = s; }
 
-const edge_cost& edge_payload::getCost() const { return _cost; }
+const edge_cost& edge_payload::get_cost() const { return _cost; }
 
-void edge_payload::setCost(const router::edge_cost& c) { _cost = c; }
+void edge_payload::set_cost(const router::edge_cost& c) { _cost = c; }
 
-util::json::Dict edge_payload::getAttrs() const
+util::json::Dict edge_payload::get_attrs() const
 {
     util::json::Dict obj;
     obj["cost"] = std::to_string(_cost.getValue());

@@ -12,27 +12,13 @@
 namespace pfaedle::osm
 {
 
-struct BBoxIdxNd
-{
-    BBoxIdxNd() :
-        box(util::geo::minbox<double>())
-    {}
-
-    BBoxIdxNd(const BOX& box) :
-        box(box)
-    {}
-
-    BOX box;
-    std::vector<BBoxIdxNd> childs;
-};
-
 /*
  * Poor man's R-tree
  */
-class BBoxIdx
+class bounding_box
 {
 public:
-    explicit BBoxIdx(double padding);
+    explicit bounding_box(double padding);
 
     // Add a bounding box to this index
     void add(BOX box);
@@ -53,10 +39,24 @@ public:
     std::vector<BOX> get_leafs() const;
 
 private:
-    void add_to_tree(const BOX& box, BBoxIdxNd* nd, size_t lvl);
-    bool tree_has(const POINT& p, const BBoxIdxNd& nd) const;
+    struct node
+    {
+        node() :
+            box(util::geo::minbox<double>())
+        {}
 
-    void get_leafs_rec(const BBoxIdxNd& nd, std::vector<BOX>* ret) const;
+        explicit node(const BOX& box) :
+            box(box)
+        {}
+
+        BOX box;
+        std::vector<node> childs;
+    };
+
+    void add_to_tree(const BOX& box, node* nd, size_t lvl);
+    bool tree_has(const POINT& p, const node& nd) const;
+
+    void get_leafs_rec(const node& nd, std::vector<BOX>* ret) const;
 
     static const size_t MAX_LVL = 5;
     static constexpr double MIN_COM_AREA = 0.0;
@@ -64,7 +64,7 @@ private:
     double _padding;
     size_t _size;
 
-    BBoxIdxNd _root;
+    node _root;
 };
 }  // namespace pfaedle::osm
 

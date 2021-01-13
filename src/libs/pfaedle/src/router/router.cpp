@@ -39,15 +39,15 @@ edge_cost NCostFunc::operator()(const trgraph::node* from,
     int oneway = e->pl().oneWay() == 2;
     int32_t stationSkip = 0;
 
-    return edge_cost(e->pl().lvl() == 0 ? e->pl().getLength() : 0,
-                    e->pl().lvl() == 1 ? e->pl().getLength() : 0,
-                    e->pl().lvl() == 2 ? e->pl().getLength() : 0,
-                    e->pl().lvl() == 3 ? e->pl().getLength() : 0,
-                    e->pl().lvl() == 4 ? e->pl().getLength() : 0,
-                    e->pl().lvl() == 5 ? e->pl().getLength() : 0,
-                    e->pl().lvl() == 6 ? e->pl().getLength() : 0,
-                    e->pl().lvl() == 7 ? e->pl().getLength() : 0, 0, stationSkip,
-                    e->pl().getLength() * oneway, oneway, 0, 0, 0, &_rOpts);
+    return edge_cost(e->pl().level() == 0 ? e->pl().get_length() : 0,
+                     e->pl().level() == 1 ? e->pl().get_length() : 0,
+                     e->pl().level() == 2 ? e->pl().get_length() : 0,
+                     e->pl().level() == 3 ? e->pl().get_length() : 0,
+                     e->pl().level() == 4 ? e->pl().get_length() : 0,
+                     e->pl().level() == 5 ? e->pl().get_length() : 0,
+                     e->pl().level() == 6 ? e->pl().get_length() : 0,
+                     e->pl().level() == 7 ? e->pl().get_length() : 0, 0, stationSkip,
+                     e->pl().get_length() * oneway, oneway, 0, 0, 0, &_rOpts);
 }
 
 edge_cost CostFunc::operator()(const trgraph::edge* from, const trgraph::node* n,
@@ -69,34 +69,34 @@ edge_cost CostFunc::operator()(const trgraph::edge* from, const trgraph::node* n
         else if (n->getDeg() > 2)
         {
             // otherwise, only intersection angles will be punished
-            fullTurns = angSmaller(from->pl().backHop(), *n->pl().getGeom(),
+            fullTurns = angSmaller(from->pl().backHop(), *n->pl().get_geom(),
                                            to->pl().frontHop(), _rOpts.fullTurnAngle);
         }
 
-        if (from->pl().isRestricted() && !_res.may(from, to, n)) oneway = 1;
+        if (from->pl().is_restricted() && !_res.may(from, to, n)) oneway = 1;
 
         // for debugging
-        n->pl().setVisited();
+        n->pl().set_visited();
 
-        if (_tgGrp && n->pl().getSI() && n->pl().getSI()->getGroup() != _tgGrp)
+        if (_tgGrp && n->pl().get_si() && n->pl().get_si()->get_group() != _tgGrp)
             stationSkip = 1;
     }
 
     double transitLinePen = transitLineCmp(from->pl());
     bool noLines = (_rAttrs.short_name.empty() && _rAttrs.to.empty() &&
-                    _rAttrs.from.empty() && from->pl().getLines().empty());
+                    _rAttrs.from.empty() && from->pl().get_lines().empty());
 
-    return edge_cost(from->pl().lvl() == 0 ? from->pl().getLength() : 0,
-                    from->pl().lvl() == 1 ? from->pl().getLength() : 0,
-                    from->pl().lvl() == 2 ? from->pl().getLength() : 0,
-                    from->pl().lvl() == 3 ? from->pl().getLength() : 0,
-                    from->pl().lvl() == 4 ? from->pl().getLength() : 0,
-                    from->pl().lvl() == 5 ? from->pl().getLength() : 0,
-                    from->pl().lvl() == 6 ? from->pl().getLength() : 0,
-                    from->pl().lvl() == 7 ? from->pl().getLength() : 0, fullTurns,
-                    stationSkip, from->pl().getLength() * oneway, oneway,
-                    from->pl().getLength() * transitLinePen,
-                    noLines ? from->pl().getLength() : 0, 0, &_rOpts);
+    return edge_cost(from->pl().level() == 0 ? from->pl().get_length() : 0,
+                     from->pl().level() == 1 ? from->pl().get_length() : 0,
+                     from->pl().level() == 2 ? from->pl().get_length() : 0,
+                     from->pl().level() == 3 ? from->pl().get_length() : 0,
+                     from->pl().level() == 4 ? from->pl().get_length() : 0,
+                     from->pl().level() == 5 ? from->pl().get_length() : 0,
+                     from->pl().level() == 6 ? from->pl().get_length() : 0,
+                     from->pl().level() == 7 ? from->pl().get_length() : 0, fullTurns,
+                    stationSkip, from->pl().get_length() * oneway, oneway,
+                     from->pl().get_length() * transitLinePen,
+                    noLines ? from->pl().get_length() : 0, 0, &_rOpts);
 }
 
 double CostFunc::transitLineCmp(const trgraph::edge_payload& e) const
@@ -105,7 +105,7 @@ double CostFunc::transitLineCmp(const trgraph::edge_payload& e) const
         _rAttrs.from.empty())
         return 0;
     double best = 1;
-    for (const auto* l : e.getLines())
+    for (const auto* l : e.get_lines())
     {
         double cur = _rAttrs.simi(l);
 
@@ -125,8 +125,8 @@ NDistHeur::NDistHeur(const routing_options& rOpts,
     double x = 0, y = 0;
     for (auto to : tos)
     {
-        x += to->pl().getGeom()->getX();
-        y += to->pl().getGeom()->getY();
+        x += to->pl().get_geom()->getX();
+        y += to->pl().get_geom()->getY();
         c++;
     }
 
@@ -136,7 +136,7 @@ NDistHeur::NDistHeur(const routing_options& rOpts,
 
     for (auto to : tos)
     {
-        double cur = util::geo::webMercMeterDist(*to->pl().getGeom(), _center);
+        double cur = util::geo::webMercMeterDist(*to->pl().get_geom(), _center);
         if (cur > _maxCentD) _maxCentD = cur;
     }
 }
@@ -150,8 +150,8 @@ DistHeur::DistHeur(uint8_t minLvl, const routing_options& rOpts,
     double x = 0, y = 0;
     for (auto to : tos)
     {
-        x += to->getFrom()->pl().getGeom()->getX();
-        y += to->getFrom()->pl().getGeom()->getY();
+        x += to->getFrom()->pl().get_geom()->getX();
+        y += to->getFrom()->pl().get_geom()->getY();
         c++;
     }
 
@@ -161,7 +161,7 @@ DistHeur::DistHeur(uint8_t minLvl, const routing_options& rOpts,
 
     for (auto to : tos)
     {
-        double cur = util::geo::webMercMeterDist(*to->getFrom()->pl().getGeom(), _center) *
+        double cur = util::geo::webMercMeterDist(*to->getFrom()->pl().get_geom(), _center) *
                      _rOpts.levelPunish[_lvl];
         if (cur > _maxCentD) _maxCentD = cur;
     }
@@ -171,7 +171,7 @@ edge_cost DistHeur::operator()(const trgraph::edge* a,
                               const std::set<trgraph::edge*>& b) const
 {
     UNUSED(b);
-    double cur = util::geo::webMercMeterDist(*a->getFrom()->pl().getGeom(), _center) *
+    double cur = util::geo::webMercMeterDist(*a->getFrom()->pl().get_geom(), _center) *
                  _rOpts.levelPunish[_lvl];
 
     return edge_cost(cur - _maxCentD, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, nullptr);
@@ -181,7 +181,7 @@ edge_cost NDistHeur::operator()(const trgraph::node* a,
                                const std::set<trgraph::node*>& b) const
 {
     UNUSED(b);
-    double cur = util::geo::webMercMeterDist(*a->pl().getGeom(), _center);
+    double cur = util::geo::webMercMeterDist(*a->pl().get_geom(), _center);
 
     return edge_cost(cur - _maxCentD, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, nullptr);
 }
@@ -191,7 +191,7 @@ double CombCostFunc::operator()(const edge* from, const node* n,
 {
     UNUSED(n);
     UNUSED(from);
-    return to->pl().getCost().getValue();
+    return to->pl().get_cost().getValue();
 }
 
 router::router(size_t numThreads, bool caching) :
@@ -218,7 +218,7 @@ bool router::compConned(const edge_candidate_group& a, const edge_candidate_grou
     {
         for (auto n2 : b)
         {
-            if (n1.e->getFrom()->pl().getComp() == n2.e->getFrom()->pl().getComp())
+            if (n1.e->getFrom()->pl().get_component() == n2.e->getFrom()->pl().get_component())
                 return true;
         }
     }
@@ -238,8 +238,8 @@ HopBand router::getHopBand(const edge_candidate_group& a, const edge_candidate_g
     {
         for (auto j : b)
         {
-            double d = util::geo::webMercMeterDist(*i.e->getFrom()->pl().getGeom(),
-                                        *j.e->getFrom()->pl().getGeom());
+            double d = util::geo::webMercMeterDist(*i.e->getFrom()->pl().get_geom(),
+                                        *j.e->getFrom()->pl().get_geom());
             if (d > pend) pend = d;
         }
     }
@@ -248,8 +248,8 @@ HopBand router::getHopBand(const edge_candidate_group& a, const edge_candidate_g
 
     const trgraph::station_group* tgGrpTo = nullptr;
 
-    if (b.begin()->e->getFrom()->pl().getSI())
-        tgGrpTo = b.begin()->e->getFrom()->pl().getSI()->getGroup();
+    if (b.begin()->e->getFrom()->pl().get_si())
+        tgGrpTo = b.begin()->e->getFrom()->pl().get_si()->get_group();
 
     CostFunc costF(rAttrs, rOpts, rest, tgGrpTo, pend * 50);
 
@@ -285,8 +285,8 @@ HopBand router::getHopBand(const edge_candidate_group& a, const edge_candidate_g
 
     for (auto e : to)
     {
-        double d = util::geo::webMercMeterDist(*el.front()->getFrom()->pl().getGeom(),
-                                    *e->getTo()->pl().getGeom());
+        double d = util::geo::webMercMeterDist(*el.front()->getFrom()->pl().get_geom(),
+                                    *e->getTo()->pl().get_geom());
         if (d > maxStrD) maxStrD = d;
     }
 
@@ -320,8 +320,8 @@ edge_list_hops router::routeGreedy(const node_candidate_route& route,
         std::set<trgraph::node*> from, to;
         for (auto c : route[i]) from.insert(c.nd);
         for (auto c : route[i + 1]) to.insert(c.nd);
-        if (route[i + 1].begin()->nd->pl().getSI())
-            tgGrp = route[i + 1].begin()->nd->pl().getSI()->getGroup();
+        if (route[i + 1].begin()->nd->pl().get_si())
+            tgGrp = route[i + 1].begin()->nd->pl().get_si()->get_group();
 
         NCostFunc cost(rAttrs, rOpts, rest, tgGrp);
         NDistHeur dist(rOpts, to);
@@ -369,8 +369,8 @@ edge_list_hops router::routeGreedy2(const node_candidate_route& route,
 
         for (auto c : route[i + 1]) to.insert(c.nd);
 
-        if (route[i + 1].begin()->nd->pl().getSI())
-            tgGrp = route[i + 1].begin()->nd->pl().getSI()->getGroup();
+        if (route[i + 1].begin()->nd->pl().get_si())
+            tgGrp = route[i + 1].begin()->nd->pl().get_si()->get_group();
 
         NCostFunc cost(rAttrs, rOpts, rest, tgGrp);
         NDistHeur dist(rOpts, to);
@@ -428,8 +428,8 @@ edge_list_hops router::route(const edge_candidate_route& route,
         nodes[e] = cgraph->addNd(i.e->getFrom());
         cgraph->addEdg(source, nodes[e])
                 ->pl()
-                .setCost(edge_cost(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                  i.pen, nullptr));
+                .set_cost(edge_cost(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    i.pen, nullptr));
     }
 
     size_t iters = EDijkstra::ITERS;
@@ -441,8 +441,8 @@ edge_list_hops router::route(const edge_candidate_route& route,
         HopBand hopBand = getHopBand(route[i], route[i + 1], rAttrs, rOpts, rest);
 
         const trgraph::station_group* tgGrp = nullptr;
-        if (route[i + 1].begin()->e->getFrom()->pl().getSI())
-            tgGrp = route[i + 1].begin()->e->getFrom()->pl().getSI()->getGroup();
+        if (route[i + 1].begin()->e->getFrom()->pl().get_si())
+            tgGrp = route[i + 1].begin()->e->getFrom()->pl().get_si()->get_group();
 
         std::set<trgraph::edge*> froms;
         for (const auto& fr : route[i]) froms.insert(fr.e);
@@ -473,15 +473,15 @@ edge_list_hops router::route(const edge_candidate_route& route,
                 edges[eTo] = cgraph->addEdg(cNodeFr, nextNodes[eTo]);
                 pens[eTo] = to.pen;
 
-                edgeLists[eTo] = edges[eTo]->pl().getEdges();
-                edges[eTo]->pl().setStartNode(eFr->getFrom());
+                edgeLists[eTo] = edges[eTo]->pl().get_edges();
+                edges[eTo]->pl().set_start_node(eFr->getFrom());
 
                 // for debugging
-                edges[eTo]->pl().setStartEdge(eFr);
-                edges[eTo]->pl().setEndNode(to.e->getFrom());
+                edges[eTo]->pl().set_start_edge(eFr);
+                edges[eTo]->pl().set_end_node(to.e->getFrom());
 
                 // for debugging
-                edges[eTo]->pl().setEndEdge(eTo);
+                edges[eTo]->pl().set_end_edge(eTo);
             }
 
             size_t iters = EDijkstra::ITERS;
@@ -501,15 +501,15 @@ edge_list_hops router::route(const edge_candidate_route& route,
                         << TOOK(t1, TIME()) << "ms (tput: " << itPerSec << " its/ms)";
             for (auto& kv : edges)
             {
-                kv.second->pl().setCost(edge_cost(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, pens[kv.first], nullptr) + costs[kv.first]);
+                kv.second->pl().set_cost(edge_cost(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, pens[kv.first], nullptr) + costs[kv.first]);
 
-                if (rOpts.popReachEdge && !kv.second->pl().getEdges()->empty())
+                if (rOpts.popReachEdge && !kv.second->pl().get_edges()->empty())
                 {
-                    if (kv.second->pl().getEdges() &&
-                        !kv.second->pl().getEdges()->empty())
+                    if (kv.second->pl().get_edges() &&
+                        !kv.second->pl().get_edges()->empty())
                     {
                         // the reach edge is included, but we dont want it in the geometry
-                        kv.second->pl().getEdges()->erase(kv.second->pl().getEdges()->begin());
+                        kv.second->pl().get_edges()->erase(kv.second->pl().get_edges()->begin());
                     }
                 }
             }
@@ -533,11 +533,11 @@ edge_list_hops router::route(const edge_candidate_route& route,
         const auto e = *i;
         if (e->getFrom() != source && e->getTo() != sink)
         {
-            assert(e->pl().frontNode());
-            assert(e->pl().backNode());
+            assert(e->pl().front_node());
+            assert(e->pl().back_node());
 
-            ret[j] = edge_list_hop{std::move(*e->pl().getEdges()), e->pl().frontNode(),
-                                 e->pl().backNode()};
+            ret[j] = edge_list_hop{std::move(*e->pl().get_edges()), e->pl().front_node(),
+                                   e->pl().back_node()};
             j++;
         }
     }
@@ -594,7 +594,7 @@ void router::hops(trgraph::edge* from, const std::set<trgraph::edge*>& froms,
         // shortcut: if the nodes lie in two different connected components,
         // the distance between them is trivially infinite
         if ((rOpts.noSelfHops && (e == from || e->getFrom() == from->getFrom())) ||
-            from->getFrom()->pl().getComp() != e->getTo()->pl().getComp() ||
+            from->getFrom()->pl().get_component() != e->getTo()->pl().get_component() ||
             e->pl().oneWay() == 2 || from->pl().oneWay() == 2)
         {
             (*rCosts)[e] = cost.inf();
@@ -610,7 +610,7 @@ void router::hops(trgraph::edge* from, const std::set<trgraph::edge*>& froms,
 
     if (!rem.empty())
     {
-        DistHeur dist(from->getFrom()->pl().getComp()->minEdgeLvl, rOpts, rem);
+        DistHeur dist(from->getFrom()->pl().get_component()->minEdgeLvl, rOpts, rem);
         const auto& ret = EDijkstra::shortestPath(from, rem, cost, dist, edgesRet);
         for (const auto& kv : ret)
         {

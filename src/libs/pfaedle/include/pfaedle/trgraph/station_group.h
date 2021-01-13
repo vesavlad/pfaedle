@@ -29,30 +29,30 @@ public:
     station_group(const station_group& a) = delete;
 
     // Add a stop s to this station group
-    void addStop(const Stop* s);
+    void add_stop(const Stop* s);
 
     // Add a node n to this station group
-    void addNode(trgraph::node* n);
+    void add_node(trgraph::node* n);
 
     // Return all nodes contained in this group
-    const std::set<trgraph::node*>& getNodes() const;
-    std::set<trgraph::node*>& getNodes();
+    const std::set<trgraph::node*>& get_nodes() const;
+    std::set<trgraph::node*>& get_nodes();
 
     // Return all stops contained in this group
-    const std::set<const Stop*>& getStops() const;
+    const std::set<const Stop*>& get_stops() const;
 
     // Remove a node from this group
-    void remNode(trgraph::node* n);
+    void remove_node(trgraph::node* n);
 
     // All nodes in other will be in this group, their SI's updated, and the
     // "other" group deleted.
     void merge(station_group* other);
 
     // Return node candidates for stop s from this group
-    const router::node_candidate_group& getNodeCands(const Stop* s) const;
+    const router::node_candidate_group& get_node_candidates(const Stop* s) const;
 
     // Write the penalties for all stops contained in this group so far.
-    void writePens(const trgraph::normalizer& platformNorm, double trackPen,
+    void write_penalties(const trgraph::normalizer& platformNorm, double trackPen,
                    double distPenFac, double nonOsmPen);
 
 private:
@@ -63,7 +63,7 @@ private:
     // its distance and optionally the track number
     std::unordered_map<const Stop*, router::node_candidate_group> _stopNodePens;
 
-    double getPen(const Stop* s, trgraph::node* n,
+    double get_penalty(const Stop* s, trgraph::node* n,
                   const trgraph::normalizer& norm, double trackPen,
                   double distPenFac, double nonOsmPen) const;
 };
