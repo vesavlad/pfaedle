@@ -267,7 +267,7 @@ int app::run()
     for (const auto& st : df_bin_strings)
         df_bins.push_back(atof(st.c_str()));
 
-    pfaedle::eval::Collector ecoll(cfg_.evalPath, df_bins);
+    pfaedle::eval::collector ecoll(cfg_.evalPath, df_bins);
 
     for (const auto& mot_cfg : mot_cfg_reader_.get_configs())
     {
@@ -373,7 +373,7 @@ int app::run()
     }
 
     if (cfg_.evaluate)
-        ecoll.printStats(std::cout);
+        ecoll.print_stats(std::cout);
 
     if (!cfg_.feedPaths.empty())
     {

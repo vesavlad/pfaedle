@@ -21,7 +21,7 @@
 #include "pfaedle/config/config_reader.h"
 #include "pfaedle/config/mot_config.h"
 #include "pfaedle/config/mot_config_reader.h"
-#include "pfaedle/eval/Collector.h"
+#include "pfaedle/eval/collector.h"
 #include "pfaedle/gtfs/Feed.h"
 #include "pfaedle/gtfs/Writer.h"
 #include "pfaedle/netgraph/Graph.h"

@@ -11,7 +11,7 @@
 
 #include "cppgtfs/gtfs/Feed.h"
 #include "pfaedle/Def.h"
-#include "pfaedle/eval/Collector.h"
+#include "pfaedle/eval/collector.h"
 #include "pfaedle/gtfs/Feed.h"
 #include "pfaedle/gtfs/StopTime.h"
 #include "pfaedle/osm/OsmBuilder.h"
@@ -21,15 +21,15 @@
 #include "util/geo/output/GeoGraphJsonOutput.h"
 #include "util/geo/output/GeoJsonOutput.h"
 #include "util/graph/EDijkstra.h"
-#include <logging/logger.h>
 #include <exception>
+#include <logging/logger.h>
 #include <map>
 #include <mutex>
 #include <random>
 #include <stdexcept>
+#include <thread>
 #include <unordered_map>
 #include <utility>
-#include <thread>
 
 using util::geo::DBox;
 using util::geo::DPoint;
@@ -57,7 +57,7 @@ ShapeBuilder::ShapeBuilder(pfaedle::gtfs::Feed& feed,
              ad::cppgtfs::gtfs::Feed& evalFeed,
              MOTs mots,
              const config::mot_config& motCfg,
-             eval::Collector& ecoll,
+             eval::collector& ecoll,
              trgraph::Graph& g,
              router::FeedStops& stops,
              osm::Restrictor& restr,

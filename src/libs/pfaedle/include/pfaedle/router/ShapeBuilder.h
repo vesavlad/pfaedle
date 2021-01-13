@@ -9,7 +9,7 @@
 #include "pfaedle/Def.h"
 #include "pfaedle/config/config.h"
 #include "pfaedle/config/mot_config.h"
-#include "pfaedle/eval/Collector.h"
+#include "pfaedle/eval/collector.h"
 #include "pfaedle/gtfs/Feed.h"
 #include "pfaedle/netgraph/Graph.h"
 #include "pfaedle/osm/Restrictor.h"
@@ -51,7 +51,7 @@ public:
                  ad::cppgtfs::gtfs::Feed& evalFeed,
                  MOTs mots,
                  const config::mot_config& motCfg,
-                 eval::Collector& ecoll,
+                 eval::collector& ecoll,
                  trgraph::Graph& g,
                  router::FeedStops& stops,
                  osm::Restrictor& restr,
@@ -114,7 +114,7 @@ private:
     ad::cppgtfs::gtfs::Feed& _evalFeed;
     MOTs _mots;
     const config::mot_config& _motCfg;
-    eval::Collector& _ecoll;
+    eval::collector& _ecoll;
     const config::config& _cfg;
     trgraph::Graph& _g;
     router::Router _crouter;

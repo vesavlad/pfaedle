@@ -17,20 +17,20 @@ namespace pfaedle::eval
 /*
  * A single evaluation result.
  */
-class Result
+class result
 {
 public:
-    Result(const Trip& t, double dist) :
+    result(const Trip& t, double dist) :
         _t(t),
         _dist(dist)
     {}
 
-    double getDist() const
+    double get_dist() const
     {
         return _dist;
     }
 
-    const Trip& getTrip() const
+    const Trip& get_trip() const
     {
         return _t;
     }
@@ -40,10 +40,10 @@ private:
     double _dist;
 };
 
-inline bool operator<(const Result& lhs, const Result& rhs)
+inline bool operator<(const result& lhs, const result& rhs)
 {
-    return lhs.getDist() < rhs.getDist() ||
-           (lhs.getDist() == rhs.getDist() && &(lhs.getTrip()) < &(rhs.getTrip()));
+    return lhs.get_dist() < rhs.get_dist() ||
+           (lhs.get_dist() == rhs.get_dist() && &(lhs.get_trip()) < &(rhs.get_trip()));
 }
 
 }  // namespace pfaedle

@@ -1585,7 +1585,7 @@ inline double frechetDistC(size_t i, size_t j, const Line<T>& p,
 }
 
 template<typename T>
-inline double frechetDist(const Line<T>& a, const Line<T>& b, double d)
+inline double frechet_distance(const Line<T>& a, const Line<T>& b, double d)
 {
     // based on Eiter / Mannila
     // http://www.kr.tuwien.ac.at/staff/eiter/et-archive/cdtr9464.pdf
@@ -1593,8 +1593,7 @@ inline double frechetDist(const Line<T>& a, const Line<T>& b, double d)
     auto p = densify(a, d);
     auto q = densify(b, d);
 
-    std::vector<std::vector<double>> ca(p.size(),
-                                        std::vector<double>(q.size(), -1.0));
+    std::vector<std::vector<double>> ca(p.size(), std::vector<double>(q.size(), -1.0));
     double fd = frechetDistC(p.size() - 1, q.size() - 1, p, q, ca);
 
     return fd;
@@ -1606,22 +1605,21 @@ inline double accFrechetDistC(const Line<T>& a, const Line<T>& b, double d)
     auto p = densify(a, d);
     auto q = densify(b, d);
 
-    std::vector<std::vector<double>> ca(p.size(),
-                                        std::vector<double>(q.size(), 0));
+    std::vector<std::vector<double>> ca(p.size(), std::vector<double>(q.size(), 0));
 
     for (size_t i = 0; i < p.size(); i++)
         ca[i][0] = std::numeric_limits<double>::infinity();
     for (size_t j = 0; j < q.size(); j++)
         ca[0][j] = std::numeric_limits<double>::infinity();
+
     ca[0][0] = 0;
 
     for (size_t i = 1; i < p.size(); i++)
     {
         for (size_t j = 1; j < q.size(); j++)
         {
-            double d = util::geo::dist(p[i], q[j]) * util::geo::dist(p[i], p[i - 1]);
-            ca[i][j] =
-                    d + std::min(ca[i - 1][j], std::min(ca[i][j - 1], ca[i - 1][j - 1]));
+            double distance = util::geo::dist(p[i], q[j]) * util::geo::dist(p[i], p[i - 1]);
+            ca[i][j] = distance + std::min(ca[i - 1][j], std::min(ca[i][j - 1], ca[i - 1][j - 1]));
         }
     }
 
