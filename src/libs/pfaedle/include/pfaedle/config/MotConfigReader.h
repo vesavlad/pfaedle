@@ -18,8 +18,6 @@
 namespace pfaedle::config
 {
 
-using ad::cppgtfs::gtfs::Route;
-
 class MotConfigReader
 {
 public:

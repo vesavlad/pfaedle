@@ -8,6 +8,7 @@
 #include "pfaedle/eval/Result.h"
 #include "util/geo/Geo.h"
 #include "util/geo/output/GeoJsonOutput.h"
+
 #include <logging/logger.h>
 #include <cmath>
 #include <csignal>
@@ -17,13 +18,22 @@
 
 
 using ad::cppgtfs::gtfs::Shape;
-using pfaedle::eval::Collector;
 using pfaedle::eval::Result;
 using pfaedle::gtfs::Trip;
-using util::geo::output::GeoJsonOutput;
 
-// _____________________________________________________________________________
-double Collector::add(const Trip* t,
+namespace pfaedle::eval
+{
+
+Collector::Collector(const std::string& evalOutPath, const std::vector<double>& dfBins) :
+    _noOrigShp(0),
+    _fdSum(0),
+    _unmatchedSegSum(0),
+    _unmatchedSegLengthSum(0),
+    _evalOutPath(evalOutPath),
+    _dfBins(dfBins)
+{}
+
+double Collector::add(const Trip& t,
                       const Shape* oldS,
                       const Shape& newS,
                       const std::vector<double>& newTripDists)
@@ -34,7 +44,7 @@ double Collector::add(const Trip* t,
         return 0;
     }
 
-    for (auto st : t->getStopTimes())
+    for (auto st : t.getStopTimes())
     {
         if (st.getShapeDistanceTravelled() < 0)
         {
@@ -51,14 +61,14 @@ double Collector::add(const Trip* t,
 
     std::vector<double> old_dists;
     LINE old_line = getWebMercLine(
-            oldS, t->getStopTimes().begin()->getShapeDistanceTravelled(),
-            (--t->getStopTimes().end())->getShapeDistanceTravelled(), &old_dists);
+            oldS, t.getStopTimes().begin()->getShapeDistanceTravelled(),
+            (--t.getStopTimes().end())->getShapeDistanceTravelled(), &old_dists);
 
     std::vector<double> new_dists;
     LINE new_line = getWebMercLine(&newS, -1, -1, &new_dists);
 
-    std::ofstream fstr(_evalOutPath + "/trip-" + t->getId() + ".json");
-    GeoJsonOutput gjout(fstr);
+    std::ofstream fstr(_evalOutPath + "/trip-" + t.getId() + ".json");
+    util::geo::output::GeoJsonOutput gjout(fstr);
 
     auto old_segs = segmentize(t, old_line, old_dists, nullptr);
     auto new_segs = segmentize(t, new_line, new_dists, &newTripDists);
@@ -124,7 +134,8 @@ double Collector::add(const Trip* t,
 
     double fac = cos(2 * atan(exp((old_segs.front().front().getY() +
                                    old_segs.back().back().getY()) /
-                                  6378137.0)) - 1.5707965);
+                                  6378137.0)) -
+                     1.5707965);
 
     if (_dCache.count(oldS) && _dCache.find(oldS)->second.count(newS.getId()))
     {
@@ -168,7 +179,7 @@ double Collector::add(const Trip* t,
     _resultsAN.insert(Result(t, static_cast<double>(unmatched_segments) / static_cast<double>(old_segs.size())));
     _resultsAL.insert(Result(t, unmatched_segments_length / total_length));
 
-    LOG(DEBUG) << "This result (" << t->getId()
+    LOG(DEBUG) << "This result (" << t.getId()
                << "): A_N/N = " << unmatched_segments << "/" << old_segs.size()
                << " = "
                << static_cast<double>(unmatched_segments) /
@@ -179,22 +190,21 @@ double Collector::add(const Trip* t,
     return fd;
 }
 
-// _____________________________________________________________________________
 std::vector<LINE> Collector::segmentize(
-        const Trip* t,
+        const Trip& t,
         const LINE& shape,
         const std::vector<double>& dists,
         const std::vector<double>* new_trip_dists)
 {
     std::vector<LINE> ret;
 
-    if (t->getStopTimes().size() < 2) return ret;
+    if (t.getStopTimes().size() < 2) return ret;
 
     POLYLINE pl(shape);
     std::vector<std::pair<POINT, double>> cuts;
 
     size_t i = 0;
-    for (auto st : t->getStopTimes())
+    for (auto st : t.getStopTimes())
     {
         if (new_trip_dists)
         {
@@ -241,13 +251,11 @@ std::vector<LINE> Collector::segmentize(
     return ret;
 }
 
-// _____________________________________________________________________________
 LINE Collector::getWebMercLine(const Shape* s, double from, double t)
 {
     return getWebMercLine(s, from, t, nullptr);
 }
 
-// _____________________________________________________________________________
 LINE Collector::getWebMercLine(const Shape* s, double from, double to,
                                std::vector<double>* dists)
 {
@@ -273,15 +281,12 @@ LINE Collector::getWebMercLine(const Shape* s, double from, double to,
     return ret;
 }
 
-// _____________________________________________________________________________
 const std::set<Result>& Collector::getResults() const { return _results; }
 
-// _____________________________________________________________________________
 double Collector::getAvgDist() const { return _fdSum / _results.size(); }
 
-// _____________________________________________________________________________
-void Collector::printHisto(std::ostream* os, const std::set<Result>& result,
-                           const std::vector<double>& bins) const
+void Collector::printHistogram(std::ostream& os, const std::set<Result>& result,
+                               const std::vector<double>& bins) const
 {
     size_t W = 60;
 
@@ -297,7 +302,8 @@ void Collector::printHisto(std::ostream* os, const std::set<Result>& result,
 
         while (it != result.end() && it->getDist() <= (bin + 0.001))
         {
-            if (!trip) trip = it->getTrip();
+            if (!trip)
+                trip = &it->getTrip();
             c++;
             it++;
         }
@@ -305,30 +311,29 @@ void Collector::printHisto(std::ostream* os, const std::set<Result>& result,
         if (c > maxC) maxC = c;
 
         examples.push_back(trip);
-        res.push_back(std::pair<double, size_t>(bin, c));
+        res.emplace_back(bin, c);
     }
 
     size_t j = 0;
     for (auto r : res)
     {
         std::string range = util::toString(r.first);
-        (*os) << "  < " << std::setfill(' ') << std::setw(10) << range << ": ";
+        os << "  < " << std::setfill(' ') << std::setw(10) << range << ": ";
         size_t i = 0;
 
         for (; i < W * (static_cast<double>(r.second) / static_cast<double>(maxC));
              i++)
         {
-            (*os) << "|";
+            os << "|";
         }
 
         if (r.second)
-            (*os) << " (" << r.second << ", e.g. #" << examples[j]->getId() << ")";
-        (*os) << std::endl;
+            os << " (" << r.second << ", e.g. #" << examples[j]->getId() << ")";
+        os << std::endl;
         j++;
     }
 }
 
-// _____________________________________________________________________________
 std::vector<double> Collector::getBins(double mind, double maxd, size_t steps)
 {
     double bin = (maxd - mind) / steps;
@@ -343,8 +348,8 @@ std::vector<double> Collector::getBins(double mind, double maxd, size_t steps)
     return ret;
 }
 
-// _____________________________________________________________________________
-void Collector::printCsv(std::ostream* os, const std::set<Result>& result,
+void Collector::printCsv(std::ostream& os,
+                         const std::set<Result>& result,
                          const std::vector<double>& bins) const
 {
     auto it = result.begin();
@@ -357,75 +362,74 @@ void Collector::printCsv(std::ostream* os, const std::set<Result>& result,
 
         while (it != result.end() && it->getDist() <= (bin + 0.001))
         {
-            if (!trip) trip = it->getTrip();
+            if (!trip)
+                trip = &it->getTrip();
             c++;
             it++;
         }
 
-        res.push_back(std::pair<double, size_t>(bin, c));
+        res.emplace_back(bin, c);
     }
 
-    (*os) << "range, count\n";
+    os << "range, count\n";
     for (auto r : res)
     {
-        (*os) << r.first << "," << r.second << "\n";
+        os << r.first << "," << r.second << "\n";
     }
 }
 
-// _____________________________________________________________________________
-void Collector::printStats(std::ostream* os) const
+void Collector::printStats(std::ostream& os) const
 {
     size_t buckets = 10;
-    (*os) << "\n ===== Evalution results =====\n\n";
+    os << "\n ===== Evalution results =====\n\n";
 
-    (*os) << std::setfill(' ') << std::setw(30)
-          << "  # of trips new shapes were matched for: " << _results.size()
-          << "\n";
-    (*os) << std::setw(30) << "  # of trips without input shapes: " << _noOrigShp
-          << "\n";
+    os << std::setfill(' ') << std::setw(30)
+       << "  # of trips new shapes were matched for: " << _results.size()
+       << "\n";
+    os << std::setw(30) << "  # of trips without input shapes: " << _noOrigShp
+       << "\n";
 
     if (!_results.empty())
     {
-        (*os) << std::setw(30) << "  highest distance to input shapes: "
-              << (--_results.end())->getDist() << " (on trip #"
-              << (--_results.end())->getTrip()->getId() << ")\n";
-        (*os) << std::setw(30) << "  lowest distance to input shapes: "
-              << (_results.begin())->getDist() << " (on trip #"
-              << (_results.begin())->getTrip()->getId() << ")\n";
-        (*os) << std::setw(30) << "  avg total frechet distance: " << getAvgDist()
-              << "\n";
+        os << std::setw(30) << "  highest distance to input shapes: "
+           << (--_results.end())->getDist() << " (on trip #"
+           << (--_results.end())->getTrip().getId() << ")\n";
+        os << std::setw(30) << "  lowest distance to input shapes: "
+           << (_results.begin())->getDist() << " (on trip #"
+           << (_results.begin())->getTrip().getId() << ")\n";
+        os << std::setw(30) << "  avg total frechet distance: " << getAvgDist()
+           << "\n";
 
         std::vector<double> dfBins = getBins(
                 (_results.begin())->getDist(), (--_results.end())->getDist(), buckets);
 
         if (!_dfBins.empty()) dfBins = _dfBins;
 
-        (*os) << "\n  -- Histogram of d_f for this run -- " << std::endl;
-        printHisto(os, _results, dfBins);
+        os << "\n  -- Histogram of d_f for this run -- " << std::endl;
+        printHistogram(os, _results, dfBins);
 
         std::ofstream fstr1(_evalOutPath + "/eval-frechet.csv");
-        printCsv(&fstr1, _results, dfBins);
+        printCsv(fstr1, _results, dfBins);
 
-        (*os) << "\n\n\n  -- Histogram of A_N/N for this run -- " << std::endl;
-        printHisto(os, _resultsAN,
-                   getBins((_resultsAN.begin())->getDist(),
-                           (--_resultsAN.end())->getDist(), buckets));
+        os << "\n\n\n  -- Histogram of A_N/N for this run -- " << std::endl;
+        printHistogram(os, _resultsAN,
+                       getBins((_resultsAN.begin())->getDist(),
+                               (--_resultsAN.end())->getDist(), buckets));
         std::ofstream fstr2(_evalOutPath + "/eval-AN.csv");
-        printCsv(&fstr2, _resultsAN, getBins(0, 1, 20));
+        printCsv(fstr2, _resultsAN, getBins(0, 1, 20));
 
-        (*os) << "\n\n\n  -- Histogram of A_L/L for this run -- " << std::endl;
-        printHisto(os, _resultsAL,
-                   getBins((_resultsAL.begin())->getDist(),
-                           (--_resultsAL.end())->getDist(), buckets));
+        os << "\n\n\n  -- Histogram of A_L/L for this run -- " << std::endl;
+        printHistogram(os, _resultsAL,
+                       getBins((_resultsAL.begin())->getDist(),
+                               (--_resultsAL.end())->getDist(), buckets));
         std::ofstream fstr3(_evalOutPath + "/eval-AL.csv");
-        printCsv(&fstr3, _resultsAL, getBins(0, 1, 20));
+        printCsv(fstr3, _resultsAL, getBins(0, 1, 20));
     }
 
-    (*os) << "\n ===== End of evaluation results =====\n";
-    (*os) << std::endl;
+    os << "\n ===== End of evaluation results =====\n";
+    os << std::endl;
 }
 
-// _____________________________________________________________________________
 std::pair<size_t, double> Collector::getDa(const std::vector<LINE>& a,
                                            const std::vector<LINE>& b)
 {
@@ -434,10 +438,7 @@ std::pair<size_t, double> Collector::getDa(const std::vector<LINE>& a,
 
     // euclidean distance on web mercator is in meters on equator,
     // and proportional to cos(lat) in both y directions
-    double fac =
-            cos(2 * atan(exp((a.front().front().getY() + a.back().back().getY()) /
-                             6378137.0)) -
-                1.5707965);
+    double fac = cos(2 * atan(exp((a.front().front().getY() + a.back().back().getY()) / 6378137.0)) - 1.5707965);
 
     for (size_t i = 0; i < a.size(); i++)
     {
@@ -450,4 +451,6 @@ std::pair<size_t, double> Collector::getDa(const std::vector<LINE>& a,
     }
 
     return ret;
+}
+
 }

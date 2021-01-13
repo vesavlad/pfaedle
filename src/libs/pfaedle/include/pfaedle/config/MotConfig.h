@@ -25,7 +25,8 @@ inline bool operator==(const MotConfig& a, const MotConfig& b)
 {
     bool unproced_eq = a.unproced.size() == b.unproced.size();
 
-    if(!unproced_eq) return unproced_eq;
+    if(!unproced_eq)
+        return unproced_eq;
 
     for (const auto& kv : a.unproced)
     {

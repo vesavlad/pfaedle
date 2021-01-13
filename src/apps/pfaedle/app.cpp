@@ -241,6 +241,7 @@ int app::run()
         {
             pfaedle::router::ShapeBuilder::getGtfsBox(feeds_[i], cmd_cfg_mots, cfg_.shapeTripId, true, box);
         }
+
         pfaedle::osm::OsmBuilder osm_builder;
         std::vector<pfaedle::osm::OsmReadOpts> opts;
         for (const auto& o : mot_cfg_reader_.getConfigs())
@@ -265,6 +266,7 @@ int app::run()
 
     for (const auto& st : df_bin_strings)
         df_bins.push_back(atof(st.c_str()));
+
     pfaedle::eval::Collector ecoll(cfg_.evalPath, df_bins);
 
     for (const auto& mot_cfg : mot_cfg_reader_.getConfigs())
@@ -371,7 +373,7 @@ int app::run()
     }
 
     if (cfg_.evaluate)
-        ecoll.printStats(&std::cout);
+        ecoll.printStats(std::cout);
 
     if (!cfg_.feedPaths.empty())
     {

@@ -136,7 +136,9 @@ inline bool operator>(const EdgeCost& a, const EdgeCost& b)
 }
 
 template<typename F>
-inline bool angSmaller(const Point<F>& f, const Point<F>& m, const Point<F>& t,
+inline bool angSmaller(const Point<F>& f,
+                       const Point<F>& m,
+                       const Point<F>& t,
                        double ang)
 {
     if (util::geo::innerProd(m, f, t) < ang)
@@ -171,67 +173,13 @@ using EdgeListHops = std::vector<EdgeListHop>;
 
 using MOTs = std::set<ad::cppgtfs::gtfs::Route::TYPE>;
 
-inline MOTs motISect(const MOTs& a, const MOTs& b)
-{
-    MOTs ret;
-    for (auto mot : a)
-    {
-        if (b.count(mot))
-        {
-            ret.insert(mot);
-        }
-    }
-    return ret;
-}
+MOTs motISect(const MOTs& a, const MOTs& b);
 
-inline pfaedle::router::FeedStops writeMotStops(const pfaedle::gtfs::Feed& feed,
+pfaedle::router::FeedStops writeMotStops(const pfaedle::gtfs::Feed& feed,
                                                 const MOTs& mots,
-                                                const std::string& tid)
-{
-    pfaedle::router::FeedStops ret;
-    for (auto t : feed.getTrips())
-    {
-        if (!tid.empty() && t.getId() != tid)
-            continue;
+                                                const std::string& tid);
 
-        if (mots.count(t.getRoute()->getType()))
-        {
-            for (auto st : t.getStopTimes())
-            {
-                // if the station has type STATION_ENTRANCE, use the parent
-                // station for routing. Normally, this should not occur, as
-                // this is not allowed in stop_times.txt
-                if (st.getStop()->getLocationType() == ad::cppgtfs::gtfs::flat::Stop::STATION_ENTRANCE &&
-                    st.getStop()->getParentStation())
-                {
-                    ret[st.getStop()->getParentStation()] = nullptr;
-                }
-                else
-                {
-                    ret[st.getStop()] = nullptr;
-                }
-            }
-        }
-    }
-    return ret;
-}
-
-inline std::string getMotStr(const MOTs& mots)
-{
-    bool first = false;
-    std::string motStr;
-    for (const auto& mot : mots)
-    {
-        if (first)
-        {
-            motStr += ", ";
-        }
-        motStr += "<" + ad::cppgtfs::gtfs::flat::Route::getTypeString(mot) + ">";
-        first = true;
-    }
-
-    return motStr;
-}
+std::string getMotStr(const MOTs& mots);
 }  // namespace pfaedle
 
 #endif  // PFAEDLE_ROUTER_MISC_H_

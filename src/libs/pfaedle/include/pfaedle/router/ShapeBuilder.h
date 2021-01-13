@@ -5,12 +5,6 @@
 #ifndef PFAEDLE_ROUTER_SHAPEBUILDER_H_
 #define PFAEDLE_ROUTER_SHAPEBUILDER_H_
 
-#include <mutex>
-#include <set>
-#include <string>
-#include <unordered_map>
-#include <utility>
-#include <vector>
 #include "cppgtfs/gtfs/Feed.h"
 #include "pfaedle/Def.h"
 #include "pfaedle/config/MotConfig.h"
@@ -23,6 +17,13 @@
 #include "pfaedle/router/Router.h"
 #include "pfaedle/trgraph/Graph.h"
 #include "util/geo/Geo.h"
+
+#include <mutex>
+#include <set>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace pfaedle::router
 {

@@ -53,7 +53,6 @@ using util::geo::webMercMeterDist;
 using util::geo::webMercToLatLng;
 using util::geo::output::GeoGraphJsonOutput;
 
-// _____________________________________________________________________________
 ShapeBuilder::ShapeBuilder(pfaedle::gtfs::Feed& feed,
              ad::cppgtfs::gtfs::Feed& evalFeed,
              MOTs mots,
@@ -78,7 +77,6 @@ ShapeBuilder::ShapeBuilder(pfaedle::gtfs::Feed& feed,
 {
 }
 
-// _____________________________________________________________________________
 const NodeCandidateGroup& ShapeBuilder::getNodeCands(const Stop& s) const
 {
     if (_stops.find(&s) == _stops.end() || _stops.at(&s) == nullptr)
@@ -87,7 +85,6 @@ const NodeCandidateGroup& ShapeBuilder::getNodeCands(const Stop& s) const
     return _stops.at(&s)->pl().getSI()->getGroup()->getNodeCands(&s);
 }
 
-// _____________________________________________________________________________
 LINE ShapeBuilder::shapeL(const router::NodeCandidateRoute& ncr,
                           const router::RoutingAttrs& rAttrs)
 {
@@ -130,13 +127,11 @@ LINE ShapeBuilder::shapeL(const router::NodeCandidateRoute& ncr,
     }
 }
 
-// _____________________________________________________________________________
 LINE ShapeBuilder::shapeL(Trip& trip)
 {
     return shapeL(getNCR(trip), getRAttrs(trip));
 }
 
-// _____________________________________________________________________________
 EdgeListHops ShapeBuilder::route(const router::NodeCandidateRoute& ncr,
                                  const router::RoutingAttrs& rAttrs) const
 {
@@ -172,7 +167,6 @@ EdgeListHops ShapeBuilder::route(const router::NodeCandidateRoute& ncr,
     }
 }
 
-// _____________________________________________________________________________
 pfaedle::router::Shape ShapeBuilder::shape(Trip& trip) const
 {
     LOG(TRACE) << "Map-matching shape for trip #" << trip.getId() << " of mot "
@@ -188,7 +182,6 @@ pfaedle::router::Shape ShapeBuilder::shape(Trip& trip) const
     return ret;
 }
 
-// _____________________________________________________________________________
 pfaedle::router::Shape ShapeBuilder::shape(Trip& trip)
 {
     LOG(TRACE) << "Map-matching shape for trip #" << trip.getId() << " of mot "
@@ -205,7 +198,6 @@ pfaedle::router::Shape ShapeBuilder::shape(Trip& trip)
     return ret;
 }
 
-// _____________________________________________________________________________
 void ShapeBuilder::shape(pfaedle::netgraph::Graph& ng)
 {
     TrGraphEdgs gtfsGraph;
@@ -282,7 +274,7 @@ void ShapeBuilder::shape(pfaedle::netgraph::Graph& ng)
             if (_cfg.evaluate)
             {
                 std::lock_guard<std::mutex> guard(_shpMutex);
-                _ecoll.add(t,
+                _ecoll.add(*t,
                            _evalFeed.getShapes().get(t->getShape()),
                            shp,
                            distances);
@@ -307,8 +299,7 @@ void ShapeBuilder::shape(pfaedle::netgraph::Graph& ng)
                << " iterations in total.";
     LOG(DEBUG) << "Took " << TOOK(t2, TIME()) << " ms in total.";
     LOG(DEBUG) << "Total avg. tput "
-               << (static_cast<double>(EDijkstra::ITERS - totiters)) /
-                          TOOK(t2, TIME())
+               << (static_cast<double>(EDijkstra::ITERS - totiters)) / TOOK(t2, TIME())
                << " iters/sec";
     LOG(DEBUG) << "Total avg. trip tput "
                << (clusters.size() / (TOOK(t2, TIME()) / 1000)) << " trips/sec";
@@ -323,7 +314,6 @@ void ShapeBuilder::shape(pfaedle::netgraph::Graph& ng)
     }
 }
 
-// _____________________________________________________________________________
 void ShapeBuilder::setShape(Trip& t, const ad::cppgtfs::gtfs::Shape& s, const std::vector<double>& distances)
 {
     assert(distances.size() == t.getStopTimes().size());
@@ -339,7 +329,6 @@ void ShapeBuilder::setShape(Trip& t, const ad::cppgtfs::gtfs::Shape& s, const st
     t.setShape(_feed.getShapes().add(s));
 }
 
-// _____________________________________________________________________________
 ad::cppgtfs::gtfs::Shape ShapeBuilder::getGtfsShape(
         const Shape& shp,
         Trip& t,
@@ -360,7 +349,8 @@ ad::cppgtfs::gtfs::Shape ShapeBuilder::getGtfsShape(
         if (hop.edges.empty())
         {
             POINT ll = webMercToLatLng<PFAEDLE_PRECISION>(
-                    hop.start->pl().getGeom()->getX(), hop.start->pl().getGeom()->getY());
+                    hop.start->pl().getGeom()->getX(),
+                    hop.start->pl().getGeom()->getY());
 
             if (dist > -0.5)
                 dist += webMercMeterDist(last, *hop.start->pl().getGeom());
@@ -382,7 +372,8 @@ ad::cppgtfs::gtfs::Shape ShapeBuilder::getGtfsShape(
             if (dist - lastDist > 0.01)
             {
                 ll = webMercToLatLng<PFAEDLE_PRECISION>(
-                        hop.end->pl().getGeom()->getX(), hop.end->pl().getGeom()->getY());
+                        hop.end->pl().getGeom()->getX(),
+                        hop.end->pl().getGeom()->getY());
                 ret.addPoint(ShapePoint(ll.getY(), ll.getX(), dist, seq));
                 seq++;
                 lastDist = dist;
@@ -392,6 +383,7 @@ ad::cppgtfs::gtfs::Shape ShapeBuilder::getGtfsShape(
         for (auto i = hop.edges.rbegin(); i != hop.edges.rend(); i++)
         {
             const auto* e = *i;
+
             if ((e->getFrom() == l) ^ e->pl().isRev())
             {
                 for (size_t i = 0; i < e->pl().getGeom()->size(); i++)
@@ -441,7 +433,6 @@ ad::cppgtfs::gtfs::Shape ShapeBuilder::getGtfsShape(
     return ret;
 }
 
-// _____________________________________________________________________________
 std::string ShapeBuilder::getFreeShapeId(Trip& trip)
 {
     std::string ret;
@@ -457,7 +448,6 @@ std::string ShapeBuilder::getFreeShapeId(Trip& trip)
     return ret;
 }
 
-// _____________________________________________________________________________
 const RoutingAttrs& ShapeBuilder::getRAttrs(const Trip& trip)
 {
     auto i = _rAttrs.find(&trip);
@@ -491,22 +481,25 @@ const RoutingAttrs& ShapeBuilder::getRAttrs(const Trip& trip)
     }
 }
 
-// _____________________________________________________________________________
 const RoutingAttrs& ShapeBuilder::getRAttrs(const Trip& trip) const
 {
     return _rAttrs.find(&trip)->second;
 }
 
-// _____________________________________________________________________________
 void ShapeBuilder::getGtfsBox(const Feed& feed, const MOTs& mots,
                               const std::string& tid, bool dropShapes,
                               osm::BBoxIdx& box)
 {
     for (const auto& t : feed.getTrips())
     {
-        if (!tid.empty() && t.getId() != tid) continue;
-        if (tid.empty() && !t.getShape().empty() && !dropShapes) continue;
-        if (t.getStopTimes().size() < 2) continue;
+        if (!tid.empty() && t.getId() != tid)
+            continue;
+
+        if (tid.empty() && !t.getShape().empty() && !dropShapes)
+            continue;
+
+        if (t.getStopTimes().size() < 2)
+            continue;
 
         if (mots.count(t.getRoute()->getType()))
         {
@@ -521,7 +514,6 @@ void ShapeBuilder::getGtfsBox(const Feed& feed, const MOTs& mots,
     }
 }
 
-// _____________________________________________________________________________
 NodeCandidateRoute ShapeBuilder::getNCR(Trip& trip) const
 {
     router::NodeCandidateRoute ncr(trip.getStopTimes().size());
@@ -542,7 +534,6 @@ NodeCandidateRoute ShapeBuilder::getNCR(Trip& trip) const
     return ncr;
 }
 
-// _____________________________________________________________________________
 double ShapeBuilder::avgHopDist(Trip& trip) const
 {
     size_t i = 0;
@@ -567,7 +558,6 @@ double ShapeBuilder::avgHopDist(Trip& trip) const
     return sum / static_cast<double>(i);
 }
 
-// _____________________________________________________________________________
 Clusters ShapeBuilder::clusterTrips(Feed& f, const MOTs& mots)
 {
     // building an index [start station, end station] -> [cluster]
@@ -610,7 +600,6 @@ Clusters ShapeBuilder::clusterTrips(Feed& f, const MOTs& mots)
     return ret;
 }
 
-// _____________________________________________________________________________
 bool ShapeBuilder::routingEqual(const Stop& a, const Stop& b)
 {
     if (&a == &b) return true;// trivial
@@ -633,7 +622,6 @@ bool ShapeBuilder::routingEqual(const Stop& a, const Stop& b)
     return true;
 }
 
-// _____________________________________________________________________________
 bool ShapeBuilder::routingEqual(Trip& a, Trip& b)
 {
     if (a.getStopTimes().size() != b.getStopTimes().size())
@@ -654,10 +642,8 @@ bool ShapeBuilder::routingEqual(Trip& a, Trip& b)
     return true;
 }
 
-// _____________________________________________________________________________
 const pfaedle::trgraph::Graph& ShapeBuilder::getGraph() const { return _g; }
 
-// _____________________________________________________________________________
 void ShapeBuilder::writeTransitGraph(const Shape& shp, TrGraphEdgs& edgs,
                                      const Cluster& cluster) const
 {
@@ -671,7 +657,6 @@ void ShapeBuilder::writeTransitGraph(const Shape& shp, TrGraphEdgs& edgs,
     }
 }
 
-// _____________________________________________________________________________
 void ShapeBuilder::buildTrGraph(TrGraphEdgs& edgs,
                                 pfaedle::netgraph::Graph& ng) const
 {

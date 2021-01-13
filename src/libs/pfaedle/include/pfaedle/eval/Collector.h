@@ -29,31 +29,25 @@ namespace pfaedle::eval
 class Collector
 {
 public:
-    Collector(const std::string& evalOutPath, const std::vector<double>& dfBins) :
-        _noOrigShp(0),
-        _fdSum(0),
-        _unmatchedSegSum(0),
-        _unmatchedSegLengthSum(0),
-        _evalOutPath(evalOutPath),
-        _dfBins(dfBins) {}
+    Collector(const std::string& evalOutPath, const std::vector<double>& dfBins);
 
     // Add a shape found by our tool newS for a trip t with newly calculated
     // station dist values with the old shape oldS
-    double add(const Trip* t, const Shape* oldS, const Shape& newS,
+    double add(const Trip& t, const Shape* oldS, const Shape& newS,
                const std::vector<double>& newDists);
 
     // Return the set of all Result objects
     const std::set<Result>& getResults() const;
 
     // Print general stats to os
-    void printStats(std::ostream* os) const;
+    void printStats(std::ostream& os) const;
 
     // Print histogramgs for the results to os
-    void printHisto(std::ostream* os, const std::set<Result>& result,
+    void printHistogram(std::ostream& os, const std::set<Result>& result,
                     const std::vector<double>& bins) const;
 
     // Print a CSV for the results to os
-    void printCsv(std::ostream* os, const std::set<Result>& result,
+    void printCsv(std::ostream& os, const std::set<Result>& result,
                   const std::vector<double>& bins) const;
 
     // Return the averaged average frechet distance
@@ -83,7 +77,7 @@ private:
     static std::pair<size_t, double> getDa(const std::vector<LINE>& a,
                                            const std::vector<LINE>& b);
 
-    static std::vector<LINE> segmentize(const Trip* t, const LINE& shape,
+    static std::vector<LINE> segmentize(const Trip& t, const LINE& shape,
                                         const std::vector<double>& dists,
                                         const std::vector<double>* newTripDists);
 

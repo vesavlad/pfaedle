@@ -126,6 +126,7 @@ public:
     {
         if (has(s.getId()))
             return s.getId();
+
         _ids.insert(s.getId());
 
         _writeBuffer << s.getId() << '\t' << s.getPoints().size();
@@ -134,6 +135,7 @@ public:
         {
             _writeBuffer << " " << p.lat << " " << p.lng << " " << p.travelDist;
         }
+
         // entries are newline separated
         _writeBuffer << '\n';
 

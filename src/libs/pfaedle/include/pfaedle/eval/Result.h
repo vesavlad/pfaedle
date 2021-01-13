@@ -11,30 +11,41 @@
 using pfaedle::gtfs::Trip;
 using ad::cppgtfs::gtfs::Shape;
 
-namespace pfaedle {
-namespace eval {
+namespace pfaedle::eval
+{
 
 /*
  * A single evaluation result.
  */
-class Result {
- public:
-  Result(const Trip* t, double dist) : _t(t), _dist(dist) {}
+class Result
+{
+public:
+    Result(const Trip& t, double dist) :
+        _t(t),
+        _dist(dist)
+    {}
 
-  double getDist() const { return _dist; }
-  const Trip* getTrip() const { return _t; }
+    double getDist() const
+    {
+        return _dist;
+    }
 
- private:
-  const Trip* _t;
-  double _dist;
+    const Trip& getTrip() const
+    {
+        return _t;
+    }
+
+private:
+    const Trip& _t;
+    double _dist;
 };
 
-inline bool operator<(const Result& lhs, const Result& rhs) {
-  return lhs.getDist() < rhs.getDist() ||
-         (lhs.getDist() == rhs.getDist() && lhs.getTrip() < rhs.getTrip());
+inline bool operator<(const Result& lhs, const Result& rhs)
+{
+    return lhs.getDist() < rhs.getDist() ||
+           (lhs.getDist() == rhs.getDist() && &(lhs.getTrip()) < &(rhs.getTrip()));
 }
 
-}  // namespace eval
 }  // namespace pfaedle
 
 #endif  // PFAEDLE_EVAL_RESULT_H_
