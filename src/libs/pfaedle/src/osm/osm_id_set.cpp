@@ -2,7 +2,7 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include "pfaedle/osm/OsmIdSet.h"
+#include "pfaedle/osm/osm_id_set.h"
 #include "pfaedle/definitions.h"
 #include <algorithm>
 #include <cassert>
@@ -16,13 +16,13 @@
 #include <string>
 #include <unistd.h>
 
-using pfaedle::osm::OsmIdSet;
+using pfaedle::osm::osm_id_set;
 
-size_t OsmIdSet::LOOKUPS = 0;
-size_t OsmIdSet::FLOOKUPS = 0;
+size_t osm_id_set::LOOKUPS = 0;
+size_t osm_id_set::FLOOKUPS = 0;
 
 // _____________________________________________________________________________
-OsmIdSet::OsmIdSet() :
+osm_id_set::osm_id_set() :
     _closed(false),
     _sorted(true),
     _last(0),
@@ -40,7 +40,7 @@ OsmIdSet::OsmIdSet() :
 }
 
 // _____________________________________________________________________________
-OsmIdSet::~OsmIdSet()
+osm_id_set::~osm_id_set()
 {
     delete _bitset;
     delete[] _buffer;
@@ -48,7 +48,7 @@ OsmIdSet::~OsmIdSet()
 }
 
 // _____________________________________________________________________________
-void OsmIdSet::add(osmid id)
+void osm_id_set::add(osmid id)
 {
     if (_closed) throw std::exception();
     diskAdd(id);
@@ -62,7 +62,7 @@ void OsmIdSet::add(osmid id)
 }
 
 // _____________________________________________________________________________
-void OsmIdSet::diskAdd(osmid id)
+void osm_id_set::diskAdd(osmid id)
 {
     memcpy(_outBuffer + _obufpos, &id, 8);
 
@@ -83,14 +83,14 @@ void OsmIdSet::diskAdd(osmid id)
 }
 
 // _____________________________________________________________________________
-size_t OsmIdSet::getBlock(osmid id) const
+size_t osm_id_set::getBlock(osmid id) const
 {
     auto it = std::upper_bound(_blockEnds.begin(), _blockEnds.end(), id);
     return (it - _blockEnds.begin());
 }
 
 // _____________________________________________________________________________
-bool OsmIdSet::diskHas(osmid id) const
+bool osm_id_set::diskHas(osmid id) const
 {
     assert(_sorted);
 
@@ -132,7 +132,7 @@ bool OsmIdSet::diskHas(osmid id) const
 }
 
 // _____________________________________________________________________________
-bool OsmIdSet::has(osmid id) const
+bool osm_id_set::has(osmid id) const
 {
     LOOKUPS++;
     if (!_closed) close();
@@ -152,7 +152,7 @@ bool OsmIdSet::has(osmid id) const
 }
 
 // _____________________________________________________________________________
-void OsmIdSet::close() const
+void osm_id_set::close() const
 {
     ssize_t w = cwrite(_file, _outBuffer, _obufpos);
     _fsize += w;
@@ -165,7 +165,7 @@ void OsmIdSet::close() const
 }
 
 // _____________________________________________________________________________
-void OsmIdSet::sort() const
+void osm_id_set::sort() const
 {
     // sort file via an external merge sort
 
@@ -250,7 +250,7 @@ void OsmIdSet::sort() const
 }
 
 // _____________________________________________________________________________
-size_t OsmIdSet::cwrite(int f, const void* buf, size_t n) const
+size_t osm_id_set::cwrite(int f, const void* buf, size_t n) const
 {
     ssize_t w = write(f, buf, n);
     if (w < 0)
@@ -262,7 +262,7 @@ size_t OsmIdSet::cwrite(int f, const void* buf, size_t n) const
 }
 
 // _____________________________________________________________________________
-size_t OsmIdSet::cread(int f, void* buf, size_t n) const
+size_t osm_id_set::cread(int f, void* buf, size_t n) const
 {
     ssize_t w = read(f, buf, n);
     if (w < 0)
@@ -274,14 +274,14 @@ size_t OsmIdSet::cread(int f, void* buf, size_t n) const
 }
 
 // _____________________________________________________________________________
-uint32_t OsmIdSet::knuth(uint32_t in) const
+uint32_t osm_id_set::knuth(uint32_t in) const
 {
     const uint32_t prime = 2654435769;
     return (in * prime) >> 2;
 }
 
 // _____________________________________________________________________________
-uint32_t OsmIdSet::jenkins(uint32_t in) const
+uint32_t osm_id_set::jenkins(uint32_t in) const
 {
     in = (in + 0x7ed55d16) + (in << 12);
     in = (in ^ 0xc761c23c) ^ (in >> 19);
@@ -293,13 +293,13 @@ uint32_t OsmIdSet::jenkins(uint32_t in) const
 }
 
 // _____________________________________________________________________________
-uint32_t OsmIdSet::hash(uint32_t in, int i) const
+uint32_t osm_id_set::hash(uint32_t in, int i) const
 {
     return (knuth(in) + jenkins(in) * i) % BLOOMF_BITS;
 }
 
 // _____________________________________________________________________________
-int OsmIdSet::openTmpFile() const
+int osm_id_set::openTmpFile() const
 {
     const std::string& fname = getTmpFName("", "");
     int file = open(fname.c_str(), O_RDWR | O_CREAT, 0666);

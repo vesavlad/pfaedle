@@ -12,7 +12,7 @@
 #include "pfaedle/eval/collector.h"
 #include "pfaedle/gtfs/Feed.h"
 #include "pfaedle/netgraph/graph.h"
-#include "pfaedle/osm/Restrictor.h"
+#include "pfaedle/osm/restrictor.h"
 #include "pfaedle/router/misc.h"
 #include "pfaedle/router/router.h"
 #include "pfaedle/trgraph/graph.h"
@@ -54,7 +54,7 @@ public:
                   eval::collector& ecoll,
                   trgraph::graph& g,
                   feed_stops& stops,
-                  osm::Restrictor& restr,
+                  osm::restrictor& restr,
                   const config::config& cfg);
 
     void get_shape(pfaedle::netgraph::graph& ng);
@@ -127,7 +127,7 @@ private:
 
     trip_routing_attributes _rAttrs;
 
-    osm::Restrictor& _restr;
+    osm::restrictor& _restr;
 };
 }  // namespace pfaedle::router
 

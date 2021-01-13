@@ -5,7 +5,7 @@
 #ifndef PFAEDLE_OSM_RESTRICTOR_H_
 #define PFAEDLE_OSM_RESTRICTOR_H_
 
-#include "pfaedle/osm/Osm.h"
+#include "pfaedle/osm/osm.h"
 #include "pfaedle/trgraph/graph.h"
 
 #include <map>
@@ -28,10 +28,10 @@ using NodeOsmIdP = std::pair<const trgraph::node*, osmid>;
 /*
  * Stores restrictions between edges
  */
-class Restrictor
+class restrictor
 {
 public:
-    Restrictor() = default;
+    restrictor() = default;
 
     void relax(osmid wid,
                const trgraph::node* n,

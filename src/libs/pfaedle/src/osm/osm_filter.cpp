@@ -2,19 +2,19 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include "pfaedle/osm/OsmFilter.h"
+#include "pfaedle/osm/osm_filter.h"
 #include <iostream>
 #include <sstream>
 #include <string>
 
-using pfaedle::osm::OsmFilter;
+using pfaedle::osm::osm_filter;
 
 // _____________________________________________________________________________
-OsmFilter::OsmFilter(const MultAttrMap& keep, const MultAttrMap& drop) :
+osm_filter::osm_filter(const multi_attribute_map& keep, const multi_attribute_map& drop) :
     _keep(keep), _drop(drop) {}
 
 // _____________________________________________________________________________
-OsmFilter::OsmFilter(const OsmReadOpts& o) :
+osm_filter::osm_filter(const osm_read_options& o) :
     _keep(o.keepFilter),
     _drop(o.dropFilter),
     _nohup(o.noHupFilter),
@@ -29,19 +29,19 @@ OsmFilter::OsmFilter(const OsmReadOpts& o) :
     _levels(o.levelFilters) {}
 
 // _____________________________________________________________________________
-uint64_t OsmFilter::keep(const AttrMap& attrs, Type t) const
+uint64_t osm_filter::keep(const attribute_map& attrs, Type t) const
 {
     return contained(attrs, _keep, t);
 }
 
 // _____________________________________________________________________________
-uint64_t OsmFilter::drop(const AttrMap& attrs, Type t) const
+uint64_t osm_filter::drop(const attribute_map& attrs, Type t) const
 {
     return contained(attrs, _drop, t);
 }
 
 // _____________________________________________________________________________
-uint64_t OsmFilter::nohup(const char* key, const char* v) const
+uint64_t osm_filter::nohup(const char* key, const char* v) const
 {
     const auto& dkv = _nohup.find(key);
     if (dkv != _nohup.end())
@@ -56,33 +56,33 @@ uint64_t OsmFilter::nohup(const char* key, const char* v) const
 }
 
 // _____________________________________________________________________________
-uint64_t OsmFilter::oneway(const AttrMap& attrs) const
+uint64_t osm_filter::oneway(const attribute_map& attrs) const
 {
     if (contained(attrs, _twoway, WAY)) return false;
     return contained(attrs, _oneway, WAY);
 }
 
 // _____________________________________________________________________________
-uint64_t OsmFilter::onewayrev(const AttrMap& attrs) const
+uint64_t osm_filter::onewayrev(const attribute_map& attrs) const
 {
     if (contained(attrs, _twoway, WAY)) return false;
     return contained(attrs, _onewayrev, WAY);
 }
 
 // _____________________________________________________________________________
-uint64_t OsmFilter::station(const AttrMap& attrs) const
+uint64_t osm_filter::station(const attribute_map& attrs) const
 {
     return contained(attrs, _station, NODE);
 }
 
 // _____________________________________________________________________________
-uint64_t OsmFilter::blocker(const AttrMap& attrs) const
+uint64_t osm_filter::blocker(const attribute_map& attrs) const
 {
     return contained(attrs, _blocker, NODE);
 }
 
 // _____________________________________________________________________________
-uint64_t OsmFilter::contained(const AttrMap& attrs, const MultAttrMap& map,
+uint64_t osm_filter::contained(const attribute_map& attrs, const multi_attribute_map& map,
                               Type t)
 {
     for (const auto& kv : attrs)
@@ -104,7 +104,7 @@ uint64_t OsmFilter::contained(const AttrMap& attrs, const MultAttrMap& map,
 }
 
 // _____________________________________________________________________________
-uint64_t OsmFilter::contained(const AttrMap& attrs, const Attr& attr)
+uint64_t osm_filter::contained(const attribute_map& attrs, const attribute& attr)
 {
     for (const auto& kv : attrs)
     {
@@ -115,7 +115,7 @@ uint64_t OsmFilter::contained(const AttrMap& attrs, const Attr& attr)
 }
 
 // _____________________________________________________________________________
-uint8_t OsmFilter::level(const AttrMap& attrs) const
+uint8_t osm_filter::level(const attribute_map& attrs) const
 {
     // the best matching level is always returned
     for (int16_t i = 0; i < 8; i++)
@@ -137,13 +137,13 @@ uint8_t OsmFilter::level(const AttrMap& attrs) const
 }
 
 // _____________________________________________________________________________
-bool OsmFilter::valMatches(const std::string& a, const std::string& b)
+bool osm_filter::valMatches(const std::string& a, const std::string& b)
 {
     return valMatches(a, b, false);
 }
 
 // _____________________________________________________________________________
-bool OsmFilter::valMatches(const std::string& a, const std::string& b, bool m)
+bool osm_filter::valMatches(const std::string& a, const std::string& b, bool m)
 {
     if (b == "*") return true;
 
@@ -160,7 +160,7 @@ bool OsmFilter::valMatches(const std::string& a, const std::string& b, bool m)
 }
 
 // _____________________________________________________________________________
-std::vector<std::string> OsmFilter::getAttrKeys() const
+std::vector<std::string> osm_filter::getAttrKeys() const
 {
     std::vector<std::string> ret;
     for (const auto& kv : _keep)
@@ -215,10 +215,10 @@ std::vector<std::string> OsmFilter::getAttrKeys() const
 }
 
 // _____________________________________________________________________________
-OsmFilter OsmFilter::merge(const OsmFilter& other) const
+osm_filter osm_filter::merge(const osm_filter& other) const
 {
-    MultAttrMap keep;
-    MultAttrMap drop;
+    multi_attribute_map keep;
+    multi_attribute_map drop;
 
     for (const auto& kv : _keep)
     {
@@ -230,11 +230,11 @@ OsmFilter OsmFilter::merge(const OsmFilter& other) const
         keep[kv.first].insert(kv.second.begin(), kv.second.end());
     }
 
-    return OsmFilter(keep, drop);
+    return osm_filter(keep, drop);
 }
 
 // _____________________________________________________________________________
-std::string OsmFilter::toString() const
+std::string osm_filter::toString() const
 {
     std::stringstream ss;
     ss << "[KEEP]\n\n";
@@ -271,27 +271,27 @@ std::string OsmFilter::toString() const
 }
 
 // _____________________________________________________________________________
-uint64_t OsmFilter::negRestr(const AttrMap& attrs) const
+uint64_t osm_filter::negRestr(const attribute_map& attrs) const
 {
     if (contained(attrs, _noRestr, ALL)) return false;
     return (contained(attrs, _negRestr, ALL));
 }
 
 // _____________________________________________________________________________
-uint64_t OsmFilter::posRestr(const AttrMap& attrs) const
+uint64_t osm_filter::posRestr(const attribute_map& attrs) const
 {
     if (contained(attrs, _noRestr, ALL)) return false;
     return (contained(attrs, _posRestr, ALL));
 }
 
 // _____________________________________________________________________________
-const pfaedle::osm::MultAttrMap& OsmFilter::getKeepRules() const
+const pfaedle::osm::multi_attribute_map& osm_filter::getKeepRules() const
 {
     return _keep;
 }
 
 // _____________________________________________________________________________
-const pfaedle::osm::MultAttrMap& OsmFilter::getDropRules() const
+const pfaedle::osm::multi_attribute_map& osm_filter::getDropRules() const
 {
     return _drop;
 }

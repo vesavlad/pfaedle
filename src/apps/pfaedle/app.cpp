@@ -219,8 +219,8 @@ int app::run()
         {
             pfaedle::router::shape_builder::get_gtfs_box(feeds_[i], cmd_cfg_mots, cfg_.shapeTripId, true, box);
         }
-        pfaedle::osm::OsmBuilder osm_builder;
-        std::vector<pfaedle::osm::OsmReadOpts> opts;
+        pfaedle::osm::osm_builder osm_builder;
+        std::vector<pfaedle::osm::osm_read_options> opts;
         for (const auto& o : mot_cfg_reader_.get_configs())
         {
             if (std::find_first_of(o.mots.begin(),
@@ -231,7 +231,7 @@ int app::run()
                 opts.push_back(o.osmBuildOpts);
             }
         }
-        osm_builder.filterWrite(cfg_.osmPath, cfg_.writeOsm, opts, box);
+        osm_builder.filter_write(cfg_.osmPath, cfg_.writeOsm, opts, box);
         exit(static_cast<int>(ret_code::SUCCESS));
     }
     else if (cfg_.writeOverpass)
@@ -242,8 +242,8 @@ int app::run()
             pfaedle::router::shape_builder::get_gtfs_box(feeds_[i], cmd_cfg_mots, cfg_.shapeTripId, true, box);
         }
 
-        pfaedle::osm::OsmBuilder osm_builder;
-        std::vector<pfaedle::osm::OsmReadOpts> opts;
+        pfaedle::osm::osm_builder osm_builder;
+        std::vector<pfaedle::osm::osm_read_options> opts;
         for (const auto& o : mot_cfg_reader_.get_configs())
         {
             if (std::find_first_of(o.mots.begin(), o.mots.end(), cmd_cfg_mots.begin(), cmd_cfg_mots.end()) != o.mots.end())
@@ -251,7 +251,7 @@ int app::run()
                 opts.push_back(o.osmBuildOpts);
             }
         }
-        osm_builder.overpassQryWrite(std::cout, opts, box);
+        osm_builder.overpass_query_write(std::cout, opts, box);
         exit(static_cast<int>(ret_code::SUCCESS));
     }
     else if (cfg_.feedPaths.empty())
@@ -289,9 +289,9 @@ int app::run()
         pfaedle::router::feed_stops f_stops =
                 pfaedle::router::write_mot_stops(feeds_.front(), used_mots, cfg_.shapeTripId);
 
-        pfaedle::osm::Restrictor restr;
+        pfaedle::osm::restrictor restr;
         pfaedle::trgraph::graph graph;
-        pfaedle::osm::OsmBuilder osm_builder;
+        pfaedle::osm::osm_builder osm_builder;
 
         pfaedle::osm::BBoxIdx box(BOX_PADDING);
         pfaedle::router::shape_builder::get_gtfs_box(feeds_.front(), cmd_cfg_mots, cfg_.shapeTripId, cfg_.dropShapes, box);

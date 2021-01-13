@@ -6,7 +6,7 @@
 #define PFAEDLE_ROUTER_ROUTER_H_
 
 #include "pfaedle/definitions.h"
-#include "pfaedle/osm/Restrictor.h"
+#include "pfaedle/osm/restrictor.h"
 #include "pfaedle/router/graph.h"
 #include "pfaedle/router/misc.h"
 #include "pfaedle/router/routing_attributes.h"
@@ -44,7 +44,7 @@ struct HopBand
 struct CostFunc : public util::graph::EDijkstra::CostFunc<trgraph::node_payload, trgraph::edge_payload, edge_cost>
 {
     CostFunc(const routing_attributes& rAttrs, const routing_options& rOpts,
-             const osm::Restrictor& res, const trgraph::station_group* tgGrp,
+             const osm::restrictor& res, const trgraph::station_group* tgGrp,
              double max) :
         _rAttrs(rAttrs),
         _rOpts(rOpts),
@@ -54,7 +54,7 @@ struct CostFunc : public util::graph::EDijkstra::CostFunc<trgraph::node_payload,
 
     const routing_attributes& _rAttrs;
     const routing_options& _rOpts;
-    const osm::Restrictor& _res;
+    const osm::restrictor& _res;
     const trgraph::station_group* _tgGrp;
     edge_cost _inf;
 
@@ -68,7 +68,7 @@ struct CostFunc : public util::graph::EDijkstra::CostFunc<trgraph::node_payload,
 struct NCostFunc : public util::graph::Dijkstra::CostFunc<trgraph::node_payload, trgraph::edge_payload, edge_cost>
 {
     NCostFunc(const routing_attributes& rAttrs, const routing_options& rOpts,
-              const osm::Restrictor& res, const trgraph::station_group* tgGrp) :
+              const osm::restrictor& res, const trgraph::station_group* tgGrp) :
         _rAttrs(rAttrs),
         _rOpts(rOpts),
         _res(res),
@@ -78,7 +78,7 @@ struct NCostFunc : public util::graph::Dijkstra::CostFunc<trgraph::node_payload,
 
     const routing_attributes& _rAttrs;
     const routing_options& _rOpts;
-    const osm::Restrictor& _res;
+    const osm::restrictor& _res;
     const trgraph::station_group* _tgGrp;
     edge_cost _inf;
 
@@ -137,31 +137,31 @@ public:
     // Find the most likely path through the graph for a node candidate route.
     edge_list_hops route(const node_candidate_route& route, const routing_attributes& rAttrs,
                        const routing_options& rOpts,
-                       const osm::Restrictor& rest) const;
+                       const osm::restrictor& rest) const;
     edge_list_hops route(const node_candidate_route& route, const routing_attributes& rAttrs,
-                       const routing_options& rOpts, const osm::Restrictor& rest,
+                       const routing_options& rOpts, const osm::restrictor& rest,
                        graph* cgraph) const;
 
     // Find the most likely path through the graph for an edge candidate route.
     edge_list_hops route(const edge_candidate_route& route, const routing_attributes& rAttrs,
                        const routing_options& rOpts,
-                       const osm::Restrictor& rest) const;
+                       const osm::restrictor& rest) const;
     edge_list_hops route(const edge_candidate_route& route, const routing_attributes& rAttrs,
-                       const routing_options& rOpts, const osm::Restrictor& rest,
+                       const routing_options& rOpts, const osm::restrictor& rest,
                        graph* cgraph) const;
 
     // Find the most likely path through cgraph for a node candidate route, but
     // based on a greedy node to node approach
     edge_list_hops routeGreedy(const node_candidate_route& route,
                              const routing_attributes& rAttrs, const routing_options& rOpts,
-                             const osm::Restrictor& rest) const;
+                             const osm::restrictor& rest) const;
 
     // Find the most likely path through cgraph for a node candidate route, but
     // based on a greedy node to node set approach
     edge_list_hops routeGreedy2(const node_candidate_route& route,
                               const routing_attributes& rAttrs,
                               const routing_options& rOpts,
-                              const osm::Restrictor& rest) const;
+                              const osm::restrictor& rest) const;
 
     // Return the number of thread caches this router was initialized with
     size_t getCacheNumber() const;
@@ -172,14 +172,14 @@ private:
 
     HopBand getHopBand(const edge_candidate_group& a, const edge_candidate_group& b,
                        const routing_attributes& rAttrs, const routing_options& rOpts,
-                       const osm::Restrictor& rest) const;
+                       const osm::restrictor& rest) const;
 
     void hops(trgraph::edge* from, const std::set<trgraph::edge*>& froms,
               const std::set<trgraph::edge*> to, const trgraph::station_group* tgGrp,
               const std::unordered_map<trgraph::edge*, edge_list*>& edgesRet,
               std::unordered_map<trgraph::edge*, edge_cost>* rCosts,
               const routing_attributes& rAttrs, const routing_options& rOpts,
-              const osm::Restrictor& rest, HopBand hopB) const;
+              const osm::restrictor& rest, HopBand hopB) const;
 
     std::set<trgraph::edge*> getCachedHops(
             trgraph::edge* from, const std::set<trgraph::edge*>& to,

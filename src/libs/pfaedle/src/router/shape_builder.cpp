@@ -14,7 +14,7 @@
 #include "pfaedle/eval/collector.h"
 #include "pfaedle/gtfs/Feed.h"
 #include "pfaedle/gtfs/StopTime.h"
-#include "pfaedle/osm/OsmBuilder.h"
+#include "pfaedle/osm/osm_builder.h"
 #include "pfaedle/router/shape_builder.h"
 #include "pfaedle/trgraph/station_group.h"
 #include "util/geo/Geo.h"
@@ -57,7 +57,7 @@ shape_builder::shape_builder(pfaedle::gtfs::Feed& feed,
                            eval::collector& ecoll,
                            trgraph::graph& g,
                            feed_stops& stops,
-                           osm::Restrictor& restr,
+                           osm::restrictor& restr,
                            const config::config& cfg) :
     _feed(feed),
     _evalFeed(evalFeed),

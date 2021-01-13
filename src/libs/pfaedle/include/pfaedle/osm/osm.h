@@ -16,17 +16,17 @@ namespace pfaedle::osm
 
 using osmid = uint64_t;
 
-using AttrMap = std::unordered_map<std::string, std::string>;
-using Attr = std::pair<std::string, std::string>;
-using OsmIdList = std::vector<osmid>;
+using attribute_map = std::unordered_map<std::string, std::string>;
+using attribute = std::pair<std::string, std::string>;
+using osmid_list = std::vector<osmid>;
 
-struct OsmElement
+struct osm_element
 {
     osmid id;
-    AttrMap attrs;
+    attribute_map attrs;
 };
 
-struct OsmRel: public OsmElement
+struct osm_relation : public osm_element
 {
     std::vector<osmid> nodes;
     std::vector<osmid> ways;
@@ -38,7 +38,7 @@ struct OsmRel: public OsmElement
     uint64_t dropFlags;
 };
 
-struct OsmWay: public OsmElement
+struct osm_way : public osm_element
 {
     std::vector<osmid> nodes;
 
@@ -46,7 +46,7 @@ struct OsmWay: public OsmElement
     uint64_t dropFlags;
 };
 
-struct OsmNode: public OsmElement
+struct osm_node : public osm_element
 {
     double lat;
     double lng;
@@ -55,9 +55,9 @@ struct OsmNode: public OsmElement
     uint64_t dropFlags;
 };
 
-struct Restriction
+struct restriction
 {
-    Restriction(osmid from, osmid to):
+    restriction(osmid from, osmid to):
         eFrom{from},
         eTo{to}
     {}
@@ -65,12 +65,12 @@ struct Restriction
     osmid eTo;
 };
 
-using RestrMap = std::unordered_map<osmid, std::vector<Restriction>>;
+using restriction_map = std::unordered_map<osmid, std::vector<restriction>>;
 
-struct Restrictions
+struct restrictions
 {
-    RestrMap pos;
-    RestrMap neg;
+    restriction_map pos;
+    restriction_map neg;
 };
 }  // namespace pfaedle::osm
 #endif  // PFAEDLE_OSM_OSM_H_

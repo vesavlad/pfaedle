@@ -8,7 +8,7 @@
 #include "configparser/config_file_parser.h"
 #include "cppgtfs/gtfs/Route.h"
 #include "pfaedle/config/mot_config.h"
-#include "pfaedle/osm/OsmBuilder.h"
+#include "pfaedle/osm/osm_builder.h"
 
 #include <set>
 #include <string>
@@ -28,11 +28,11 @@ public:
     const std::vector<mot_config>& get_configs() const;
 
 private:
-    osm::KeyVal getKv(const std::string& kv) const;
-    osm::FilterRule getFRule(const std::string& kv) const;
+    osm::key_val_pair getKv(const std::string& kv) const;
+    osm::filter_rule getFRule(const std::string& kv) const;
 
     trgraph::ReplRules getNormRules(const std::vector<std::string>& arr) const;
-    osm::DeepAttrRule getDeepAttrRule(const std::string& rule) const;
+    osm::deep_attribute_rule getDeepAttrRule(const std::string& rule) const;
     uint64_t getFlags(const std::set<string>& flags) const;
 
     std::vector<mot_config> configs_;

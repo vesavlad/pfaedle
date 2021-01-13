@@ -13,7 +13,7 @@
 
 #include <algorithm>
 #include <set>
-#if __GNUC_PREREQ(7,5)
+#if defined(__GNUC__) && __GNUC_PREREQ(7,5)
 #include <experimental/filesystem>
 namespace filesystem = std::experimental::filesystem;
 #else
@@ -72,6 +72,7 @@ std::vector<pid_t> get_tids()
               std::back_inserter(paths));
     for (const auto& path : paths)
     {
+        (void)path;
 //        tids.push_back(static_cast<pid_t>(path.filename().native()));
     }
     std::sort(tids.begin(), tids.end());

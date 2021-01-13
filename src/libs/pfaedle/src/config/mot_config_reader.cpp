@@ -15,9 +15,9 @@ using configparser::config_file_parser;
 using configparser::parse_exception;
 using pfaedle::config::mot_config;
 using pfaedle::config::mot_config_reader;
-using pfaedle::osm::DeepAttrRule;
-using pfaedle::osm::FilterRule;
-using pfaedle::osm::KeyVal;
+using pfaedle::osm::deep_attribute_rule;
+using pfaedle::osm::filter_rule;
+using pfaedle::osm::key_val_pair;
 using pfaedle::trgraph::ReplRules;
 
 // _____________________________________________________________________________
@@ -49,7 +49,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
             {
                 auto fRule = getFRule(kvs);
                 curCfg.osmBuildOpts.keepFilter[fRule.kv.first].insert(
-                        osm::AttrFlagPair(fRule.kv.second, getFlags(fRule.flags)));
+                        osm::attribute_flag_pair(fRule.kv.second, getFlags(fRule.flags)));
             }
         }
 
@@ -63,7 +63,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
                 {
                     auto fRule = getFRule(kvs);
                     curCfg.osmBuildOpts.levelFilters[i][fRule.kv.first].insert(
-                            osm::AttrFlagPair(fRule.kv.second, getFlags(fRule.flags)));
+                            osm::attribute_flag_pair(fRule.kv.second, getFlags(fRule.flags)));
                 }
             }
         }
@@ -75,7 +75,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
             {
                 auto fRule = getFRule(kvs);
                 curCfg.osmBuildOpts.dropFilter[fRule.kv.first].insert(
-                        osm::AttrFlagPair(fRule.kv.second, getFlags(fRule.flags)));
+                        osm::attribute_flag_pair(fRule.kv.second, getFlags(fRule.flags)));
             }
         }
 
@@ -97,7 +97,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
             {
                 auto fRule = getFRule(kvs);
                 curCfg.osmBuildOpts.noHupFilter[fRule.kv.first].insert(
-                        osm::AttrFlagPair(fRule.kv.second, getFlags(fRule.flags)));
+                        osm::attribute_flag_pair(fRule.kv.second, getFlags(fRule.flags)));
             }
         }
 
@@ -108,7 +108,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
             {
                 auto fRule = getFRule(kvs);
                 curCfg.osmBuildOpts.oneWayFilter[fRule.kv.first].insert(
-                        osm::AttrFlagPair(fRule.kv.second, getFlags(fRule.flags)));
+                        osm::attribute_flag_pair(fRule.kv.second, getFlags(fRule.flags)));
             }
         }
 
@@ -120,7 +120,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
             {
                 auto fRule = getFRule(kvs);
                 curCfg.osmBuildOpts.oneWayFilterRev[fRule.kv.first].insert(
-                        osm::AttrFlagPair(fRule.kv.second, getFlags(fRule.flags)));
+                        osm::attribute_flag_pair(fRule.kv.second, getFlags(fRule.flags)));
             }
         }
 
@@ -132,7 +132,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
             {
                 auto fRule = getFRule(kvs);
                 curCfg.osmBuildOpts.twoWayFilter[fRule.kv.first].insert(
-                        osm::AttrFlagPair(fRule.kv.second, getFlags(fRule.flags)));
+                        osm::attribute_flag_pair(fRule.kv.second, getFlags(fRule.flags)));
             }
         }
 
@@ -144,7 +144,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
             {
                 auto fRule = getFRule(kvs);
                 curCfg.osmBuildOpts.stationFilter[fRule.kv.first].insert(
-                        osm::AttrFlagPair(fRule.kv.second, getFlags(fRule.flags)));
+                        osm::attribute_flag_pair(fRule.kv.second, getFlags(fRule.flags)));
             }
         }
 
@@ -156,7 +156,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
             {
                 auto fRule = getFRule(kvs);
                 curCfg.osmBuildOpts.stationBlockerFilter[fRule.kv.first].insert(
-                        osm::AttrFlagPair(fRule.kv.second, getFlags(fRule.flags)));
+                        osm::attribute_flag_pair(fRule.kv.second, getFlags(fRule.flags)));
             }
         }
 
@@ -168,7 +168,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
             {
                 auto fRule = getFRule(kvs);
                 curCfg.osmBuildOpts.restrPosRestr[fRule.kv.first].insert(
-                        osm::AttrFlagPair(fRule.kv.second, getFlags(fRule.flags)));
+                        osm::attribute_flag_pair(fRule.kv.second, getFlags(fRule.flags)));
             }
         }
 
@@ -180,7 +180,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
             {
                 auto fRule = getFRule(kvs);
                 curCfg.osmBuildOpts.restrNegRestr[fRule.kv.first].insert(
-                        osm::AttrFlagPair(fRule.kv.second, getFlags(fRule.flags)));
+                        osm::attribute_flag_pair(fRule.kv.second, getFlags(fRule.flags)));
             }
         }
 
@@ -192,7 +192,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
             {
                 auto fRule = getFRule(kvs);
                 curCfg.osmBuildOpts.noRestrFilter[fRule.kv.first].insert(
-                        osm::AttrFlagPair(fRule.kv.second, getFlags(fRule.flags)));
+                        osm::attribute_flag_pair(fRule.kv.second, getFlags(fRule.flags)));
             }
         }
 
@@ -614,9 +614,9 @@ uint64_t mot_config_reader::getFlags(const std::set<string>& flags) const
 }
 
 // _____________________________________________________________________________
-FilterRule mot_config_reader::getFRule(const std::string& r) const
+filter_rule mot_config_reader::getFRule(const std::string& r) const
 {
-    osm::FilterRule ret;
+    osm::filter_rule ret;
 
     auto parts = util::split(util::trim(r), '|');
 
@@ -627,9 +627,9 @@ FilterRule mot_config_reader::getFRule(const std::string& r) const
 }
 
 // _____________________________________________________________________________
-KeyVal mot_config_reader::getKv(const std::string& kv) const
+key_val_pair mot_config_reader::getKv(const std::string& kv) const
 {
-    osm::KeyVal ret;
+    osm::key_val_pair ret;
     size_t p = kv.find('=', 0);
     ret.first = kv.substr(0, p);
 
@@ -648,17 +648,17 @@ const std::vector<mot_config>& mot_config_reader::get_configs() const
 }
 
 // _____________________________________________________________________________
-DeepAttrRule mot_config_reader::getDeepAttrRule(const std::string& rule) const
+deep_attribute_rule mot_config_reader::getDeepAttrRule(const std::string& rule) const
 {
     if (rule[0] == '[' && rule.find(']') != std::string::npos)
     {
         auto kv = getFRule(rule.substr(1, rule.find(']') - 1));
         std::string attr = rule.substr(rule.find(']') + 1);
-        return osm::DeepAttrRule{attr, kv};
+        return osm::deep_attribute_rule{attr, kv};
     }
     else
     {
-        return osm::DeepAttrRule{rule, osm::FilterRule()};
+        return osm::deep_attribute_rule{rule, osm::filter_rule()};
     }
 }
 pfaedle::config::mot_config_reader::mot_config_reader(const std::vector<std::string>&& paths) :

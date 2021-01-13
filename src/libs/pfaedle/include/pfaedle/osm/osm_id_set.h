@@ -5,7 +5,7 @@
 #ifndef PFAEDLE_OSM_OSMIDSET_H_
 #define PFAEDLE_OSM_OSMIDSET_H_
 
-#include "pfaedle/osm/Osm.h"
+#include "pfaedle/osm/osm.h"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -32,11 +32,11 @@ static const size_t OBUFFER_S = 8 * 1024 * 1024;
  * A disk-based set for OSM ids. Read-access for checking the presence is
  * reduced by a bloom filter
  */
-class OsmIdSet
+class osm_id_set
 {
 public:
-    OsmIdSet();
-    ~OsmIdSet();
+    osm_id_set();
+    ~osm_id_set();
 
     // Add an OSM id
     void add(osmid id);

@@ -10,7 +10,7 @@ Status](https://travis-ci.org/ad-freiburg/pfaedle.svg?branch=master)](https://tr
 # pfaedle
 
 Precise OpenStreetMap (OSM) map-matching for public transit schedules ([GTFS](https://developers.google.com/transit/gtfs/reference/) data).
-Implementation and evaluation code for our paper [Sparse Map-Matching in Public Transit Networks with Turn Restrictions](http://ad-publications.informatik.uni-freiburg.de/SIGSPATIAL_Sparse%20map%20matching%202018.pdf).
+Implementation and evaluation code for our paper [Sparse Map-Matching in Public Transit Networks with Turn restrictions](http://ad-publications.informatik.uni-freiburg.de/SIGSPATIAL_Sparse%20map%20matching%202018.pdf).
 
 ## Requirements
 

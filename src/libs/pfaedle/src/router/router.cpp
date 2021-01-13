@@ -228,7 +228,7 @@ bool router::compConned(const edge_candidate_group& a, const edge_candidate_grou
 
 HopBand router::getHopBand(const edge_candidate_group& a, const edge_candidate_group& b,
                            const routing_attributes& rAttrs, const routing_options& rOpts,
-                           const osm::Restrictor& rest) const
+                           const osm::restrictor& rest) const
 {
     assert(a.size());
     assert(b.size());
@@ -308,7 +308,7 @@ HopBand router::getHopBand(const edge_candidate_group& a, const edge_candidate_g
 edge_list_hops router::routeGreedy(const node_candidate_route& route,
                                  const routing_attributes& rAttrs,
                                  const routing_options& rOpts,
-                                 const osm::Restrictor& rest) const
+                                 const osm::restrictor& rest) const
 {
     if (route.size() < 2)
         return edge_list_hops();
@@ -352,7 +352,7 @@ edge_list_hops router::routeGreedy(const node_candidate_route& route,
 edge_list_hops router::routeGreedy2(const node_candidate_route& route,
                                   const routing_attributes& rAttrs,
                                   const routing_options& rOpts,
-                                  const osm::Restrictor& rest) const
+                                  const osm::restrictor& rest) const
 {
     if (route.size() < 2) return edge_list_hops();
     edge_list_hops ret(route.size() - 1);
@@ -399,7 +399,7 @@ edge_list_hops router::routeGreedy2(const node_candidate_route& route,
 
 edge_list_hops router::route(const edge_candidate_route& route,
                            const routing_attributes& rAttrs, const routing_options& rOpts,
-                           const osm::Restrictor& rest) const
+                           const osm::restrictor& rest) const
 {
     graph cg;
     return router::route(route, rAttrs, rOpts, rest, &cg);
@@ -407,7 +407,7 @@ edge_list_hops router::route(const edge_candidate_route& route,
 
 edge_list_hops router::route(const edge_candidate_route& route,
                            const routing_attributes& rAttrs, const routing_options& rOpts,
-                           const osm::Restrictor& rest,
+                           const osm::restrictor& rest,
                            graph* cgraph) const
 {
     if (route.size() < 2)
@@ -548,7 +548,7 @@ edge_list_hops router::route(const edge_candidate_route& route,
 
 edge_list_hops router::route(const node_candidate_route& route,
                            const routing_attributes& rAttrs, const routing_options& rOpts,
-                           const osm::Restrictor& rest) const
+                           const osm::restrictor& rest) const
 {
     graph cg;
     return router::route(route, rAttrs, rOpts, rest, &cg);
@@ -556,7 +556,7 @@ edge_list_hops router::route(const node_candidate_route& route,
 
 edge_list_hops router::route(const node_candidate_route& route,
                            const routing_attributes& rAttrs, const routing_options& rOpts,
-                           const osm::Restrictor& rest,
+                           const osm::restrictor& rest,
                            graph* cgraph) const
 {
     edge_candidate_route r;
@@ -581,7 +581,7 @@ void router::hops(trgraph::edge* from, const std::set<trgraph::edge*>& froms,
                   const std::unordered_map<trgraph::edge*, edge_list*>& edgesRet,
                   std::unordered_map<trgraph::edge*, edge_cost>* rCosts,
                   const routing_attributes& rAttrs, const routing_options& rOpts,
-                  const osm::Restrictor& rest, HopBand hopB) const
+                  const osm::restrictor& rest, HopBand hopB) const
 {
     std::set<trgraph::edge*> rem;
 

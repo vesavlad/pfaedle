@@ -2,13 +2,13 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include "pfaedle/osm/Restrictor.h"
+#include "pfaedle/osm/restrictor.h"
 #include <logging/logger.h>
 
-using pfaedle::osm::Restrictor;
+using pfaedle::osm::restrictor;
 
 // _____________________________________________________________________________
-void Restrictor::relax(osmid wid, const trgraph::node* n,
+void restrictor::relax(osmid wid, const trgraph::node* n,
                        const trgraph::edge* e)
 {
     // the wid is not unique here, because the OSM ways are split into
@@ -36,7 +36,7 @@ void Restrictor::relax(osmid wid, const trgraph::node* n,
 }
 
 // _____________________________________________________________________________
-void Restrictor::add(const trgraph::edge* from, osmid to,
+void restrictor::add(const trgraph::edge* from, osmid to,
                      const trgraph::node* via, bool pos)
 {
     const trgraph::edge* toE = nullptr;
@@ -59,7 +59,7 @@ void Restrictor::add(const trgraph::edge* from, osmid to,
 }
 
 // _____________________________________________________________________________
-bool Restrictor::may(const trgraph::edge* from, const trgraph::edge* to,
+bool restrictor::may(const trgraph::edge* from, const trgraph::edge* to,
                      const trgraph::node* via) const
 {
     auto posI = _pos.find(via);
@@ -86,7 +86,7 @@ bool Restrictor::may(const trgraph::edge* from, const trgraph::edge* to,
 }
 
 // _____________________________________________________________________________
-void Restrictor::replaceEdge(const trgraph::edge* old,
+void restrictor::replaceEdge(const trgraph::edge* old,
                              const trgraph::edge* newA,
                              const trgraph::edge* newB)
 {
@@ -107,7 +107,7 @@ void Restrictor::replaceEdge(const trgraph::edge* old,
 }
 
 // _____________________________________________________________________________
-void Restrictor::duplicateEdge(const trgraph::edge* old,
+void restrictor::duplicateEdge(const trgraph::edge* old,
                                const trgraph::edge* newE)
 {
     duplicateEdge(old, old->getFrom(), newE);
@@ -115,7 +115,7 @@ void Restrictor::duplicateEdge(const trgraph::edge* old,
 }
 
 // _____________________________________________________________________________
-void Restrictor::duplicateEdge(const trgraph::edge* old,
+void restrictor::duplicateEdge(const trgraph::edge* old,
                                const trgraph::node* via,
                                const trgraph::edge* newE)
 {
@@ -167,7 +167,7 @@ void Restrictor::duplicateEdge(const trgraph::edge* old,
 }
 
 // _____________________________________________________________________________
-void Restrictor::replaceEdge(const trgraph::edge* old,
+void restrictor::replaceEdge(const trgraph::edge* old,
                              const trgraph::node* via,
                              const trgraph::edge* newE)
 {

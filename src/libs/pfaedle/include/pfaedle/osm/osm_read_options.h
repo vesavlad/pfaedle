@@ -5,7 +5,7 @@
 #ifndef PFAEDLE_OSM_OSMREADOPTS_H_
 #define PFAEDLE_OSM_OSMREADOPTS_H_
 
-#include <pfaedle/osm/Osm.h>
+#include <pfaedle/osm/osm.h>
 #include <pfaedle/trgraph/graph.h>
 #include <pfaedle/trgraph/normalizer.h>
 
@@ -21,31 +21,31 @@
 namespace pfaedle::osm
 {
 
-using AttrKeySet = std::unordered_set<std::string>;
-using NIdMap = std::unordered_map<osmid, trgraph::node*>;
-using NIdMultMap = std::unordered_map<osmid, std::set<trgraph::node*>>;
-using EdgeCand = std::pair<double, trgraph::edge*>;
-using EdgeCandPQ = std::priority_queue<EdgeCand>;
-using RelMap = std::unordered_map<osmid, std::vector<size_t>>;
-using RelVec = std::vector<AttrMap>;
-using AttrLst = std::vector<std::string>;
+using attribute_key_set = std::unordered_set<std::string>;
+using node_id_map = std::unordered_map<osmid, trgraph::node*>;
+using node_id_multimap = std::unordered_map<osmid, std::set<trgraph::node*>>;
+using edge_candidate = std::pair<double, trgraph::edge*>;
+using edge_candidate_priority_queue = std::priority_queue<edge_candidate>;
+using relation_map = std::unordered_map<osmid, std::vector<size_t>>;
+using relation_vec = std::vector<attribute_map>;
+using attribute_list = std::vector<std::string>;
 
-using AttrFlagPair = std::pair<std::string, uint64_t>;
-using MultAttrMap = std::unordered_map<std::string, std::map<std::string, uint64_t>>;
+using attribute_flag_pair = std::pair<std::string, uint64_t>;
+using multi_attribute_map = std::unordered_map<std::string, std::map<std::string, uint64_t>>;
 
-using KeyVal = std::pair<std::string, std::string>;
-using FlatRels = std::set<size_t>;
+using key_val_pair = std::pair<std::string, std::string>;
+using flat_relations = std::set<size_t>;
 
-using EdgTracks = std::unordered_map<const trgraph::edge*, std::string>;
+using edge_tracks = std::unordered_map<const trgraph::edge*, std::string>;
 
-class RelLst
+class relation_list
 {
 public:
-    RelVec rels;
-    FlatRels flat;
+    relation_vec rels;
+    flat_relations flat;
 };
 
-enum FilterFlags : uint64_t
+enum filter_flags : uint64_t
 {
     USE = 1,// dummy value
     REL_NO_DOWN = 2,
@@ -55,102 +55,102 @@ enum FilterFlags : uint64_t
     MULT_VAL_MATCH = 32
 };
 
-class FilterRule
+class filter_rule
 {
 public:
-    FilterRule() :
-        kv(KeyVal("", ""))
+    filter_rule() :
+        kv(key_val_pair("", ""))
     {}
-    KeyVal kv;
+    key_val_pair kv;
     std::set<std::string> flags;
 };
 
-inline bool operator==(const FilterRule& a, const FilterRule& b)
+inline bool operator==(const filter_rule& a, const filter_rule& b)
 {
     return a.kv == b.kv && a.flags == b.flags;
 }
 
-class DeepAttrRule
+class deep_attribute_rule
 {
 public:
     std::string attr;
-    FilterRule relRule;
+    filter_rule relRule;
 };
 
-inline bool operator==(const DeepAttrRule& a, const DeepAttrRule& b)
+inline bool operator==(const deep_attribute_rule& a, const deep_attribute_rule& b)
 {
     return a.attr == b.attr && a.relRule == b.relRule;
 }
 
-using DeepAttrLst = std::vector<DeepAttrRule>;
+using deep_attribute_list = std::vector<deep_attribute_rule>;
 
-class RelLineRules
+class relation_line_rules
 {
 public:
-    AttrLst sNameRule;
-    AttrLst fromNameRule;
-    AttrLst toNameRule;
+    attribute_list sNameRule;
+    attribute_list fromNameRule;
+    attribute_list toNameRule;
 };
 
-inline bool operator==(const RelLineRules& a, const RelLineRules& b)
+inline bool operator==(const relation_line_rules& a, const relation_line_rules& b)
 {
     return a.sNameRule == b.sNameRule &&
            a.fromNameRule == b.fromNameRule &&
            a.toNameRule == b.toNameRule;
 }
 
-class StationAttrRules
+class station_attribute_rules
 {
 public:
-    DeepAttrLst nameRule;
-    DeepAttrLst platformRule;
-    DeepAttrLst idRule;
+    deep_attribute_list nameRule;
+    deep_attribute_list platformRule;
+    deep_attribute_list idRule;
 };
 
-inline bool operator==(const StationAttrRules& a, const StationAttrRules& b)
+inline bool operator==(const station_attribute_rules& a, const station_attribute_rules& b)
 {
     return a.nameRule == b.nameRule && a.platformRule == b.platformRule;
 }
 
-struct StatGroupNAttrRule
+struct station_group_node_attribute_rule
 {
-    DeepAttrRule attr;
+    deep_attribute_rule attr;
     double maxDist;
 };
 
-inline bool operator==(const StatGroupNAttrRule& a,
-                       const StatGroupNAttrRule& b)
+inline bool operator==(const station_group_node_attribute_rule& a,
+                       const station_group_node_attribute_rule& b)
 {
     return a.attr == b.attr && a.maxDist == b.maxDist;
 }
 
-using StAttrGroups = std::unordered_map<std::string, std::unordered_map<std::string, std::vector<trgraph::station_group*>>>;
+using station_attribute_groups = std::unordered_map<std::string, std::unordered_map<std::string, std::vector<trgraph::station_group*>>>;
 
-class OsmReadOpts
+class osm_read_options
 {
 public:
-    OsmReadOpts() = default;
+    osm_read_options() = default;
 
-    MultAttrMap noHupFilter;
-    MultAttrMap keepFilter;
-    MultAttrMap levelFilters[8];
-    MultAttrMap dropFilter;
-    MultAttrMap oneWayFilter;
-    MultAttrMap oneWayFilterRev;
-    MultAttrMap twoWayFilter;
-    MultAttrMap stationFilter;
-    MultAttrMap stationBlockerFilter;
-    std::vector<StatGroupNAttrRule> statGroupNAttrRules;
+    multi_attribute_map noHupFilter;
+    multi_attribute_map keepFilter;
+    multi_attribute_map levelFilters[8];
+    multi_attribute_map dropFilter;
+    multi_attribute_map oneWayFilter;
+    multi_attribute_map oneWayFilterRev;
+    multi_attribute_map twoWayFilter;
+    multi_attribute_map stationFilter;
+    multi_attribute_map stationBlockerFilter;
+    std::vector<station_group_node_attribute_rule> statGroupNAttrRules;
 
     trgraph::normalizer statNormzer;
     trgraph::normalizer lineNormzer;
     trgraph::normalizer trackNormzer;
     trgraph::normalizer idNormzer;
 
-    RelLineRules relLinerules;
-    StationAttrRules statAttrRules;
+    relation_line_rules relLinerules;
+    station_attribute_rules statAttrRules;
 
-    DeepAttrLst edgePlatformRules;
+    deep_attribute_list edgePlatformRules;
 
     uint8_t maxSnapLevel;
 
@@ -167,12 +167,12 @@ public:
     double fullTurnAngle;
 
     // restriction system
-    MultAttrMap restrPosRestr;
-    MultAttrMap restrNegRestr;
-    MultAttrMap noRestrFilter;
+    multi_attribute_map restrPosRestr;
+    multi_attribute_map restrNegRestr;
+    multi_attribute_map noRestrFilter;
 };
 
-inline bool operator==(const OsmReadOpts& a, const OsmReadOpts& b)
+inline bool operator==(const osm_read_options& a, const osm_read_options& b)
 {
     if (a.maxSnapDistances.size() != b.maxSnapDistances.size()) return false;
     for (size_t i = 0; i < a.maxSnapDistances.size(); i++)

@@ -15,10 +15,14 @@ namespace pfaedle::osm
 struct BBoxIdxNd
 {
     BBoxIdxNd() :
-        box(util::geo::minbox<double>()) {}
-    explicit BBoxIdxNd(const util::geo::Box<double>& box) :
-        box(box) {}
-    util::geo::Box<double> box;
+        box(util::geo::minbox<double>())
+    {}
+
+    BBoxIdxNd(const BOX& box) :
+        box(box)
+    {}
+
+    BOX box;
     std::vector<BBoxIdxNd> childs;
 };
 
@@ -31,37 +35,36 @@ public:
     explicit BBoxIdx(double padding);
 
     // Add a bounding box to this index
-    void add(util::geo::Box<double> box);
+    void add(BOX box);
 
     // Check if a point is contained in this index
-    bool contains(const util::geo::Point<double>& box) const;
+    bool contains(const POINT& box) const;
 
     // Return the full total bounding box of this index
-    BOX getFullWebMercBox() const;
+    BOX get_full_web_merc_box() const;
 
     // Return the full total bounding box of this index
-    BOX getFullBox() const;
+    BOX get_full_box() const;
 
     // Return the size of this index
     size_t size() const;
 
     // return the leaf bounding boxes of this idx
-    std::vector<util::geo::Box<double>> getLeafs() const;
+    std::vector<BOX> get_leafs() const;
 
 private:
+    void add_to_tree(const BOX& box, BBoxIdxNd* nd, size_t lvl);
+    bool tree_has(const POINT& p, const BBoxIdxNd& nd) const;
+
+    void get_leafs_rec(const BBoxIdxNd& nd, std::vector<BOX>* ret) const;
+
+    static const size_t MAX_LVL = 5;
+    static constexpr double MIN_COM_AREA = 0.0;
+
     double _padding;
     size_t _size;
 
     BBoxIdxNd _root;
-
-    void addToTree(const util::geo::Box<double>& box, BBoxIdxNd* nd, size_t lvl);
-    bool treeHas(const util::geo::Point<double>& p, const BBoxIdxNd& nd) const;
-
-    void getLeafsRec(const BBoxIdxNd& nd,
-                     std::vector<util::geo::Box<double>>* ret) const;
-
-    static const size_t MAX_LVL = 5;
-    static constexpr double MIN_COM_AREA = 0.0;
 };
 }  // namespace pfaedle::osm
 
