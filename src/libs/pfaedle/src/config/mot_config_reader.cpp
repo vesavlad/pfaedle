@@ -446,7 +446,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
             {
                 auto arr = p.getStrArr(secStr, "station_normalize_chain", ';');
                 curCfg.osmBuildOpts.statNormzer =
-                        trgraph::Normalizer(getNormRules(arr));
+                        trgraph::normalizer(getNormRules(arr));
             }
             catch (const std::exception& e)
             {
@@ -465,7 +465,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
             {
                 auto arr = p.getStrArr(secStr, "track_normalize_chain", ';');
                 curCfg.osmBuildOpts.trackNormzer =
-                        trgraph::Normalizer(getNormRules(arr));
+                        trgraph::normalizer(getNormRules(arr));
             }
             catch (const std::exception& e)
             {
@@ -484,7 +484,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
             {
                 auto arr = p.getStrArr(secStr, "line_normalize_chain", ';');
                 curCfg.osmBuildOpts.lineNormzer =
-                        trgraph::Normalizer(getNormRules(arr));
+                        trgraph::normalizer(getNormRules(arr));
             }
             catch (const std::exception& e)
             {
@@ -502,7 +502,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
             try
             {
                 auto arr = p.getStrArr(secStr, "station_id_normalize_chain", ';');
-                curCfg.osmBuildOpts.idNormzer = trgraph::Normalizer(getNormRules(arr));
+                curCfg.osmBuildOpts.idNormzer = trgraph::normalizer(getNormRules(arr));
             }
             catch (const std::exception& e)
             {

@@ -5,19 +5,19 @@
 #ifndef PFAEDLE_TRGRAPH_NODEPL_H_
 #define PFAEDLE_TRGRAPH_NODEPL_H_
 
+#include "cppgtfs/gtfs/Feed.h"
+#include "pfaedle/definitions.h"
+#include "pfaedle/trgraph/station_info.h"
+#include "util/geo/Geo.h"
+#include "util/geo/GeoGraph.h"
 #include <map>
 #include <string>
 #include <unordered_map>
-#include "cppgtfs/gtfs/Feed.h"
-#include "pfaedle/Def.h"
-#include "pfaedle/trgraph/StatInfo.h"
-#include "util/geo/Geo.h"
-#include "util/geo/GeoGraph.h"
 
 namespace pfaedle::trgraph
 {
 
-struct Component
+struct component
 {
     uint8_t minEdgeLvl : 3;
 };
@@ -25,14 +25,14 @@ struct Component
 /*
  * A node payload class for the transit graph.
  */
-class NodePayload
+class node_payload
 {
 public:
-    NodePayload();
-    NodePayload(const NodePayload& pl); // NOLINT
-    NodePayload(const POINT& geom);// NOLINT
-    NodePayload(const POINT& geom, const StatInfo& si);
-    ~NodePayload();
+    node_payload();
+    node_payload(const node_payload& pl); // NOLINT
+    node_payload(const POINT& geom);// NOLINT
+    node_payload(const POINT& geom, const station_info& si);
+    ~node_payload();
 
     // Return the geometry of this node.
     const POINT* getGeom() const;
@@ -42,20 +42,20 @@ public:
     util::json::Dict getAttrs() const;
 
     // Set the station info for this node
-    void setSI(const StatInfo& si);
+    void setSI(const station_info& si);
 
     // Return the station info for this node
-    const StatInfo* getSI() const;
-    StatInfo* getSI();
+    const station_info* getSI() const;
+    station_info* getSI();
 
     // Delete the station info for this node
     void setNoStat();
 
     // Get the component of this node
-    const Component* getComp() const;
+    const component* getComp() const;
 
     // Set the component of this node
-    void setComp(const Component* c);
+    void setComp(const component* c);
 
     // Make this node a blocker
     void setBlocker();
@@ -69,15 +69,15 @@ public:
 
 private:
     POINT _geom;
-    StatInfo* _si;
-    const Component* _component;
+    station_info* _si;
+    const component* _component;
 
 #ifdef PFAEDLE_DBG
     mutable bool _vis;
 #endif
 
-    static StatInfo _blockerSI;
-    static std::unordered_map<const Component*, size_t> _comps;
+    static station_info _blockerSI;
+    static std::unordered_map<const component*, size_t> _comps;
 };
 }  // namespace pfaedle::trgraph
 

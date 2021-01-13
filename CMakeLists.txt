@@ -7,7 +7,7 @@ include(cmake/pkg.cmake)
 enable_testing()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
-set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/build")
+#set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/build")
 
 
 find_package(OpenMP)
@@ -52,10 +52,6 @@ if(PFAEDLE_LINT)
 endif()
 
 add_subdirectory(src)
-
-# tests
-
-add_test("utilTest" utilTest)
 
 # custom eval target
 

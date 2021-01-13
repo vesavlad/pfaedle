@@ -5,9 +5,9 @@
 #ifndef PFAEDLE_OSM_BBOXIDX_H_
 #define PFAEDLE_OSM_BBOXIDX_H_
 
-#include <vector>
-#include "pfaedle/Def.h"
+#include "pfaedle/definitions.h"
 #include "util/geo/Geo.h"
+#include <vector>
 
 namespace pfaedle::osm
 {

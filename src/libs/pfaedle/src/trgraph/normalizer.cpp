@@ -2,7 +2,7 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include "pfaedle/trgraph/Normalizer.h"
+#include "pfaedle/trgraph/normalizer.h"
 #include <algorithm>
 #include <cassert>
 #include <iostream>
@@ -14,23 +14,23 @@
 #include <utility>
 #include <vector>
 
-using pfaedle::trgraph::Normalizer;
+using pfaedle::trgraph::normalizer;
 
 // _____________________________________________________________________________
-Normalizer::Normalizer(const ReplRules& rules) :
+normalizer::normalizer(const ReplRules& rules) :
     _rulesOrig(rules)
 {
     buildRules(rules);
 }
 
 // _____________________________________________________________________________
-Normalizer::Normalizer(const Normalizer& other) :
+normalizer::normalizer(const normalizer& other) :
     _rules(other._rules),
     _rulesOrig(other._rulesOrig),
     _cache(other._cache) {}
 
 // _____________________________________________________________________________
-Normalizer& Normalizer::operator=(Normalizer other)
+normalizer& normalizer::operator=(normalizer other)
 {
     std::swap(this->_rules, other._rules);
     std::swap(this->_rulesOrig, other._rulesOrig);
@@ -40,20 +40,20 @@ Normalizer& Normalizer::operator=(Normalizer other)
 }
 
 // _____________________________________________________________________________
-std::string Normalizer::operator()(std::string sn) const
+std::string normalizer::operator()(std::string sn) const
 {
     return normTS(sn);
 }
 
 // _____________________________________________________________________________
-std::string Normalizer::normTS(const std::string& sn) const
+std::string normalizer::normTS(const std::string& sn) const
 {
     std::lock_guard<std::mutex> lock(_mutex);
     return norm(sn);
 }
 
 // _____________________________________________________________________________
-std::string Normalizer::norm(const std::string& sn) const
+std::string normalizer::norm(const std::string& sn) const
 {
     auto i = _cache.find(sn);
     if (i != _cache.end()) return i->second;
@@ -76,13 +76,13 @@ std::string Normalizer::norm(const std::string& sn) const
 }
 
 // _____________________________________________________________________________
-bool Normalizer::operator==(const Normalizer& b) const
+bool normalizer::operator==(const normalizer& b) const
 {
     return _rulesOrig == b._rulesOrig;
 }
 
 // _____________________________________________________________________________
-void Normalizer::buildRules(const ReplRules& rules)
+void normalizer::buildRules(const ReplRules& rules)
 {
     for (const auto& rule : rules)
     {

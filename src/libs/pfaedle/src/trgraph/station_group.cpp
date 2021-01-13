@@ -2,30 +2,30 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include "pfaedle/trgraph/StatGroup.h"
+#include "pfaedle/trgraph/station_group.h"
 #include "util/geo/Geo.h"
 #include <set>
 
 using ad::cppgtfs::gtfs::Stop;
 using pfaedle::router::node_candidate_group;
-using pfaedle::trgraph::Node;
-using pfaedle::trgraph::StatGroup;
+using pfaedle::trgraph::node;
+using pfaedle::trgraph::station_group;
 
 // _____________________________________________________________________________
-StatGroup::StatGroup() {}
+station_group::station_group() {}
 
 // _____________________________________________________________________________
-void StatGroup::addStop(const Stop* s) { _stops.insert(s); }
+void station_group::addStop(const Stop* s) { _stops.insert(s); }
 
 // _____________________________________________________________________________
-void StatGroup::addNode(trgraph::Node* n) { _nodes.insert(n); }
+void station_group::addNode(trgraph::node* n) { _nodes.insert(n); }
 
 // _____________________________________________________________________________
-void StatGroup::merge(StatGroup* other)
+void station_group::merge(station_group* other)
 {
     if (other == this) return;
 
-    std::set<Node*> nds = other->getNodes();
+    std::set<node*> nds = other->getNodes();
     std::set<const Stop*> stops = other->getStops();
 
     for (auto on : nds)
@@ -41,30 +41,30 @@ void StatGroup::merge(StatGroup* other)
 }
 
 // _____________________________________________________________________________
-const node_candidate_group& StatGroup::getNodeCands(const Stop* s) const
+const node_candidate_group& station_group::getNodeCands(const Stop* s) const
 {
     return _stopNodePens.at(s);
 }
 
 // _____________________________________________________________________________
-const std::set<Node*>& StatGroup::getNodes() const { return _nodes; }
+const std::set<node*>& station_group::getNodes() const { return _nodes; }
 
 // _____________________________________________________________________________
-void StatGroup::remNode(trgraph::Node* n)
+void station_group::remNode(trgraph::node* n)
 {
     auto it = _nodes.find(n);
     if (it != _nodes.end()) _nodes.erase(it);
 }
 
 // _____________________________________________________________________________
-std::set<Node*>& StatGroup::getNodes() { return _nodes; }
+std::set<node*>& station_group::getNodes() { return _nodes; }
 
 // _____________________________________________________________________________
-const std::set<const Stop*>& StatGroup::getStops() const { return _stops; }
+const std::set<const Stop*>& station_group::getStops() const { return _stops; }
 
 // _____________________________________________________________________________
-double StatGroup::getPen(const Stop* s, trgraph::Node* n,
-                         const trgraph::Normalizer& platformNorm,
+double station_group::getPen(const Stop* s, trgraph::node* n,
+                         const trgraph::normalizer& platformNorm,
                          double trackPen, double distPenFac,
                          double nonOsmPen) const
 {
@@ -88,7 +88,7 @@ double StatGroup::getPen(const Stop* s, trgraph::Node* n,
 }
 
 // _____________________________________________________________________________
-void StatGroup::writePens(const trgraph::Normalizer& platformNorm,
+void station_group::writePens(const trgraph::normalizer& platformNorm,
                           double trackPen, double distPenFac,
                           double nonOsmPen)
 {

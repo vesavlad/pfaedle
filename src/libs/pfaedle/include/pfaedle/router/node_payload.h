@@ -5,12 +5,12 @@
 #ifndef PFAEDLE_ROUTER_NODEPL_H_
 #define PFAEDLE_ROUTER_NODEPL_H_
 
+#include "pfaedle/definitions.h"
+#include "pfaedle/trgraph/graph.h"
+#include "util/geo/Geo.h"
+#include "util/geo/GeoGraph.h"
 #include <map>
 #include <string>
-#include "pfaedle/trgraph/Graph.h"
-#include "util/geo/GeoGraph.h"
-#include "util/geo/Geo.h"
-#include "pfaedle/Def.h"
 
 namespace pfaedle::router
 {
@@ -22,7 +22,7 @@ public:
         _n(nullptr)
     {}
 
-    node_payload(const pfaedle::trgraph::Node* n) :
+    node_payload(const pfaedle::trgraph::node* n) :
         _n(n)
     {}
 
@@ -41,7 +41,7 @@ public:
     }
 
 private:
-    const pfaedle::trgraph::Node* _n;
+    const pfaedle::trgraph::node* _n;
 };
 }  // namespace pfaedle
 

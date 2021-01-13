@@ -8,8 +8,8 @@
 using pfaedle::osm::Restrictor;
 
 // _____________________________________________________________________________
-void Restrictor::relax(osmid wid, const trgraph::Node* n,
-                       const trgraph::Edge* e)
+void Restrictor::relax(osmid wid, const trgraph::node* n,
+                       const trgraph::edge* e)
 {
     // the wid is not unique here, because the OSM ways are split into
     // multiple edges. They are only unique as a pair with a "from-via" point.
@@ -36,10 +36,10 @@ void Restrictor::relax(osmid wid, const trgraph::Node* n,
 }
 
 // _____________________________________________________________________________
-void Restrictor::add(const trgraph::Edge* from, osmid to,
-                     const trgraph::Node* via, bool pos)
+void Restrictor::add(const trgraph::edge* from, osmid to,
+                     const trgraph::node* via, bool pos)
 {
-    const trgraph::Edge* toE = nullptr;
+    const trgraph::edge* toE = nullptr;
     if (_rlx.count(NodeOsmIdP(via, to)))
         toE = _rlx.find(NodeOsmIdP(via, to))->second;
     if (pos)
@@ -59,8 +59,8 @@ void Restrictor::add(const trgraph::Edge* from, osmid to,
 }
 
 // _____________________________________________________________________________
-bool Restrictor::may(const trgraph::Edge* from, const trgraph::Edge* to,
-                     const trgraph::Node* via) const
+bool Restrictor::may(const trgraph::edge* from, const trgraph::edge* to,
+                     const trgraph::node* via) const
 {
     auto posI = _pos.find(via);
     auto negI = _neg.find(via);
@@ -86,12 +86,12 @@ bool Restrictor::may(const trgraph::Edge* from, const trgraph::Edge* to,
 }
 
 // _____________________________________________________________________________
-void Restrictor::replaceEdge(const trgraph::Edge* old,
-                             const trgraph::Edge* newA,
-                             const trgraph::Edge* newB)
+void Restrictor::replaceEdge(const trgraph::edge* old,
+                             const trgraph::edge* newA,
+                             const trgraph::edge* newB)
 {
-    const trgraph::Edge* newFrom;
-    const trgraph::Edge* newTo;
+    const trgraph::edge* newFrom;
+    const trgraph::edge* newTo;
     if (old->getFrom() == newA->getFrom() || old->getFrom() == newA->getTo())
     {
         newFrom = newA;
@@ -107,17 +107,17 @@ void Restrictor::replaceEdge(const trgraph::Edge* old,
 }
 
 // _____________________________________________________________________________
-void Restrictor::duplicateEdge(const trgraph::Edge* old,
-                               const trgraph::Edge* newE)
+void Restrictor::duplicateEdge(const trgraph::edge* old,
+                               const trgraph::edge* newE)
 {
     duplicateEdge(old, old->getFrom(), newE);
     duplicateEdge(old, old->getTo(), newE);
 }
 
 // _____________________________________________________________________________
-void Restrictor::duplicateEdge(const trgraph::Edge* old,
-                               const trgraph::Node* via,
-                               const trgraph::Edge* newE)
+void Restrictor::duplicateEdge(const trgraph::edge* old,
+                               const trgraph::node* via,
+                               const trgraph::edge* newE)
 {
     auto posI = _pos.find(via);
     auto negI = _neg.find(via);
@@ -167,9 +167,9 @@ void Restrictor::duplicateEdge(const trgraph::Edge* old,
 }
 
 // _____________________________________________________________________________
-void Restrictor::replaceEdge(const trgraph::Edge* old,
-                             const trgraph::Node* via,
-                             const trgraph::Edge* newE)
+void Restrictor::replaceEdge(const trgraph::edge* old,
+                             const trgraph::node* via,
+                             const trgraph::edge* newE)
 {
     const auto& pos_iterator = _pos.find(via);
     const auto& neg_iterator = _neg.find(via);

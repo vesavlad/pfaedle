@@ -290,7 +290,7 @@ int app::run()
                 pfaedle::router::write_mot_stops(feeds_.front(), used_mots, cfg_.shapeTripId);
 
         pfaedle::osm::Restrictor restr;
-        pfaedle::trgraph::Graph graph;
+        pfaedle::trgraph::graph graph;
         pfaedle::osm::OsmBuilder osm_builder;
 
         pfaedle::osm::BBoxIdx box(BOX_PADDING);

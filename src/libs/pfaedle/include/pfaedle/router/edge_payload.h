@@ -6,7 +6,7 @@
 #define PFAEDLE_ROUTER_EDGEPL_H_
 
 #include <map>
-#include <pfaedle/Def.h>
+#include <pfaedle/definitions.h>
 #include <pfaedle/router/misc.h>
 #include <string>
 #include <util/geo/Geo.h>
@@ -30,10 +30,10 @@ public:
     router::edge_list* getEdges();
     const router::edge_list& getEdges() const;
 
-    void setStartNode(const trgraph::Node* s);
-    void setEndNode(const trgraph::Node* s);
-    void setStartEdge(const trgraph::Edge* s);
-    void setEndEdge(const trgraph::Edge* s);
+    void setStartNode(const trgraph::node* s);
+    void setEndNode(const trgraph::node* s);
+    void setStartEdge(const trgraph::edge* s);
+    void setEndEdge(const trgraph::edge* s);
 
     const router::edge_cost& getCost() const;
     void setCost(const router::edge_cost& c);
@@ -41,17 +41,17 @@ public:
     const POINT& frontHop() const;
     const POINT& backHop() const;
 
-    const trgraph::Node* frontNode() const;
-    const trgraph::Node* backNode() const;
+    const trgraph::node* frontNode() const;
+    const trgraph::node* backNode() const;
 
 private:
     router::edge_cost _cost;
     // the edges are in this field in REVERSED ORDER!
     router::edge_list _edges;
-    const trgraph::Node* _start;
-    const trgraph::Node* _end;
-    const trgraph::Edge* _startE;
-    const trgraph::Edge* _endE;
+    const trgraph::node* _start;
+    const trgraph::node* _end;
+    const trgraph::edge* _startE;
+    const trgraph::edge* _endE;
     mutable LINE _geom;
 };
 }  // namespace pfaedle

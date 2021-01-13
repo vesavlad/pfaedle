@@ -6,8 +6,8 @@
 #define PFAEDLE_OSM_OSMREADOPTS_H_
 
 #include <pfaedle/osm/Osm.h>
-#include <pfaedle/trgraph/Graph.h>
-#include <pfaedle/trgraph/Normalizer.h>
+#include <pfaedle/trgraph/graph.h>
+#include <pfaedle/trgraph/normalizer.h>
 
 #include <queue>
 #include <unordered_set>
@@ -22,9 +22,9 @@ namespace pfaedle::osm
 {
 
 using AttrKeySet = std::unordered_set<std::string>;
-using NIdMap = std::unordered_map<osmid, trgraph::Node*>;
-using NIdMultMap = std::unordered_map<osmid, std::set<trgraph::Node*>>;
-using EdgeCand = std::pair<double, trgraph::Edge*>;
+using NIdMap = std::unordered_map<osmid, trgraph::node*>;
+using NIdMultMap = std::unordered_map<osmid, std::set<trgraph::node*>>;
+using EdgeCand = std::pair<double, trgraph::edge*>;
 using EdgeCandPQ = std::priority_queue<EdgeCand>;
 using RelMap = std::unordered_map<osmid, std::vector<size_t>>;
 using RelVec = std::vector<AttrMap>;
@@ -36,7 +36,7 @@ using MultAttrMap = std::unordered_map<std::string, std::map<std::string, uint64
 using KeyVal = std::pair<std::string, std::string>;
 using FlatRels = std::set<size_t>;
 
-using EdgTracks = std::unordered_map<const trgraph::Edge*, std::string>;
+using EdgTracks = std::unordered_map<const trgraph::edge*, std::string>;
 
 class RelLst
 {
@@ -124,7 +124,7 @@ inline bool operator==(const StatGroupNAttrRule& a,
     return a.attr == b.attr && a.maxDist == b.maxDist;
 }
 
-using StAttrGroups = std::unordered_map<std::string, std::unordered_map<std::string, std::vector<trgraph::StatGroup *>>>;
+using StAttrGroups = std::unordered_map<std::string, std::unordered_map<std::string, std::vector<trgraph::station_group*>>>;
 
 class OsmReadOpts
 {
@@ -142,10 +142,10 @@ public:
     MultAttrMap stationBlockerFilter;
     std::vector<StatGroupNAttrRule> statGroupNAttrRules;
 
-    trgraph::Normalizer statNormzer;
-    trgraph::Normalizer lineNormzer;
-    trgraph::Normalizer trackNormzer;
-    trgraph::Normalizer idNormzer;
+    trgraph::normalizer statNormzer;
+    trgraph::normalizer lineNormzer;
+    trgraph::normalizer trackNormzer;
+    trgraph::normalizer idNormzer;
 
     RelLineRules relLinerules;
     StationAttrRules statAttrRules;

@@ -6,16 +6,16 @@
 #define PFAEDLE_ROUTER_SHAPEBUILDER_H_
 
 #include "cppgtfs/gtfs/Feed.h"
-#include "pfaedle/Def.h"
 #include "pfaedle/config/config.h"
 #include "pfaedle/config/mot_config.h"
+#include "pfaedle/definitions.h"
 #include "pfaedle/eval/collector.h"
 #include "pfaedle/gtfs/Feed.h"
 #include "pfaedle/netgraph/graph.h"
 #include "pfaedle/osm/Restrictor.h"
 #include "pfaedle/router/misc.h"
 #include "pfaedle/router/router.h"
-#include "pfaedle/trgraph/Graph.h"
+#include "pfaedle/trgraph/graph.h"
 #include "util/geo/Geo.h"
 
 #include <mutex>
@@ -38,7 +38,7 @@ using cluster = std::vector<pfaedle::gtfs::Trip*>;
 using clusters = std::vector<cluster>;
 using stop_pair = std::pair<const ad::cppgtfs::gtfs::Stop*, const ad::cppgtfs::gtfs::Stop*>;
 using trip_routing_attributes = std::unordered_map<const pfaedle::gtfs::Trip*, routing_attributes>;
-using transit_graph_edges = std::unordered_map<const trgraph::Edge*, std::set<const pfaedle::gtfs::Trip*>>;
+using transit_graph_edges = std::unordered_map<const trgraph::edge*, std::set<const pfaedle::gtfs::Trip*>>;
 
 /*
  * Layer class for the router. Provides an interface for direct usage with
@@ -52,7 +52,7 @@ public:
                   MOTs mots,
                   const config::mot_config& motCfg,
                   eval::collector& ecoll,
-                  trgraph::Graph& g,
+                  trgraph::graph& g,
                   feed_stops& stops,
                   osm::Restrictor& restr,
                   const config::config& cfg);
@@ -67,7 +67,7 @@ public:
     pfaedle::router::shape get_shape(pfaedle::gtfs::Trip& trip) const;
     pfaedle::router::shape get_shape(pfaedle::gtfs::Trip& trip);
 
-    const trgraph::Graph& get_graph() const;
+    const trgraph::graph& get_graph() const;
 
     static void get_gtfs_box(const pfaedle::gtfs::Feed& feed,
                              const MOTs& mots,
@@ -113,7 +113,7 @@ private:
     const config::mot_config& _motCfg;
     eval::collector& _ecoll;
     const config::config& _cfg;
-    trgraph::Graph& _g;
+    trgraph::graph& _g;
     router _crouter;
 
     feed_stops& _stops;

@@ -2,21 +2,21 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include "pfaedle/trgraph/EdgePayload.h"
+#include "pfaedle/trgraph/edge_payload.h"
 #include "util/geo/Geo.h"
 #include <map>
 #include <string>
 #include <vector>
 
-using pfaedle::trgraph::EdgePayload;
-using pfaedle::trgraph::TransitEdgeLine;
+using pfaedle::trgraph::edge_payload;
+using pfaedle::trgraph::transit_edge_line;
 
 
-std::map<LINE*, size_t> EdgePayload::_flines;
-std::map<const TransitEdgeLine*, size_t> EdgePayload::_tlines;
+std::map<LINE*, size_t> edge_payload::_flines;
+std::map<const transit_edge_line*, size_t> edge_payload::_tlines;
 
 // _____________________________________________________________________________
-EdgePayload::EdgePayload() :
+edge_payload::edge_payload() :
     _length(0), _oneWay(0), _hasRestr(false), _rev(false), _lvl(0)
 {
     _l = new LINE();
@@ -24,11 +24,11 @@ EdgePayload::EdgePayload() :
 }
 
 // _____________________________________________________________________________
-EdgePayload::EdgePayload(const EdgePayload& pl) :
-    EdgePayload(pl, false) {}
+edge_payload::edge_payload(const edge_payload& pl) :
+    edge_payload(pl, false) {}
 
 // _____________________________________________________________________________
-EdgePayload::EdgePayload(const EdgePayload& pl, bool geoflat) :
+edge_payload::edge_payload(const edge_payload& pl, bool geoflat) :
     _length(pl._length),
     _oneWay(pl._oneWay),
     _hasRestr(pl._hasRestr),
@@ -49,7 +49,7 @@ EdgePayload::EdgePayload(const EdgePayload& pl, bool geoflat) :
 }
 
 // _____________________________________________________________________________
-EdgePayload::~EdgePayload()
+edge_payload::~edge_payload()
 {
     if (_l)
     {
@@ -61,7 +61,7 @@ EdgePayload::~EdgePayload()
 }
 
 // _____________________________________________________________________________
-void EdgePayload::unRefTLine(const TransitEdgeLine* l)
+void edge_payload::unRefTLine(const transit_edge_line* l)
 {
     if (l)
     {
@@ -75,9 +75,9 @@ void EdgePayload::unRefTLine(const TransitEdgeLine* l)
 }
 
 // _____________________________________________________________________________
-EdgePayload EdgePayload::revCopy() const
+edge_payload edge_payload::revCopy() const
 {
-    EdgePayload ret(*this);
+    edge_payload ret(*this);
     ret.setRev();
     if (ret.oneWay() == 1)
         ret.setOneWay(2);
@@ -87,13 +87,13 @@ EdgePayload EdgePayload::revCopy() const
 }
 
 // _____________________________________________________________________________
-void EdgePayload::setLength(double d) { _length = d; }
+void edge_payload::setLength(double d) { _length = d; }
 
 // _____________________________________________________________________________
-double EdgePayload::getLength() const { return _length; }
+double edge_payload::getLength() const { return _length; }
 
 // _____________________________________________________________________________
-void EdgePayload::addLine(const TransitEdgeLine* l)
+void edge_payload::addLine(const transit_edge_line* l)
 {
     if (std::find(_lines.begin(), _lines.end(), l) == _lines.end())
     {
@@ -107,28 +107,28 @@ void EdgePayload::addLine(const TransitEdgeLine* l)
 }
 
 // _____________________________________________________________________________
-void EdgePayload::addLines(const std::vector<TransitEdgeLine*>& l)
+void edge_payload::addLines(const std::vector<transit_edge_line*>& l)
 {
     for (auto line : l) addLine(line);
 }
 
 // _____________________________________________________________________________
-const std::vector<const TransitEdgeLine*>& EdgePayload::getLines() const
+const std::vector<const transit_edge_line*>& edge_payload::getLines() const
 {
     return _lines;
 }
 
 // _____________________________________________________________________________
-void EdgePayload::addPoint(const POINT& p) { _l->push_back(p); }
+void edge_payload::addPoint(const POINT& p) { _l->push_back(p); }
 
 // _____________________________________________________________________________
-const LINE* EdgePayload::getGeom() const { return _l; }
+const LINE* edge_payload::getGeom() const { return _l; }
 
 // _____________________________________________________________________________
-LINE* EdgePayload::getGeom() { return _l; }
+LINE* edge_payload::getGeom() { return _l; }
 
 // _____________________________________________________________________________
-util::json::Dict EdgePayload::getAttrs() const
+util::json::Dict edge_payload::getAttrs() const
 {
     util::json::Dict obj;
     obj["m_length"] = std::to_string(_length);
@@ -156,34 +156,34 @@ util::json::Dict EdgePayload::getAttrs() const
 }
 
 // _____________________________________________________________________________
-void EdgePayload::setRestricted() { _hasRestr = true; }
+void edge_payload::setRestricted() { _hasRestr = true; }
 
 // _____________________________________________________________________________
-bool EdgePayload::isRestricted() const { return _hasRestr; }
+bool edge_payload::isRestricted() const { return _hasRestr; }
 
 // _____________________________________________________________________________
-uint8_t EdgePayload::oneWay() const { return _oneWay; }
+uint8_t edge_payload::oneWay() const { return _oneWay; }
 
 // _____________________________________________________________________________
-void EdgePayload::setOneWay(uint8_t dir) { _oneWay = dir; }
+void edge_payload::setOneWay(uint8_t dir) { _oneWay = dir; }
 
 // _____________________________________________________________________________
-void EdgePayload::setOneWay() { _oneWay = 1; }
+void edge_payload::setOneWay() { _oneWay = 1; }
 
 // _____________________________________________________________________________
-void EdgePayload::setLvl(uint8_t lvl) { _lvl = lvl; }
+void edge_payload::setLvl(uint8_t lvl) { _lvl = lvl; }
 
 // _____________________________________________________________________________
-uint8_t EdgePayload::lvl() const { return _lvl; }
+uint8_t edge_payload::lvl() const { return _lvl; }
 
 // _____________________________________________________________________________
-void EdgePayload::setRev() { _rev = true; }
+void edge_payload::setRev() { _rev = true; }
 
 // _____________________________________________________________________________
-bool EdgePayload::isRev() const { return _rev; }
+bool edge_payload::isRev() const { return _rev; }
 
 // _____________________________________________________________________________
-const POINT& EdgePayload::backHop() const
+const POINT& edge_payload::backHop() const
 {
     if (isRev())
     {
@@ -193,7 +193,7 @@ const POINT& EdgePayload::backHop() const
 }
 
 // _____________________________________________________________________________
-const POINT& EdgePayload::frontHop() const
+const POINT& edge_payload::frontHop() const
 {
     if (isRev())
     {

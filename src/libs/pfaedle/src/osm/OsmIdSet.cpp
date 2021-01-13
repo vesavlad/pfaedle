@@ -3,7 +3,7 @@
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
 #include "pfaedle/osm/OsmIdSet.h"
-#include "pfaedle/Def.h"
+#include "pfaedle/definitions.h"
 #include <algorithm>
 #include <cassert>
 #include <climits>

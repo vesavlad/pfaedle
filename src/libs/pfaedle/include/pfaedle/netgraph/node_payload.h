@@ -5,7 +5,7 @@
 #ifndef PFAEDLE_NETGRAPH_NODEPL_H_
 #define PFAEDLE_NETGRAPH_NODEPL_H_
 
-#include <pfaedle/Def.h>
+#include <pfaedle/definitions.h>
 #include <util/json/Writer.h>
 
 namespace pfaedle::netgraph

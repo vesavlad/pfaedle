@@ -7,7 +7,7 @@
 
 #include <cppgtfs/gtfs/Shape.h>
 #include <cppgtfs/gtfs/flat/Shape.h>
-#include <pfaedle/Def.h>
+#include <pfaedle/definitions.h>
 #include <util/Misc.h>
 
 #include <unistd.h>

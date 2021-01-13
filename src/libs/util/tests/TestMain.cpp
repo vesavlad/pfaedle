@@ -18,42 +18,51 @@ using namespace util;
 using namespace util::geo;
 using namespace util::graph;
 
-class approx {
- public:
-  explicit approx(double magnitude)
-      : _epsilon{std::numeric_limits<float>::epsilon() * 100},
+class approx
+{
+public:
+    explicit approx(double magnitude) :
+        _epsilon{std::numeric_limits<float>::epsilon() * 100},
         _magnitude{magnitude} {}
 
-  friend bool operator==(double lhs, approx const& rhs) {
-    return std::abs(lhs - rhs._magnitude) < rhs._epsilon;
-  }
+    friend bool operator==(double lhs, approx const& rhs)
+    {
+        return std::abs(lhs - rhs._magnitude) < rhs._epsilon;
+    }
 
-  friend bool operator==(approx const& lhs, double rhs) {
-    return operator==(rhs, lhs);
-  }
-  friend bool operator!=(double lhs, approx const& rhs) {
-    return !operator==(lhs, rhs);
-  }
-  friend bool operator!=(approx const& lhs, double rhs) {
-    return !operator==(rhs, lhs);
-  }
+    friend bool operator==(approx const& lhs, double rhs)
+    {
+        return operator==(rhs, lhs);
+    }
+    friend bool operator!=(double lhs, approx const& rhs)
+    {
+        return !operator==(lhs, rhs);
+    }
+    friend bool operator!=(approx const& lhs, double rhs)
+    {
+        return !operator==(rhs, lhs);
+    }
 
-  friend bool operator<=(double lhs, approx const& rhs) {
-    return lhs < rhs._magnitude || lhs == rhs;
-  }
-  friend bool operator<=(approx const& lhs, double rhs) {
-    return lhs._magnitude < rhs || lhs == rhs;
-  }
-  friend bool operator>=(double lhs, approx const& rhs) {
-    return lhs > rhs._magnitude || lhs == rhs;
-  }
-  friend bool operator>=(approx const& lhs, double rhs) {
-    return lhs._magnitude > rhs || lhs == rhs;
-  }
+    friend bool operator<=(double lhs, approx const& rhs)
+    {
+        return lhs < rhs._magnitude || lhs == rhs;
+    }
+    friend bool operator<=(approx const& lhs, double rhs)
+    {
+        return lhs._magnitude < rhs || lhs == rhs;
+    }
+    friend bool operator>=(double lhs, approx const& rhs)
+    {
+        return lhs > rhs._magnitude || lhs == rhs;
+    }
+    friend bool operator>=(approx const& lhs, double rhs)
+    {
+        return lhs._magnitude > rhs || lhs == rhs;
+    }
 
- private:
-  double _epsilon;
-  double _magnitude;
+private:
+    double _epsilon;
+    double _magnitude;
 };
 
 // _____________________________________________________________________________
@@ -77,50 +86,57 @@ int main(int argc, char** argv)
     // ___________________________________________________________________________
     {
         std::stringstream ss;
-        util::json::Writer wr(&ss, 2, false);
+        {
+            util::json::Writer wr(ss, 2, false);
 
-        util::json::Val a("bla");
-        util::json::Val b(1);
-        util::json::Val c(1.0);
-        util::json::Val d("a");
-        util::json::Val e({"a", "b", "c"});
+            util::json::Val a("bla");
+            util::json::Val b(1);
+            util::json::Val c(1.0);
+            util::json::Val d("a");
+            util::json::Val e({"a", "b", "c"});
 
-        util::json::Val f({1, json::Array{2, 3, 4}, 3});
-
+            util::json::Val f({1, json::Array{2, 3, 4}, 3});
+            ss.str("");
+        }
+        {
+            util::json::Writer wr(ss, 2, false);
+            util::json::Val i({1, json::Array{2, json::Null(), 4}, true});
+            wr.val(i);
+            wr.closeAll();
+            assert(ss.str() == "[1,[2,null,4],true]");
+            ss.str("");
+        }
+        {
+            util::json::Writer wr(ss, 2, false);
+            util::json::Val i({1, json::Array{2, json::Null(), 4}, false});
+            wr.val(i);
+            wr.closeAll();
+            assert(ss.str() == "[1,[2,null,4],false]");
+        }
         ss.str("");
-        wr = util::json::Writer(&ss, 2, false);
-        util::json::Val i({1, json::Array{2, json::Null(), 4}, true});
-        wr.val(i);
-        wr.closeAll();
-        assert(ss.str() == "[1,[2,null,4],true]");
-
+        {
+            util::json::Writer wr(ss, 2, false);
+            util::json::Val i({1, json::Array{2, json::Null(), 4}, false});
+            wr.val(i);
+            wr.closeAll();
+            assert(ss.str() == "[1,[2,null,4],false]");
+        }
         ss.str("");
-        wr = util::json::Writer(&ss, 2, false);
-        i = util::json::Val({1, json::Array{2, json::Null(), 4}, false});
-        wr.val(i);
-        wr.closeAll();
-        assert(ss.str() == "[1,[2,null,4],false]");
-
+        {
+            util::json::Writer wr(ss, 2, false);
+            util::json::Val i({1, json::Array{2.13, "", 4}, 0});
+            wr.val(i);
+            wr.closeAll();
+            assert(ss.str() == "[1,[2.13,\"\",4],0]");
+        }
         ss.str("");
-        wr = util::json::Writer(&ss, 2, false);
-        i = util::json::Val({1, json::Array{2, json::Null(), 4}, false});
-        wr.val(i);
-        wr.closeAll();
-        assert(ss.str() == "[1,[2,null,4],false]");
-
-        ss.str("");
-        wr = util::json::Writer(&ss, 2, false);
-        i = util::json::Val({1, json::Array{2.13, "", 4}, 0});
-        wr.val(i);
-        wr.closeAll();
-        assert(ss.str() == "[1,[2.13,\"\",4],0]");
-
-        ss.str("");
-        wr = util::json::Writer(&ss, 2, false);
-        i = util::json::Val(
-                {1, json::Array{2.13, json::Dict{{"a", 1}, {"B", 2.123}}, 4}, 0});
-        wr.val(i);
-        wr.closeAll();
+        {
+            util::json::Writer wr(ss, 2, false);
+            util::json::Val i(
+                    {1, json::Array{2.13, json::Dict{{"a", 1}, {"B", 2.123}}, 4}, 0});
+            wr.val(i);
+            wr.closeAll();
+        }
         assert((ss.str() == "[1,[2.13,{\"a\":1,\"B\":2.12},4],0]" ||
                 ss.str() == "[1,[2.13,{\"B\":2.12,\"a\":1},4],0]"));
     }
@@ -305,7 +321,7 @@ int main(int argc, char** argv)
         f.push_back(Point<double>(1, 1));
         f.push_back(Point<double>(1, 2));
 
-        double fd = util::geo::frechetDist(e, f, 0.1);
+        double fd = util::geo::frechet_distance(e, f, 0.1);
 
         assert(fd == approx(0));
 
@@ -328,7 +344,7 @@ int main(int argc, char** argv)
         auto adense = util::geo::densify(a, 0.1);
         auto bdense = util::geo::densify(b, 0.1);
 
-        fd = util::geo::frechetDist(a, b, 0.1);
+        fd = util::geo::frechet_distance(a, b, 0.1);
 
         assert(fd == approx(1));
 
@@ -340,7 +356,7 @@ int main(int argc, char** argv)
         d.push_back(Point<double>(3, 1));
         d.push_back(Point<double>(4, 1));
 
-        fd = util::geo::frechetDist(c, d, 0.1);
+        fd = util::geo::frechet_distance(c, d, 0.1);
 
         assert(fd == approx(2));
 
@@ -354,7 +370,7 @@ int main(int argc, char** argv)
         h.push_back(Point<double>(3, 1));
         h.push_back(Point<double>(10, 1));
 
-        fd = util::geo::frechetDist(g, h, 0.1);
+        fd = util::geo::frechet_distance(g, h, 0.1);
 
         assert(fd == approx(1));
     }

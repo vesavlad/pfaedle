@@ -7,7 +7,7 @@
 
 #include <pfaedle/router/edge_payload.h>
 #include <pfaedle/router/node_payload.h>
-#include <pfaedle/trgraph/Graph.h>
+#include <pfaedle/trgraph/graph.h>
 #include <util/graph/DirGraph.h>
 
 

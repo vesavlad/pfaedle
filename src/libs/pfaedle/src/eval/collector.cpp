@@ -4,7 +4,7 @@
 
 #include "pfaedle/eval/collector.h"
 #include "cppgtfs/gtfs/Feed.h"
-#include "pfaedle/Def.h"
+#include "pfaedle/definitions.h"
 #include "pfaedle/eval/result.h"
 #include "util/geo/Geo.h"
 #include "util/geo/output/GeoJsonOutput.h"

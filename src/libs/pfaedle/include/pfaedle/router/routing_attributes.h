@@ -13,7 +13,7 @@ namespace pfaedle
 {
 namespace trgraph
 {
-struct TransitEdgeLine;
+struct transit_edge_line;
 }
 
 namespace router
@@ -29,7 +29,7 @@ public:
     {}
 
     // carfull: lower return value = higher similarity
-    double simi(const trgraph::TransitEdgeLine* line) const
+    double simi(const trgraph::transit_edge_line* line) const
     {
         auto i = simi_cache_.find(line);
         if (i != simi_cache_.end()) return i->second;
@@ -55,7 +55,7 @@ public:
     std::string to;
     std::string short_name;
 private:
-    mutable std::map<const trgraph::TransitEdgeLine*, double> simi_cache_;
+    mutable std::map<const trgraph::transit_edge_line*, double> simi_cache_;
 };
 
 inline bool operator==(const routing_attributes& a, const routing_attributes& b)

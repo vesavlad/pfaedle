@@ -3,12 +3,12 @@
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
 #include "pfaedle/osm/OsmBuilder.h"
-#include "pfaedle/Def.h"
+#include "pfaedle/definitions.h"
 #include "pfaedle/osm/BBoxIdx.h"
 #include "pfaedle/osm/Osm.h"
 #include "pfaedle/osm/OsmFilter.h"
 #include "pfaedle/osm/Restrictor.h"
-#include "pfaedle/trgraph/StatGroup.h"
+#include "pfaedle/trgraph/station_group.h"
 #include "util/Misc.h"
 
 #include <logging/logger.h>
@@ -23,29 +23,22 @@
 #include <vector>
 
 using ad::cppgtfs::gtfs::Stop;
-using pfaedle::osm::BlockSearch;
-using pfaedle::osm::EdgeGrid;
-using pfaedle::osm::EqSearch;
-using pfaedle::osm::NodeGrid;
-using pfaedle::osm::OsmBuilder;
-using pfaedle::osm::OsmNode;
-using pfaedle::osm::OsmRel;
-using pfaedle::osm::OsmWay;
-using pfaedle::trgraph::Component;
-using pfaedle::trgraph::Edge;
-using pfaedle::trgraph::EdgePayload;
-using pfaedle::trgraph::Graph;
-using pfaedle::trgraph::Node;
-using pfaedle::trgraph::NodePayload;
-using pfaedle::trgraph::Normalizer;
-using pfaedle::trgraph::StatGroup;
-using pfaedle::trgraph::StatInfo;
-using pfaedle::trgraph::TransitEdgeLine;
+using pfaedle::trgraph::component;
+using pfaedle::trgraph::edge;
+using pfaedle::trgraph::edge_payload;
+using pfaedle::trgraph::graph;
+using pfaedle::trgraph::node;
+using pfaedle::trgraph::node_payload;
+using pfaedle::trgraph::normalizer;
+using pfaedle::trgraph::station_info;
+using pfaedle::trgraph::transit_edge_line;
+using pfaedle::trgraph::transit_edge_line;
 using util::geo::webMercMeterDist;
 using util::geo::Point;
 
-
-bool EqSearch::operator()(const Node* cand, const StatInfo* si) const
+namespace pfaedle::osm
+{
+bool EqSearch::operator()(const node* cand, const station_info* si) const
 {
     if (orphanSnap && cand->pl().getSI() &&
         (!cand->pl().getSI()->getGroup() ||
@@ -62,7 +55,7 @@ OsmBuilder::OsmBuilder() = default;
 
 void OsmBuilder::read(const std::string& path,
                       const OsmReadOpts& opts,
-                      Graph& g,
+                      graph& g,
                       const BBoxIdx& bbox,
                       size_t gridSize,
                       router::feed_stops& fs,
@@ -125,7 +118,7 @@ void OsmBuilder::read(const std::string& path,
     }
 
     LOG(TRACE) << "OSM ID set lookups: " << osm::OsmIdSet::LOOKUPS
-                << ", file lookups: " << osm::OsmIdSet::FLOOKUPS;
+               << ", file lookups: " << osm::OsmIdSet::FLOOKUPS;
 
     LOG(TRACE) << "Applying edge track numbers...";
     writeEdgeTracks(e_tracks);
@@ -133,7 +126,7 @@ void OsmBuilder::read(const std::string& path,
 
     {
         LOG(TRACE) << "Fixing gaps...";
-        NodeGrid ng = buildNodeIdx(g, gridSize, bbox.getFullWebMercBox(), false);
+        trgraph::node_grid ng = buildNodeIdx(g, gridSize, bbox.getFullWebMercBox(), false);
         fixGaps(g, &ng);
     }
 
@@ -338,7 +331,7 @@ void OsmBuilder::readWriteRels(pugi::xml_document& i,
                                const OsmFilter& filter,
                                const AttrKeySet& keepAttrs)
 {
-    for(const auto& xmlrel : i.child("osm").children("relation"))
+    for (const auto& xmlrel : i.child("osm").children("relation"))
     {
         OsmRel rel;
         uint64_t keep_flags = 0;
@@ -367,16 +360,16 @@ void OsmBuilder::readWriteRels(pugi::xml_document& i,
         }
 
         // processing members
-        for(const auto& member: xmlrel.children("member"))
+        for (const auto& member : xmlrel.children("member"))
         {
             const auto& type = member.attribute("type").as_string();
-            if(strcmp(type, "node") == 0)
+            if (strcmp(type, "node") == 0)
             {
                 osmid id = member.attribute("ref").as_ullong();
                 rel.nodes.emplace_back(id);
                 rel.nodeRoles.emplace_back(member.attribute("role").as_string());
             }
-            if(strcmp(type, "way") == 0)
+            if (strcmp(type, "way") == 0)
             {
                 osmid id = member.attribute("ref").as_ullong();
                 rel.ways.emplace_back(id);
@@ -440,9 +433,8 @@ void OsmBuilder::readWriteRels(pugi::xml_document& i,
                 auto tag_child = relation_child.append_child("tag");
                 tag_child.append_attribute("k").set_value(kv.first.c_str());
                 tag_child.append_attribute("v").set_value(kv.second.c_str());
-//                        {"v", pfxml::file::decode(kv.second)}};
+                //                        {"v", pfxml::file::decode(kv.second)}};
             }
-
         }
     }
 }
@@ -454,7 +446,7 @@ void OsmBuilder::readWriteWays(pugi::xml_document& i,
                                const AttrKeySet& keepAttrs) const
 {
     NIdMultMap empty;
-    for(const auto & wayxml: i.child("osm").children())
+    for (const auto& wayxml : i.child("osm").children())
     {
         bool usable = false;
         OsmWay w;
@@ -501,12 +493,12 @@ void OsmBuilder::readWriteWays(pugi::xml_document& i,
 }
 
 
-NodePayload OsmBuilder::plFromGtfs(const Stop* s, const OsmReadOpts& ops)
+node_payload OsmBuilder::plFromGtfs(const Stop* s, const OsmReadOpts& ops)
 {
-    NodePayload ret(
+    node_payload ret(
             util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(s->getLat(), s->getLng()),
-            StatInfo(ops.statNormzer.norm(s->getName()),
-                     ops.trackNormzer.norm(s->getPlatformCode()), false));
+            station_info(ops.statNormzer.norm(s->getName()),
+                         ops.trackNormzer.norm(s->getPlatformCode()), false));
 
 #ifdef PFAEDLE_STATION_IDS
     // debug feature, store station id from GTFS
@@ -530,11 +522,11 @@ int OsmBuilder::filter_nodes(pugi::xml_document& xml,
                              const BBoxIdx& bbox) const
 {
 
-    for(const auto& node : xml.child("osm").children("node"))
+    for (const auto& node : xml.child("osm").children("node"))
     {
         osmid cur_id = 0;
 
-        double y = node.attribute("lat").as_double() ;
+        double y = node.attribute("lat").as_double();
         double x = node.attribute("lon").as_double();
 
         if (bbox.contains(Point(x, y)))
@@ -543,10 +535,10 @@ int OsmBuilder::filter_nodes(pugi::xml_document& xml,
             nodes.add(cur_id);
         }
 
-        if(cur_id == 0)
+        if (cur_id == 0)
             continue;
 
-        for(const auto& tag: node.children("tag"))
+        for (const auto& tag : node.children("tag"))
         {
             if (filter.nohup(tag.attribute("k").as_string(),
                              tag.attribute("v").as_string()))
@@ -607,26 +599,24 @@ void OsmBuilder::readEdges(pugi::xml_document& xml,
                            NIdMap& nodes,
                            const FlatRels& flat)
 {
-    for(const auto& wayxml: xml.child("osm").children("way"))
+    for (const auto& wayxml : xml.child("osm").children("way"))
     {
         OsmWay w;
         w.id = wayxml.attribute("id").as_ullong();
-        for(const auto& node: wayxml.children("nd"))
+        for (const auto& node : wayxml.children("nd"))
         {
             osmid nid = node.attribute("ref").as_ullong();
             w.nodes.push_back(nid);
-
         }
-        for(const auto& tag: wayxml.children("tag"))
+        for (const auto& tag : wayxml.children("tag"))
         {
             const auto& key = tag.attribute("k").as_string();
             const auto& val = tag.attribute("v").as_string();
             if (keepAttrs.count(key))
                 w.attrs[key] = val;
-
         }
 
-        if(keepWay(w, wayRels, filter, bBoxNodes, flat))
+        if (keepWay(w, wayRels, filter, bBoxNodes, flat))
         {
             ret.push_back(w.id);
             for (auto n : w.nodes)
@@ -639,7 +629,7 @@ void OsmBuilder::readEdges(pugi::xml_document& xml,
 
 
 void OsmBuilder::readEdges(pugi::xml_document& xml,
-                           Graph& g,
+                           graph& g,
                            const RelLst& rels,
                            const RelMap& wayRels,
                            const OsmFilter& filter,
@@ -654,7 +644,7 @@ void OsmBuilder::readEdges(pugi::xml_document& xml,
                            EdgTracks& eTracks,
                            const OsmReadOpts& opts)
 {
-    for(const auto& xmlway : xml.child("osm").children("way"))
+    for (const auto& xmlway : xml.child("osm").children("way"))
     {
         OsmWay w;
         w.id = xmlway.attribute("id").as_ullong();
@@ -675,8 +665,8 @@ void OsmBuilder::readEdges(pugi::xml_document& xml,
         }
         if (keepWay(w, wayRels, filter, bBoxNodes, fl))
         {
-            Node* last = nullptr;
-            std::vector<TransitEdgeLine*> lines;
+            node* last = nullptr;
+            std::vector<transit_edge_line*> lines;
             if (wayRels.count(w.id))
             {
                 lines = getLines(wayRels.find(w.id)->second, rels, opts);
@@ -692,7 +682,7 @@ void OsmBuilder::readEdges(pugi::xml_document& xml,
             osmid lastnid = 0;
             for (osmid nid : w.nodes)
             {
-                Node* n = nullptr;
+                node* n = nullptr;
                 if (noHupNodes.has(nid))
                 {
                     n = g.addNd();
@@ -710,7 +700,7 @@ void OsmBuilder::readEdges(pugi::xml_document& xml,
                 }
                 if (last)
                 {
-                    auto e = g.addEdg(last, n, EdgePayload());
+                    auto e = g.addEdg(last, n, edge_payload());
                     if (!e) continue;
 
                     processRestr(nid, w.id, rawRests, e, n, restor);
@@ -734,8 +724,8 @@ void OsmBuilder::readEdges(pugi::xml_document& xml,
 void OsmBuilder::processRestr(osmid nid,
                               osmid wid,
                               const Restrictions& rawRests,
-                              Edge* e,
-                              Node* n,
+                              edge* e,
+                              node* n,
                               Restrictor& restor) const
 {
     if (rawRests.pos.count(nid))
@@ -805,7 +795,7 @@ void OsmBuilder::readWriteNds(pugi::xml_document& i,
                               const FlatRels& f) const
 {
     NIdMultMap empt;
-    for (const auto & xmlnode: i.child("osm").children("node"))
+    for (const auto& xmlnode : i.child("osm").children("node"))
     {
         OsmNode nd;
         nd.lat = xmlnode.attribute("lat").as_double();
@@ -840,7 +830,7 @@ void OsmBuilder::readWriteNds(pugi::xml_document& i,
 
 
 void OsmBuilder::readNodes(pugi::xml_document& xml,
-                           Graph& g,
+                           graph& g,
                            const RelLst& rels,
                            const RelMap& nodeRels,
                            const OsmFilter& filter,
@@ -854,25 +844,25 @@ void OsmBuilder::readNodes(pugi::xml_document& xml,
 {
     StAttrGroups attr_groups;
 
-    for(const auto& xmlnode: xml.child("osm").children("node"))
+    for (const auto& xmlnode : xml.child("osm").children("node"))
     {
         OsmNode nd;
         nd.lat = xmlnode.attribute("lat").as_double();
         nd.lng = xmlnode.attribute("lon").as_double();
         nd.id = xmlnode.attribute("id").as_ullong();
 
-        for(const auto& tag: xmlnode.children("tag"))
+        for (const auto& tag : xmlnode.children("tag"))
         {
             const auto& key = tag.attribute("k").as_string();
             const auto& val = tag.attribute("v").as_string();
 
-            if(keepAttrs.count(key))
+            if (keepAttrs.count(key))
                 nd.attrs[key] = val;
         }
 
-        if(keepNode(nd, nodes, multNodes, nodeRels, bBoxNodes, filter, fl))
+        if (keepNode(nd, nodes, multNodes, nodeRels, bBoxNodes, filter, fl))
         {
-            Node* n = nullptr;
+            node* n = nullptr;
             auto pos = util::geo::latLngToWebMerc<double>(nd.lat, nd.lng);
             if (nodes.count(nd.id))
             {
@@ -917,7 +907,7 @@ void OsmBuilder::readNodes(pugi::xml_document& xml,
                 // these are nodes without any connected edges
                 if (filter.station(nd.attrs))
                 {
-                    auto tmp = g.addNd(NodePayload(pos));
+                    auto tmp = g.addNd(node_payload(pos));
                     auto si = getStatInfo(tmp, nd.id, pos, nd.attrs, &attr_groups, nodeRels, rels, opts);
 
                     if (si.has_value())
@@ -945,7 +935,7 @@ void OsmBuilder::readRels(pugi::xml_document& xml,
                           const AttrKeySet& keepAttrs,
                           Restrictions& rests) const
 {
-    for(const auto& xmlrel: xml.child("osm").children("relation"))
+    for (const auto& xmlrel : xml.child("osm").children("relation"))
     {
         OsmRel rel;
         uint64_t keep_flags = 0;
@@ -976,16 +966,16 @@ void OsmBuilder::readRels(pugi::xml_document& xml,
         }
 
         // processing members
-        for(const auto& member: xmlrel.children("member"))
+        for (const auto& member : xmlrel.children("member"))
         {
             const auto& type = member.attribute("type").as_string();
-            if(strcmp(type, "node") == 0)
+            if (strcmp(type, "node") == 0)
             {
                 osmid id = member.attribute("ref").as_ullong();
                 rel.nodes.emplace_back(id);
                 rel.nodeRoles.emplace_back(member.attribute("role").as_string());
             }
-            if(strcmp(type, "way") == 0)
+            if (strcmp(type, "way") == 0)
             {
                 osmid id = member.attribute("ref").as_ullong();
                 rel.ways.emplace_back(id);
@@ -1033,12 +1023,12 @@ void OsmBuilder::readRestr(const OsmRel& rel,
     {
         if (rel.wayRoles[i] == "from")
         {
-            if (from) return; // only one from member supported
+            if (from) return;// only one from member supported
             from = rel.ways[i];
         }
         if (rel.wayRoles[i] == "to")
         {
-            if (to) return; // only one to member supported
+            if (to) return;// only one to member supported
             to = rel.ways[i];
         }
     }
@@ -1066,7 +1056,7 @@ std::string OsmBuilder::getAttrByFirstMatch(const DeepAttrLst& rule, osmid id,
                                             const AttrMap& attrs,
                                             const RelMap& entRels,
                                             const RelLst& rels,
-                                            const Normalizer& normzer) const
+                                            const normalizer& normzer) const
 {
     std::string ret;
     for (const auto& s : rule)
@@ -1081,7 +1071,7 @@ std::string OsmBuilder::getAttrByFirstMatch(const DeepAttrLst& rule, osmid id,
 std::vector<std::string> OsmBuilder::getAttrMatchRanked(
         const DeepAttrLst& rule, osmid id, const AttrMap& attrs,
         const RelMap& entRels, const RelLst& rels,
-        const Normalizer& normzer) const
+        const normalizer& normzer) const
 {
     std::vector<std::string> ret;
     for (const auto& s : rule)
@@ -1127,12 +1117,12 @@ std::string OsmBuilder::getAttr(const DeepAttrRule& s, osmid id,
 }
 
 
-std::optional<StatInfo> OsmBuilder::getStatInfo(Node* node, osmid nid,
-                                           const POINT& pos, const AttrMap& m,
-                                           StAttrGroups* groups,
-                                           const RelMap& nodeRels,
-                                           const RelLst& rels,
-                                           const OsmReadOpts& ops) const
+std::optional<station_info> OsmBuilder::getStatInfo(node* node, osmid nid,
+                                                    const POINT& pos, const AttrMap& m,
+                                                    StAttrGroups* groups,
+                                                    const RelMap& nodeRels,
+                                                    const RelLst& rels,
+                                                    const OsmReadOpts& ops) const
 {
     std::string platform;
     std::vector<std::string> names;
@@ -1145,7 +1135,7 @@ std::optional<StatInfo> OsmBuilder::getStatInfo(Node* node, osmid nid,
     if (names.empty())
         return std::nullopt;
 
-    auto ret = StatInfo(names[0], platform, true);
+    auto ret = station_info(names[0], platform, true);
 
 #ifdef PFAEDLE_STATION_IDS
     ret.setId(getAttrByFirstMatch(ops.statAttrRules.idRule, nid, m, nodeRels,
@@ -1189,7 +1179,7 @@ std::optional<StatInfo> OsmBuilder::getStatInfo(Node* node, osmid nid,
             if (!rule_val.empty())
             {
                 // add new group
-                auto* g = new StatGroup();
+                auto* g = new trgraph::station_group();
                 if (node)
                     g->addNode(node);
                 ret.setGroup(g);
@@ -1203,19 +1193,19 @@ std::optional<StatInfo> OsmBuilder::getStatInfo(Node* node, osmid nid,
 }
 
 
-double OsmBuilder::dist(const Node* a, const Node* b)
+double OsmBuilder::dist(const node* a, const node* b)
 {
     return webMercMeterDist(*a->pl().getGeom(), *b->pl().getGeom());
 }
 
 
-double OsmBuilder::webMercDist(const Node* a, const Node* b)
+double OsmBuilder::webMercDist(const node* a, const node* b)
 {
     return webMercMeterDist(*a->pl().getGeom(), *b->pl().getGeom());
 }
 
 
-void OsmBuilder::writeGeoms(Graph& g)
+void OsmBuilder::writeGeoms(graph& g)
 {
     for (auto* n : *g.getNds())
     {
@@ -1229,7 +1219,7 @@ void OsmBuilder::writeGeoms(Graph& g)
 }
 
 
-void OsmBuilder::fixGaps(Graph& g, NodeGrid* ng)
+void OsmBuilder::fixGaps(graph& g, trgraph::node_grid* ng)
 {
     double meter = 1;
     for (auto* n : *g.getNds())
@@ -1237,7 +1227,7 @@ void OsmBuilder::fixGaps(Graph& g, NodeGrid* ng)
         if (n->getInDeg() + n->getOutDeg() == 1)
         {
             // get all nodes in distance
-            std::set<Node*> ret;
+            std::set<node*> ret;
             double distor = util::geo::webMercDistFactor(*n->pl().getGeom());
             ng->get(util::geo::pad(util::geo::getBoundingBox(*n->pl().getGeom()),
                                    meter / distor),
@@ -1251,7 +1241,7 @@ void OsmBuilder::fixGaps(Graph& g, NodeGrid* ng)
                     // the end point nb to n and delete nb
                     if (!nb->pl().getSI() && !n->pl().getSI())
                     {
-                        Node* otherN;
+                        node* otherN;
                         if (nb->getOutDeg())
                             otherN = (*nb->getAdjListOut().begin())->getOtherNd(nb);
                         else
@@ -1260,7 +1250,7 @@ void OsmBuilder::fixGaps(Graph& g, NodeGrid* ng)
                         l.push_back(*otherN->pl().getGeom());
                         l.push_back(*n->pl().getGeom());
 
-                        Edge* e;
+                        edge* e;
                         if (nb->getOutDeg())
                             e = g.addEdg(otherN, n, (*nb->getAdjListOut().begin())->pl());
                         else
@@ -1287,10 +1277,10 @@ void OsmBuilder::fixGaps(Graph& g, NodeGrid* ng)
 }
 
 
-EdgeGrid OsmBuilder::buildEdgeIdx(Graph& g, size_t size,
+trgraph::edge_grid OsmBuilder::buildEdgeIdx(graph& g, size_t size,
                                   const BOX& webMercBox)
 {
-    EdgeGrid ret(size, size, webMercBox, false);
+    trgraph::edge_grid ret(size, size, webMercBox, false);
     for (auto* n : *g.getNds())
     {
         for (auto* e : n->getAdjListOut())
@@ -1303,10 +1293,10 @@ EdgeGrid OsmBuilder::buildEdgeIdx(Graph& g, size_t size,
 }
 
 
-NodeGrid OsmBuilder::buildNodeIdx(Graph& g, size_t size, const BOX& webMercBox,
+trgraph::node_grid OsmBuilder::buildNodeIdx(graph& g, size_t size, const BOX& webMercBox,
                                   bool which)
 {
-    NodeGrid ret(size, size, webMercBox, false);
+    trgraph::node_grid ret(size, size, webMercBox, false);
     for (auto* n : *g.getNds())
     {
         if (!which && n->getInDeg() + n->getOutDeg() == 1)
@@ -1318,7 +1308,7 @@ NodeGrid OsmBuilder::buildNodeIdx(Graph& g, size_t size, const BOX& webMercBox,
 }
 
 
-Node* OsmBuilder::depthSearch(const Edge* e, const StatInfo* si, const POINT& p,
+node* OsmBuilder::depthSearch(const edge* e, const station_info* si, const POINT& p,
                               double maxD, int maxFullTurns, double minAngle,
                               const SearchFunc& sfunc)
 {
@@ -1345,8 +1335,8 @@ Node* OsmBuilder::depthSearch(const Edge* e, const StatInfo* si, const POINT& p,
 
         for (size_t i = 0; i < cur.node->getInDeg() + cur.node->getOutDeg(); i++)
         {
-            trgraph::Node* cand;
-            trgraph::Edge* edg;
+            trgraph::node* cand;
+            trgraph::edge* edg;
 
             if (i < cur.node->getInDeg())
             {
@@ -1394,8 +1384,8 @@ Node* OsmBuilder::depthSearch(const Edge* e, const StatInfo* si, const POINT& p,
 }
 
 
-bool OsmBuilder::isBlocked(const Edge* e,
-                           const StatInfo* si,
+bool OsmBuilder::isBlocked(const edge* e,
+                           const station_info* si,
                            const POINT& p,
                            double maxD,
                            int maxFullTurns,
@@ -1405,7 +1395,7 @@ bool OsmBuilder::isBlocked(const Edge* e,
 }
 
 
-Node* OsmBuilder::eqStatReach(const Edge* e, const StatInfo* si, const POINT& p,
+node* OsmBuilder::eqStatReach(const edge* e, const station_info* si, const POINT& p,
                               double maxD, int maxFullTurns, double minAngle,
                               bool orphanSnap)
 {
@@ -1414,10 +1404,10 @@ Node* OsmBuilder::eqStatReach(const Edge* e, const StatInfo* si, const POINT& p,
 }
 
 
-void OsmBuilder::getEdgCands(const POINT& geom, EdgeCandPQ& ret, EdgeGrid& eg, double d)
+void OsmBuilder::getEdgCands(const POINT& geom, EdgeCandPQ& ret, trgraph::edge_grid& eg, double d)
 {
     double distor = util::geo::webMercDistFactor(geom);
-    std::set<Edge*> neighs;
+    std::set<edge*> neighs;
     BOX box = util::geo::pad(util::geo::getBoundingBox(geom), d / distor);
     eg.get(box, &neighs);
 
@@ -1434,12 +1424,12 @@ void OsmBuilder::getEdgCands(const POINT& geom, EdgeCandPQ& ret, EdgeGrid& eg, d
 }
 
 
-std::set<Node*> OsmBuilder::getMatchingNds(const NodePayload& s, NodeGrid* ng,
+std::set<node*> OsmBuilder::getMatchingNds(const node_payload& s, trgraph::node_grid* ng,
                                            double d)
 {
-    std::set<Node*> ret;
+    std::set<node*> ret;
     double distor = util::geo::webMercDistFactor(*s.getGeom());
-    std::set<Node*> neighs;
+    std::set<node*> neighs;
     BOX box = util::geo::pad(util::geo::getBoundingBox(*s.getGeom()), d / distor);
     ng->get(box, &neighs);
 
@@ -1456,14 +1446,14 @@ std::set<Node*> OsmBuilder::getMatchingNds(const NodePayload& s, NodeGrid* ng,
 }
 
 
-Node* OsmBuilder::getMatchingNd(const NodePayload& s, NodeGrid& ng, double d)
+node* OsmBuilder::getMatchingNd(const node_payload& s, trgraph::node_grid& ng, double d)
 {
     double distor = util::geo::webMercDistFactor(*s.getGeom());
-    std::set<Node*> neighs;
+    std::set<node*> neighs;
     BOX box = util::geo::pad(util::geo::getBoundingBox(*s.getGeom()), d / distor);
     ng.get(box, &neighs);
 
-    Node* ret = nullptr;
+    node* ret = nullptr;
     double best_d = std::numeric_limits<double>::max();
 
     for (auto* n : neighs)
@@ -1483,10 +1473,10 @@ Node* OsmBuilder::getMatchingNd(const NodePayload& s, NodeGrid& ng, double d)
 }
 
 
-std::set<Node*> OsmBuilder::snapStation(Graph& g,
-                                        NodePayload& s,
-                                        EdgeGrid& eg,
-                                        NodeGrid& sng,
+std::set<node*> OsmBuilder::snapStation(graph& g,
+                                        node_payload& s,
+                                        trgraph::edge_grid& eg,
+                                        trgraph::node_grid& sng,
                                         const OsmReadOpts& opts,
                                         Restrictor& restor,
                                         bool surrHeur,
@@ -1494,7 +1484,7 @@ std::set<Node*> OsmBuilder::snapStation(Graph& g,
                                         double d)
 {
     assert(s.getSI());
-    std::set<Node*> ret;
+    std::set<node*> ret;
 
     EdgeCandPQ pq;
 
@@ -1504,7 +1494,7 @@ std::set<Node*> OsmBuilder::snapStation(Graph& g,
     {
         // no station found in the first round, try again with the nearest
         // surrounding station with matching name
-        const Node* best = getMatchingNd(s, sng, opts.maxSnapFallbackHeurDistance);
+        const node* best = getMatchingNd(s, sng, opts.maxSnapFallbackHeurDistance);
         if (best)
         {
             getEdgCands(*best->pl().getGeom(), pq, eg, d);
@@ -1524,7 +1514,7 @@ std::set<Node*> OsmBuilder::snapStation(Graph& g,
                                          *s.getGeom(),
                                          *e->getTo()->pl().getGeom());
 
-        Node* eq = nullptr;
+        node* eq = nullptr;
         if (!(eq = eqStatReach(e, s.getSI(), geom, 2 * d, 0,
                                opts.maxAngleSnapReach, orphSnap)))
         {
@@ -1562,7 +1552,7 @@ std::set<Node*> OsmBuilder::snapStation(Graph& g,
             else
             {
                 s.setGeom(geom);
-                Node* n = g.addNd(s);
+                node* n = g.addNd(s);
 
                 if (n->pl().getSI()->getGroup())
                     n->pl().getSI()->getGroup()->addNode(n);
@@ -1610,12 +1600,12 @@ std::set<Node*> OsmBuilder::snapStation(Graph& g,
 }
 
 
-StatGroup* OsmBuilder::groupStats(const router::node_set& s)
+trgraph::station_group* OsmBuilder::groupStats(const router::node_set& s)
 {
     if (s.empty())
         return nullptr;
     // reference group
-    auto* ret = new StatGroup();
+    auto* ret = new trgraph::station_group();
     bool used = false;
 
     for (auto* n : s)
@@ -1645,15 +1635,15 @@ StatGroup* OsmBuilder::groupStats(const router::node_set& s)
 }
 
 
-std::vector<TransitEdgeLine*> OsmBuilder::getLines(
+std::vector<transit_edge_line*> OsmBuilder::getLines(
         const std::vector<size_t>& edgeRels,
         const RelLst& rels,
         const OsmReadOpts& ops)
 {
-    std::vector<TransitEdgeLine*> ret;
+    std::vector<transit_edge_line*> ret;
     for (size_t rel_id : edgeRels)
     {
-        TransitEdgeLine* elp = nullptr;
+        transit_edge_line* elp = nullptr;
 
         if (_relLines.count(rel_id))
         {
@@ -1661,7 +1651,7 @@ std::vector<TransitEdgeLine*> OsmBuilder::getLines(
         }
         else
         {
-            TransitEdgeLine el;
+            transit_edge_line el;
 
             bool found = false;
             for (const auto& r : ops.relLinerules.sNameRule)
@@ -1671,7 +1661,7 @@ std::vector<TransitEdgeLine*> OsmBuilder::getLines(
                     if (rel_attr.first == r)
                     {
                         el.shortName = ops.lineNormzer.norm(rel_attr.second);
-                                //ops.lineNormzer.norm(pfxml::file::decode(relAttr.second));
+                        //ops.lineNormzer.norm(pfxml::file::decode(relAttr.second));
                         if (!el.shortName.empty())
                             found = true;
                     }
@@ -1687,7 +1677,7 @@ std::vector<TransitEdgeLine*> OsmBuilder::getLines(
                     if (rel_attr.first == r)
                     {
                         el.fromStr = ops.lineNormzer.norm(rel_attr.second);
-                                //ops.statNormzer.norm(pfxml::file::decode(relAttr.second));
+                        //ops.statNormzer.norm(pfxml::file::decode(relAttr.second));
                         if (!el.fromStr.empty())
                             found = true;
                     }
@@ -1704,7 +1694,7 @@ std::vector<TransitEdgeLine*> OsmBuilder::getLines(
                     if (rel_attr.first == r)
                     {
                         el.toStr = ops.lineNormzer.norm(rel_attr.second);
-                                //ops.statNormzer.norm(pfxml::file::decode(relAttr.second));
+                        //ops.statNormzer.norm(pfxml::file::decode(relAttr.second));
                         if (!el.toStr.empty()) found = true;
                     }
                 }
@@ -1721,7 +1711,7 @@ std::vector<TransitEdgeLine*> OsmBuilder::getLines(
             }
             else
             {
-                elp = new TransitEdgeLine(el);
+                elp = new transit_edge_line(el);
                 _lines[el] = elp;
                 _relLines[rel_id] = elp;
             }
@@ -1876,7 +1866,7 @@ void OsmBuilder::getKeptAttrKeys(const OsmReadOpts& opts,
 }
 
 
-void OsmBuilder::deleteOrphEdgs(Graph& g, const OsmReadOpts& opts)
+void OsmBuilder::deleteOrphEdgs(graph& g, const OsmReadOpts& opts)
 {
     const size_t rounds = 3;
     for (size_t c = 0; c < rounds; c++)
@@ -1906,7 +1896,7 @@ void OsmBuilder::deleteOrphEdgs(Graph& g, const OsmReadOpts& opts)
 }
 
 
-void OsmBuilder::deleteOrphNds(Graph& g)
+void OsmBuilder::deleteOrphNds(graph& g)
 {
     for (auto i = g.getNds()->begin(); i != g.getNds()->end();)
     {
@@ -1924,7 +1914,7 @@ void OsmBuilder::deleteOrphNds(Graph& g)
 }
 
 
-bool OsmBuilder::edgesSim(const Edge* a, const Edge* b)
+bool OsmBuilder::edgesSim(const edge* a, const edge* b)
 {
     if (static_cast<bool>(a->pl().oneWay()) ^ static_cast<bool>(b->pl().oneWay()))
         return false;
@@ -1947,9 +1937,9 @@ bool OsmBuilder::edgesSim(const Edge* a, const Edge* b)
 }
 
 
-const EdgePayload& OsmBuilder::mergeEdgePL(Edge* a, Edge* b)
+const edge_payload& OsmBuilder::mergeEdgePL(edge* a, edge* b)
 {
-    const Node* n = nullptr;
+    const node* n = nullptr;
     if (a->getFrom() == b->getFrom())
         n = a->getFrom();
     else if (a->getFrom() == b->getTo())
@@ -1994,14 +1984,14 @@ const EdgePayload& OsmBuilder::mergeEdgePL(Edge* a, Edge* b)
 }
 
 
-void OsmBuilder::collapseEdges(Graph& g)
+void OsmBuilder::collapseEdges(graph& g)
 {
     for (auto* n : *g.getNds())
     {
         if (n->getOutDeg() + n->getInDeg() != 2 || n->pl().getSI()) continue;
 
-        Edge* ea;
-        Edge* eb;
+        edge* ea;
+        edge* eb;
         if (n->getOutDeg() == 2)
         {
             ea = *n->getAdjListOut().begin();
@@ -2040,7 +2030,7 @@ void OsmBuilder::collapseEdges(Graph& g)
 }
 
 
-void OsmBuilder::simplifyGeoms(Graph& g)
+void OsmBuilder::simplifyGeoms(graph& g)
 {
     for (auto* n : *g.getNds())
     {
@@ -2052,16 +2042,16 @@ void OsmBuilder::simplifyGeoms(Graph& g)
 }
 
 
-uint32_t OsmBuilder::writeComps(Graph& g)
+uint32_t OsmBuilder::writeComps(graph& g)
 {
-    auto* comp = new Component{7};
+    auto* comp = new component{7};
     uint32_t comp_counter = 0;
 
     for (auto* n : *g.getNds())
     {
         if (!n->pl().getComp())
         {
-            using node_edge_pair = std::pair<Node*, Edge*>;
+            using node_edge_pair = std::pair<node*, edge*>;
             std::stack<node_edge_pair> stack({node_edge_pair(n, 0)});
             while (!stack.empty())
             {
@@ -2086,7 +2076,7 @@ uint32_t OsmBuilder::writeComps(Graph& g)
             }
 
             comp_counter++;
-            comp = new Component{7};
+            comp = new component{7};
         }
     }
 
@@ -2115,7 +2105,7 @@ void OsmBuilder::writeEdgeTracks(const EdgTracks& tracks)
 }
 
 
-void OsmBuilder::writeODirEdgs(Graph& g, Restrictor& restor)
+void OsmBuilder::writeODirEdgs(graph& g, Restrictor& restor)
 {
     for (auto* n : *g.getNds())
     {
@@ -2131,7 +2121,7 @@ void OsmBuilder::writeODirEdgs(Graph& g, Restrictor& restor)
 }
 
 
-void OsmBuilder::writeSelfEdgs(Graph& g)
+void OsmBuilder::writeSelfEdgs(graph& g)
 {
     for (auto* n : *g.getNds())
     {
@@ -2143,11 +2133,11 @@ void OsmBuilder::writeSelfEdgs(Graph& g)
 }
 
 
-bool OsmBuilder::keepFullTurn(const trgraph::Node* n, double ang)
+bool OsmBuilder::keepFullTurn(const trgraph::node* n, double ang)
 {
     if (n->getInDeg() + n->getOutDeg() != 1) return false;
 
-    const trgraph::Edge* e = nullptr;
+    const trgraph::edge* e = nullptr;
     if (n->getOutDeg())
         e = n->getAdjListOut().front();
     else
@@ -2157,8 +2147,8 @@ bool OsmBuilder::keepFullTurn(const trgraph::Node* n, double ang)
 
     if (other->getInDeg() + other->getOutDeg() == 3)
     {
-        const trgraph::Edge* a = nullptr;
-        const trgraph::Edge* b = nullptr;
+        const trgraph::edge* a = nullptr;
+        const trgraph::edge* b = nullptr;
         for (auto f : other->getAdjListIn())
         {
             if (f != e && !a)
@@ -2188,15 +2178,15 @@ bool OsmBuilder::keepFullTurn(const trgraph::Node* n, double ang)
 
 
 void OsmBuilder::snapStats(const OsmReadOpts& opts,
-                           Graph& g,
+                           graph& g,
                            const BBoxIdx& bbox,
                            size_t gridSize,
                            router::feed_stops& fs,
                            Restrictor& res,
                            const router::node_set& orphanStations)
 {
-    NodeGrid sng = buildNodeIdx(g, gridSize, bbox.getFullWebMercBox(), true);
-    EdgeGrid eg = buildEdgeIdx(g, gridSize, bbox.getFullWebMercBox());
+    trgraph::node_grid sng = buildNodeIdx(g, gridSize, bbox.getFullWebMercBox(), true);
+    trgraph::edge_grid eg = buildEdgeIdx(g, gridSize, bbox.getFullWebMercBox());
 
     LOG(DEBUG) << "Grid size of " << sng.getXWidth() << "x" << sng.getYHeight();
 
@@ -2205,7 +2195,7 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts,
         for (auto s : orphanStations)
         {
             POINT geom = *s->pl().getGeom();
-            NodePayload pl = s->pl();
+            node_payload pl = s->pl();
             pl.getSI()->setIsFromOsm(false);
             const auto& r = snapStation(g, pl, eg, sng, opts, res, false, false, d);
             groupStats(r);
@@ -2231,7 +2221,7 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts,
         {
             double d = opts.maxSnapDistances[i];
 
-            StatGroup* group = groupStats(
+            trgraph::station_group* group = groupStats(
                     snapStation(g, pl, eg, sng, opts, res,
                                 i == opts.maxSnapDistances.size() - 1, false, d));
 
@@ -2245,14 +2235,14 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts,
         if (!snapped)
         {
             LOG(TRACE) << "Could not snap station "
-                        << "(" << pl.getSI()->getName() << ")"
-                        << " (" << s.first->getLat() << "," << s.first->getLng()
-                        << ") in normal run, trying again later in orphan mode.";
+                       << "(" << pl.getSI()->getName() << ")"
+                       << " (" << s.first->getLat() << "," << s.first->getLng()
+                       << ") in normal run, trying again later in orphan mode.";
             if (!bbox.contains(*pl.getGeom()))
             {
                 LOG(TRACE) << "Note: '" << pl.getSI()->getName()
-                            << "' does not lie within the bounds for this graph and "
-                               "may be a stray station";
+                           << "' does not lie within the bounds for this graph and "
+                              "may be a stray station";
             }
             notSnapped.push_back(s.first);
         }
@@ -2260,9 +2250,9 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts,
 
     if (!notSnapped.empty())
         LOG(TRACE) << notSnapped.size()
-                    << " stations could not be snapped in "
-                       "normal run, trying again in orphan "
-                       "mode.";
+                   << " stations could not be snapped in "
+                      "normal run, trying again in orphan "
+                      "mode.";
 
     // try again, but aggressively snap to orphan OSM stations which have
     // not been assigned to any GTFS stop yet
@@ -2274,7 +2264,7 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts,
         {
             double d = opts.maxSnapDistances[i];
 
-            StatGroup* group = groupStats(
+            trgraph::station_group* group = groupStats(
                     snapStation(g, pl, eg, sng, opts, res,
                                 i == opts.maxSnapDistances.size() - 1, true, d));
 
@@ -2297,7 +2287,7 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts,
             // finally give up
 
             // add a group with only this stop in it
-            auto* dummy_group = new StatGroup();
+            auto* dummy_group = new trgraph::station_group();
             auto* dummy_node = g.addNd(pl);
 
             dummy_node->pl().getSI()->setGroup(dummy_group);
@@ -2307,11 +2297,11 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts,
             if (!bbox.contains(*pl.getGeom()))
             {
                 LOG(TRACE) << "Could not snap station "
-                            << "(" << pl.getSI()->getName() << ")"
-                            << " (" << s->getLat() << "," << s->getLng() << ")";
+                           << "(" << pl.getSI()->getName() << ")"
+                           << " (" << s->getLat() << "," << s->getLng() << ")";
                 LOG(TRACE) << "Note: '" << pl.getSI()->getName()
-                            << "' does not lie within the bounds for this graph and "
-                               "may be a stray station";
+                           << "' does not lie within the bounds for this graph and "
+                              "may be a stray station";
             }
             else
             {
@@ -2322,4 +2312,5 @@ void OsmBuilder::snapStats(const OsmReadOpts& opts,
             }
         }
     }
+}
 }

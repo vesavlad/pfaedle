@@ -1,6 +1,5 @@
-include_directories(
-	${TRANSITMAP_INCLUDE_DIR}
-)
+add_executable(util_test TestMain.cpp)
+target_link_libraries(util_test pfaedle-util)
+# tests
 
-add_executable(utilTest TestMain.cpp)
-target_link_libraries(utilTest util)
+add_test("util_test" util_test)

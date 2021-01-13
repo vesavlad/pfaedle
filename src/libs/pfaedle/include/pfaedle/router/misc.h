@@ -6,10 +6,10 @@
 #define PFAEDLE_ROUTER_MISC_H_
 
 #include <cppgtfs/gtfs/Feed.h>
-#include <cppgtfs/gtfs/Stop.h>
 #include <cppgtfs/gtfs/Route.h>
+#include <cppgtfs/gtfs/Stop.h>
 #include <pfaedle/gtfs/Feed.h>
-#include <pfaedle/trgraph/Graph.h>
+#include <pfaedle/trgraph/graph.h>
 #include <util/geo/Point.h>
 
 #include <set>
@@ -22,13 +22,13 @@ namespace pfaedle::router
 
 struct node_candidate
 {
-    trgraph::Node* nd;
+    trgraph::node* nd;
     double pen;
 };
 
 struct edge_candidate
 {
-    trgraph::Edge* e;
+    trgraph::edge* e;
     double pen;
 };
 
@@ -150,9 +150,9 @@ inline bool angSmaller(const util::geo::Point<F>& f,
     return false;
 }
 
-using node_set = std::set<trgraph::Node*>;
-using edge_set = std::set<trgraph::Edge*>;
-using feed_stops = std::unordered_map<const ad::cppgtfs::gtfs::Stop*, trgraph::Node*>;
+using node_set = std::set<trgraph::node*>;
+using edge_set = std::set<trgraph::edge*>;
+using feed_stops = std::unordered_map<const ad::cppgtfs::gtfs::Stop*, trgraph::node*>;
 
 using node_candidate_group = std::vector<node_candidate>;
 using node_candidate_route = std::vector<node_candidate_group>;
@@ -160,14 +160,14 @@ using node_candidate_route = std::vector<node_candidate_group>;
 using edge_candidate_group = std::vector<edge_candidate>;
 using edge_candidate_route = std::vector<edge_candidate_group>;
 
-using edge_list = std::vector<trgraph::Edge*>;
-using node_list = std::vector<trgraph::Node*>;
+using edge_list = std::vector<trgraph::edge*>;
+using node_list = std::vector<trgraph::node*>;
 
 struct edge_list_hop
 {
     edge_list edges;
-    const trgraph::Node* start;
-    const trgraph::Node* end;
+    const trgraph::node* start;
+    const trgraph::node* end;
 };
 
 using edge_list_hops = std::vector<edge_list_hop>;

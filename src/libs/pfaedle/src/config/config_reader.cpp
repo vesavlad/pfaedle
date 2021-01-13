@@ -3,8 +3,8 @@
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
 #include "pfaedle/config/config_reader.h"
-#include "pfaedle/Def.h"
 #include "pfaedle/config.h"
+#include "pfaedle/definitions.h"
 #include "util/String.h"
 
 #include <logging/logger.h>

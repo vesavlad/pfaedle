@@ -3,7 +3,7 @@
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
 #include "pfaedle/router/edge_payload.h"
-#include "pfaedle/Def.h"
+#include "pfaedle/definitions.h"
 #include "util/String.h"
 
 namespace pfaedle::router
@@ -24,12 +24,12 @@ const POINT& edge_payload::backHop() const
     return _edges.front()->pl().backHop();
 }
 
-const trgraph::Node* edge_payload::backNode() const
+const trgraph::node* edge_payload::backNode() const
 {
     return _end;
 }
 
-const trgraph::Node* edge_payload::frontNode() const
+const trgraph::node* edge_payload::frontNode() const
 {
     return _start;
 }
@@ -39,7 +39,7 @@ const LINE* edge_payload::getGeom() const
     if (_edges.empty()) return nullptr;
     if (_geom.empty())
     {
-        const trgraph::Node* l = _start;
+        const trgraph::node* l = _start;
         for (auto i = _edges.rbegin(); i != _edges.rend(); i++)
         {
             const auto e = *i;
@@ -60,13 +60,13 @@ const LINE* edge_payload::getGeom() const
     return &_geom;
 }
 
-void edge_payload::setStartNode(const trgraph::Node* s) { _start = s; }
+void edge_payload::setStartNode(const trgraph::node* s) { _start = s; }
 
-void edge_payload::setEndNode(const trgraph::Node* e) { _end = e; }
+void edge_payload::setEndNode(const trgraph::node* e) { _end = e; }
 
-void edge_payload::setStartEdge(const trgraph::Edge* s) { _startE = s; }
+void edge_payload::setStartEdge(const trgraph::edge* s) { _startE = s; }
 
-void edge_payload::setEndEdge(const trgraph::Edge* e) { _endE = e; }
+void edge_payload::setEndEdge(const trgraph::edge* e) { _endE = e; }
 
 const edge_cost& edge_payload::getCost() const { return _cost; }
 

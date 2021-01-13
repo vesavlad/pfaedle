@@ -5,8 +5,8 @@
 #ifndef PFAEDLE_TRGRAPH_GRAPH_H_
 #define PFAEDLE_TRGRAPH_GRAPH_H_
 
-#include "pfaedle/trgraph/EdgePayload.h"
-#include "pfaedle/trgraph/NodePayload.h"
+#include "pfaedle/trgraph/edge_payload.h"
+#include "pfaedle/trgraph/node_payload.h"
 #include "util/geo/Grid.h"
 #include "util/graph/DirGraph.h"
 #include "util/graph/UndirGraph.h"
@@ -16,11 +16,11 @@ namespace pfaedle::trgraph
 /*
  * A graph for physical transit networks
  */
-using Edge = util::graph::Edge<NodePayload, EdgePayload>;
-using Node = util::graph::Node<NodePayload, EdgePayload>;
-using Graph = util::graph::DirGraph<NodePayload, EdgePayload>;
-using NodeGrid = util::geo::Grid<Node*, util::geo::Point, PFAEDLE_PRECISION>;
-using EdgeGrid = util::geo::Grid<Edge*, util::geo::Line, PFAEDLE_PRECISION>;
+using edge = util::graph::Edge<node_payload, edge_payload>;
+using node = util::graph::Node<node_payload, edge_payload>;
+using graph = util::graph::DirGraph<node_payload, edge_payload>;
+using node_grid = util::geo::Grid<node*, util::geo::Point, PFAEDLE_PRECISION>;
+using edge_grid = util::geo::Grid<edge*, util::geo::Line, PFAEDLE_PRECISION>;
 
 }  // namespace pfaedle
 

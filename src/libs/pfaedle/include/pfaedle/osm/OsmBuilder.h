@@ -6,17 +6,17 @@
 #define PFAEDLE_OSM_OSMBUILDER_H_
 
 #include "cppgtfs/gtfs/Feed.h"
-#include "pfaedle/Def.h"
+#include "pfaedle/definitions.h"
 #include "pfaedle/osm/BBoxIdx.h"
 #include "pfaedle/osm/OsmFilter.h"
 #include "pfaedle/osm/OsmIdSet.h"
 #include "pfaedle/osm/OsmReadOpts.h"
 #include "pfaedle/osm/Restrictor.h"
 #include "pfaedle/router/router.h"
-#include "pfaedle/trgraph/Graph.h"
-#include "pfaedle/trgraph/NodePayload.h"
-#include "pfaedle/trgraph/Normalizer.h"
-#include "pfaedle/trgraph/StatInfo.h"
+#include "pfaedle/trgraph/graph.h"
+#include "pfaedle/trgraph/node_payload.h"
+#include "pfaedle/trgraph/normalizer.h"
+#include "pfaedle/trgraph/station_info.h"
 #include "util/geo/Geo.h"
 #include "util/xml/XmlWriter.h"
 
@@ -38,32 +38,19 @@ class xml_node;
 namespace pfaedle::osm
 {
 
-using pfaedle::trgraph::EdgeGrid;
-using pfaedle::trgraph::NodeGrid;
-using pfaedle::trgraph::Normalizer;
-using pfaedle::trgraph::Graph;
-using pfaedle::trgraph::Node;
-using pfaedle::trgraph::NodePayload;
-using pfaedle::trgraph::Edge;
-using pfaedle::trgraph::EdgePayload;
-using pfaedle::trgraph::TransitEdgeLine;
-using pfaedle::trgraph::StatInfo;
-using pfaedle::trgraph::StatGroup;
-using pfaedle::trgraph::Component;
-using pfaedle::trgraph::StatInfo;
 using ad::cppgtfs::gtfs::Stop;
 
 struct NodeCand
 {
     double dist;
-    Node* node;
-    const Edge* fromEdge;
+    trgraph::node* node;
+    const trgraph::edge* fromEdge;
     int fullTurns;
 };
 
 struct SearchFunc
 {
-    virtual bool operator()(const Node* n, const StatInfo* si) const = 0;
+    virtual bool operator()(const trgraph::node* n, const trgraph::station_info* si) const = 0;
 };
 
 struct EqSearch : public SearchFunc
@@ -72,12 +59,12 @@ struct EqSearch : public SearchFunc
         orphanSnap(orphan_snap) {}
     double minSimi = 0.9;
     bool orphanSnap;
-    bool operator()(const Node* cand, const StatInfo* si) const override;
+    bool operator()(const trgraph::node* cand, const trgraph::station_info* si) const override;
 };
 
 struct BlockSearch : public SearchFunc
 {
-    bool operator()(const Node* n, const StatInfo* si) const override
+    bool operator()(const trgraph::node* n, const trgraph::station_info* si) const override
     {
         if (n->pl().getSI() && n->pl().getSI()->simi(si) < 0.5) return true;
         return n->pl().isBlocker();
@@ -103,7 +90,7 @@ public:
     // inside the bounding box will be read
     void read(const std::string& path,
               const OsmReadOpts& opts,
-              Graph& g,
+              trgraph::graph& g,
               const BBoxIdx& box,
               size_t gridSize,
               router::feed_stops& fs,
@@ -141,7 +128,7 @@ private:
                    const OsmFilter& filter) const;
 
     void readNodes(pugi::xml_document& f,
-                   Graph& g,
+                   trgraph::graph& g,
                    const RelLst& rels,
                    const RelMap& nodeRels,
                    const OsmFilter& filter,
@@ -175,7 +162,7 @@ private:
                        const AttrKeySet& keepAttrs);
 
     void readEdges(pugi::xml_document& xml,
-                   Graph& g, const RelLst& rels,
+                   trgraph::graph& g, const RelLst& rels,
                    const RelMap& wayRels,
                    const OsmFilter& filter,
                    const OsmIdSet& bBoxNodes,
@@ -207,96 +194,96 @@ private:
                   const OsmIdSet& bBoxNodes, const OsmFilter& filter,
                   const FlatRels& fl) const;
 
-    std::optional<StatInfo> getStatInfo(Node* node, osmid nid, const POINT& pos,
+    std::optional<trgraph::station_info> getStatInfo(trgraph::node* node, osmid nid, const POINT& pos,
                                    const AttrMap& m, StAttrGroups* groups,
                                    const RelMap& nodeRels, const RelLst& rels,
                                    const OsmReadOpts& ops) const;
 
     static void snapStats(const OsmReadOpts& opts,
-                          Graph& g,
+                          trgraph::graph& g,
                           const BBoxIdx& bbox,
                           size_t gridSize,
                           router::feed_stops& fs,
                           Restrictor& res,
                           const router::node_set& orphanStations);
-    static void writeGeoms(Graph& g);
-    static void deleteOrphNds(Graph& g);
-    static void deleteOrphEdgs(Graph& g, const OsmReadOpts& opts);
-    static double dist(const Node* a, const Node* b);
-    static double webMercDist(const Node* a, const Node* b);
+    static void writeGeoms(trgraph::graph& g);
+    static void deleteOrphNds(trgraph::graph& g);
+    static void deleteOrphEdgs(trgraph::graph& g, const OsmReadOpts& opts);
+    static double dist(const trgraph::node* a, const trgraph::node* b);
+    static double webMercDist(const trgraph::node* a, const trgraph::node* b);
 
-    static NodeGrid buildNodeIdx(Graph& g, size_t size, const BOX& webMercBox,
+    static trgraph::node_grid buildNodeIdx(trgraph::graph& g, size_t size, const BOX& webMercBox,
                                  bool which);
 
-    static EdgeGrid buildEdgeIdx(Graph& g, size_t size, const BOX& webMercBox);
+    static trgraph::edge_grid buildEdgeIdx(trgraph::graph& g, size_t size, const BOX& webMercBox);
 
-    static void fixGaps(Graph& g, NodeGrid* ng);
-    static void collapseEdges(Graph& g);
-    static void writeODirEdgs(Graph& g, Restrictor& restor);
-    static void writeSelfEdgs(Graph& g);
+    static void fixGaps(trgraph::graph& g, trgraph::node_grid* ng);
+    static void collapseEdges(trgraph::graph& g);
+    static void writeODirEdgs(trgraph::graph& g, Restrictor& restor);
+    static void writeSelfEdgs(trgraph::graph& g);
     static void writeEdgeTracks(const EdgTracks& tracks);
-    static void simplifyGeoms(Graph& g);
-    static uint32_t writeComps(Graph& g);
-    static bool edgesSim(const Edge* a, const Edge* b);
-    static const EdgePayload& mergeEdgePL(Edge* a, Edge* b);
-    static void getEdgCands(const POINT& s, EdgeCandPQ& ret, EdgeGrid& eg, double d);
+    static void simplifyGeoms(trgraph::graph& g);
+    static uint32_t writeComps(trgraph::graph& g);
+    static bool edgesSim(const trgraph::edge* a, const trgraph::edge* b);
+    static const trgraph::edge_payload& mergeEdgePL(trgraph::edge* a, trgraph::edge* b);
+    static void getEdgCands(const POINT& s, EdgeCandPQ& ret, trgraph::edge_grid& eg, double d);
 
-    static std::set<Node*> getMatchingNds(const NodePayload& s, NodeGrid* ng,
+    static std::set<trgraph::node*> getMatchingNds(const trgraph::node_payload& s, trgraph::node_grid* ng,
                                           double d);
 
-    static Node* getMatchingNd(const NodePayload& s, NodeGrid& ng, double d);
+    static trgraph::node* getMatchingNd(const trgraph::node_payload& s, trgraph::node_grid& ng, double d);
 
-    static router::node_set snapStation(Graph& g, NodePayload& s, EdgeGrid& eg, NodeGrid& sng,
+    static router::node_set snapStation(trgraph::graph& g, trgraph::node_payload& s, trgraph::edge_grid& eg, trgraph::node_grid& sng,
                                const OsmReadOpts& opts, Restrictor& restor,
                                bool surHeur, bool orphSnap, double maxD);
 
     // Checks if from the edge e, a station similar to si can be reach with less
     // than maxD distance and less or equal to "maxFullTurns" full turns. If
     // such a station exists, it is returned. If not, 0 is returned.
-    static Node* eqStatReach(const Edge* e, const StatInfo* si, const POINT& p,
+    static trgraph::node* eqStatReach(const trgraph::edge* e, const trgraph::station_info* si, const POINT& p,
                              double maxD, int maxFullTurns, double maxAng,
                              bool orph);
 
-    static Node* depthSearch(const Edge* e, const StatInfo* si, const POINT& p,
+    static trgraph::node* depthSearch(const trgraph::edge* e, const trgraph::station_info* si, const POINT& p,
                              double maxD, int maxFullTurns, double minAngle,
                              const SearchFunc& sfunc);
 
-    static bool isBlocked(const Edge* e, const StatInfo* si, const POINT& p,
+    static bool isBlocked(const trgraph::edge* e, const trgraph::station_info* si, const POINT& p,
                           double maxD, int maxFullTurns, double minAngle);
-    static bool keepFullTurn(const trgraph::Node* n, double ang);
+    static bool keepFullTurn(const trgraph::node* n, double ang);
 
-    static StatGroup* groupStats(const router::node_set& s);
+    static trgraph::station_group* groupStats(const router::node_set& s);
 
-    static NodePayload plFromGtfs(const Stop* s, const OsmReadOpts& ops);
+    static trgraph::node_payload plFromGtfs(const Stop* s, const OsmReadOpts& ops);
 
-    std::vector<TransitEdgeLine*> getLines(const std::vector<size_t>& edgeRels,
+    std::vector<trgraph::transit_edge_line*> getLines(const std::vector<size_t>& edgeRels,
                                            const RelLst& rels,
                                            const OsmReadOpts& ops);
 
     void getKeptAttrKeys(const OsmReadOpts& opts, AttrKeySet sets[3]) const;
 
 
-    void processRestr(osmid nid, osmid wid, const Restrictions& rawRests, Edge* e,
-                      Node* n, Restrictor& restor) const;
+    void processRestr(osmid nid, osmid wid, const Restrictions& rawRests, trgraph::edge* e,
+                      trgraph::node* n, Restrictor& restor) const;
 
     std::string getAttrByFirstMatch(const DeepAttrLst& rule, osmid id,
                                     const AttrMap& attrs, const RelMap& entRels,
                                     const RelLst& rels,
-                                    const Normalizer& norm) const;
+                                    const trgraph::normalizer& norm) const;
 
     std::vector<std::string> getAttrMatchRanked(const DeepAttrLst& rule, osmid id,
                                                 const AttrMap& attrs,
                                                 const RelMap& entRels,
                                                 const RelLst& rels,
-                                                const Normalizer& norm) const;
+                                                const trgraph::normalizer& norm) const;
 
     std::string getAttr(const DeepAttrRule& s, osmid id, const AttrMap& attrs,
                         const RelMap& entRels, const RelLst& rels) const;
 
     bool relKeep(osmid id, const RelMap& rels, const FlatRels& fl) const;
 
-    std::map<TransitEdgeLine, TransitEdgeLine*> _lines;
-    std::map<size_t, TransitEdgeLine*> _relLines;
+    std::map<trgraph::transit_edge_line, trgraph::transit_edge_line*> _lines;
+    std::map<size_t, trgraph::transit_edge_line*> _relLines;
 };
 }  // namespace pfaedle::osm
 #endif  // PFAEDLE_OSM_OSMBUILDER_H_

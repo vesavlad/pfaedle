@@ -10,13 +10,13 @@
 #endif
 
 #include "cppgtfs/gtfs/Feed.h"
-#include "pfaedle/Def.h"
+#include "pfaedle/definitions.h"
 #include "pfaedle/eval/collector.h"
 #include "pfaedle/gtfs/Feed.h"
 #include "pfaedle/gtfs/StopTime.h"
 #include "pfaedle/osm/OsmBuilder.h"
 #include "pfaedle/router/shape_builder.h"
-#include "pfaedle/trgraph/StatGroup.h"
+#include "pfaedle/trgraph/station_group.h"
 #include "util/geo/Geo.h"
 #include "util/geo/output/GeoGraphJsonOutput.h"
 #include "util/geo/output/GeoJsonOutput.h"
@@ -45,6 +45,8 @@ using util::geo::latLngToWebMerc;
 using util::geo::webMercMeterDist;
 using util::geo::webMercToLatLng;
 using util::geo::output::GeoGraphJsonOutput;
+using util::graph::Dijkstra;
+using util::graph::EDijkstra;
 
 namespace pfaedle::router
 {
@@ -53,7 +55,7 @@ shape_builder::shape_builder(pfaedle::gtfs::Feed& feed,
                            MOTs mots,
                            const config::mot_config& motCfg,
                            eval::collector& ecoll,
-                           trgraph::Graph& g,
+                           trgraph::graph& g,
                            feed_stops& stops,
                            osm::Restrictor& restr,
                            const config::config& cfg) :
@@ -90,7 +92,7 @@ LINE shape_builder::get_shape_line(const node_candidate_route& ncr,
         LINE l;
         for (const auto& hop : res)
         {
-            const trgraph::Node* last = hop.start;
+            const trgraph::node* last = hop.start;
             if (hop.edges.empty())
             {
                 l.push_back(*hop.start->pl().getGeom());
@@ -340,7 +342,7 @@ ad::cppgtfs::gtfs::Shape shape_builder::get_gtfs_shape(
     POINT last(0, 0);
     for (const auto& hop : shp.hops)
     {
-        const trgraph::Node* l = hop.start;
+        const trgraph::node* l = hop.start;
         if (hop.edges.empty())
         {
             POINT ll = webMercToLatLng<PFAEDLE_PRECISION>(
@@ -637,7 +639,7 @@ bool shape_builder::routingEqual(Trip& a, Trip& b)
     return true;
 }
 
-const pfaedle::trgraph::Graph& shape_builder::get_graph() const { return _g; }
+const pfaedle::trgraph::graph& shape_builder::get_graph() const { return _g; }
 
 void shape_builder::write_transit_graph(const pfaedle::router::shape& shp, transit_graph_edges& edgs,
                                      const cluster& cluster) const
@@ -655,7 +657,7 @@ void shape_builder::write_transit_graph(const pfaedle::router::shape& shp, trans
 void shape_builder::build_transit_graph(transit_graph_edges& edgs,
                                 pfaedle::netgraph::graph& ng) const
 {
-    std::unordered_map<trgraph::Node*, pfaedle::netgraph::node*> nodes;
+    std::unordered_map<trgraph::node*, pfaedle::netgraph::node*> nodes;
 
     for (const auto& ep : edgs)
     {

@@ -18,4 +18,4 @@ else()
             PRIVATE logging)
 endif( ZLIB_FOUND )
 
-#add_subdirectory(tests)
+add_subdirectory(tests)

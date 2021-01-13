@@ -5,7 +5,7 @@
 #ifndef PFAEDLE_TRGRAPH_EDGEPL_H_
 #define PFAEDLE_TRGRAPH_EDGEPL_H_
 
-#include "pfaedle/Def.h"
+#include "pfaedle/definitions.h"
 #include "pfaedle/router/comp.h"
 #include "util/geo/Geo.h"
 #include "util/geo/GeoGraph.h"
@@ -20,20 +20,20 @@ namespace pfaedle::trgraph
 /*
  * A line occuring on an edge
  */
-struct TransitEdgeLine
+struct transit_edge_line
 {
     std::string fromStr;
     std::string toStr;
     std::string shortName;
 };
 
-inline bool operator==(const TransitEdgeLine& a, const TransitEdgeLine& b)
+inline bool operator==(const transit_edge_line& a, const transit_edge_line& b)
 {
     return a.fromStr == b.fromStr && a.toStr == b.toStr &&
            a.shortName == b.shortName;
 }
 
-inline bool operator<(const TransitEdgeLine& a, const TransitEdgeLine& b)
+inline bool operator<(const transit_edge_line& a, const transit_edge_line& b)
 {
     return a.fromStr < b.fromStr ||
            (a.fromStr == b.fromStr && a.toStr < b.toStr) ||
@@ -44,13 +44,13 @@ inline bool operator<(const TransitEdgeLine& a, const TransitEdgeLine& b)
 /*
  * An edge payload class for the transit graph.
  */
-class EdgePayload
+class edge_payload
 {
 public:
-    EdgePayload();
-    ~EdgePayload();
-    EdgePayload(const EdgePayload& pl);
-    EdgePayload(const EdgePayload& pl, bool geoFlat);
+    edge_payload();
+    ~edge_payload();
+    edge_payload(const edge_payload& pl);
+    edge_payload(const edge_payload& pl, bool geoFlat);
 
     // Return the geometry of this edge.
     const LINE* getGeom() const;
@@ -95,13 +95,13 @@ public:
     uint8_t oneWay() const;
 
     // Add a TransitedgeLine to this payload's edge
-    void addLine(const TransitEdgeLine* l);
+    void addLine(const transit_edge_line* l);
 
     // Add multiple TransitedgeLine objects to this payload's edge
-    void addLines(const std::vector<TransitEdgeLine*>& l);
+    void addLines(const std::vector<transit_edge_line*>& l);
 
     // Return the TransitEdgeLines stored for this payload
-    const std::vector<const TransitEdgeLine*>& getLines() const;
+    const std::vector<const transit_edge_line*>& getLines() const;
 
     // Returns the last hop of the payload - this is the (n-2)th point in
     // the payload geometry of length n > 1
@@ -112,7 +112,7 @@ public:
     const POINT& frontHop() const;
 
     // Obtain an exact copy of this edge, but in reverse.
-    EdgePayload revCopy() const;
+    edge_payload revCopy() const;
 
 private:
     float _length;
@@ -123,12 +123,12 @@ private:
 
     LINE* _l;
 
-    std::vector<const TransitEdgeLine*> _lines;
+    std::vector<const transit_edge_line*> _lines;
 
-    static void unRefTLine(const TransitEdgeLine* l);
+    static void unRefTLine(const transit_edge_line* l);
 
     static std::map<LINE*, size_t> _flines;
-    static std::map<const TransitEdgeLine*, size_t> _tlines;
+    static std::map<const transit_edge_line*, size_t> _tlines;
 };
 }  // namespace pfaedle
 

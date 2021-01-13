@@ -6,7 +6,7 @@
 #define PFAEDLE_EVAL_COLLECTOR_H_
 
 #include "cppgtfs/gtfs/Feed.h"
-#include "pfaedle/Def.h"
+#include "pfaedle/definitions.h"
 #include "pfaedle/eval/result.h"
 #include "pfaedle/gtfs/Feed.h"
 #include "util/geo/Geo.h"
