@@ -7,8 +7,8 @@
 
 #include "cppgtfs/gtfs/Feed.h"
 #include "pfaedle/Def.h"
-#include "pfaedle/config/MotConfig.h"
-#include "pfaedle/config/PfaedleConfig.h"
+#include "pfaedle/config/config.h"
+#include "pfaedle/config/mot_config.h"
 #include "pfaedle/eval/Collector.h"
 #include "pfaedle/gtfs/Feed.h"
 #include "pfaedle/netgraph/Graph.h"
@@ -50,12 +50,12 @@ public:
     ShapeBuilder(pfaedle::gtfs::Feed& feed,
                  ad::cppgtfs::gtfs::Feed& evalFeed,
                  MOTs mots,
-                 const config::MotConfig& motCfg,
+                 const config::mot_config& motCfg,
                  eval::Collector& ecoll,
                  trgraph::Graph& g,
                  router::FeedStops& stops,
                  osm::Restrictor& restr,
-                 const config::Config& cfg);
+                 const config::config& cfg);
 
     void shape(pfaedle::netgraph::Graph& ng);
 
@@ -113,9 +113,9 @@ private:
     pfaedle::gtfs::Feed& _feed;
     ad::cppgtfs::gtfs::Feed& _evalFeed;
     MOTs _mots;
-    const config::MotConfig& _motCfg;
+    const config::mot_config& _motCfg;
     eval::Collector& _ecoll;
-    const config::Config& _cfg;
+    const config::config& _cfg;
     trgraph::Graph& _g;
     router::Router _crouter;
 

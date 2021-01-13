@@ -37,7 +37,7 @@ std::string get_file_name_mot_str(const pfaedle::router::MOTs& mots)
     return mot_str;
 }
 
-std::vector<std::string> get_cfg_paths(const pfaedle::config::Config& cfg)
+std::vector<std::string> get_cfg_paths(const pfaedle::config::config& cfg)
 {
     if (!cfg.configPaths.empty())
         return cfg.configPaths;
@@ -95,9 +95,9 @@ std::vector<std::string> get_cfg_paths(const pfaedle::config::Config& cfg)
     return ret;
 }
 
-bool read_config(pfaedle::config::Config& cfg, int argc, char** argv)
+bool read_config(pfaedle::config::config& cfg, int argc, char** argv)
 {
-    pfaedle::config::ConfigReader reader(cfg);
+    pfaedle::config::config_reader reader(cfg);
     reader.read(argc, argv);
     return true;
 }
@@ -123,7 +123,7 @@ int app::run()
         exit(static_cast<int>(ret_code::NO_OSM_INPUT));
     }
 
-    if (mot_cfg_reader_.getConfigs().empty())
+    if (mot_cfg_reader_.get_configs().empty())
     {
         LOG(ERROR) << "No MOT configurations specified and no implicit "
                       "configurations found, see --help.";
@@ -192,7 +192,7 @@ int app::run()
         exit(static_cast<int>(ret_code::MULT_FEEDS_NOT_ALWD));
     }
 
-    LOG(DEBUG) << "Read " << mot_cfg_reader_.getConfigs().size() << " unique MOT configs.";
+    LOG(DEBUG) << "Read " << mot_cfg_reader_.get_configs().size() << " unique MOT configs.";
     pfaedle::router::MOTs cmd_cfg_mots = cfg_.mots;
     pfaedle::gtfs::Trip* single_trip = nullptr;
 
@@ -221,7 +221,7 @@ int app::run()
         }
         pfaedle::osm::OsmBuilder osm_builder;
         std::vector<pfaedle::osm::OsmReadOpts> opts;
-        for (const auto& o : mot_cfg_reader_.getConfigs())
+        for (const auto& o : mot_cfg_reader_.get_configs())
         {
             if (std::find_first_of(o.mots.begin(),
                                    o.mots.end(),
@@ -244,7 +244,7 @@ int app::run()
 
         pfaedle::osm::OsmBuilder osm_builder;
         std::vector<pfaedle::osm::OsmReadOpts> opts;
-        for (const auto& o : mot_cfg_reader_.getConfigs())
+        for (const auto& o : mot_cfg_reader_.get_configs())
         {
             if (std::find_first_of(o.mots.begin(), o.mots.end(), cmd_cfg_mots.begin(), cmd_cfg_mots.end()) != o.mots.end())
             {
@@ -269,7 +269,7 @@ int app::run()
 
     pfaedle::eval::Collector ecoll(cfg_.evalPath, df_bins);
 
-    for (const auto& mot_cfg : mot_cfg_reader_.getConfigs())
+    for (const auto& mot_cfg : mot_cfg_reader_.get_configs())
     {
         std::string file_post;
         auto used_mots = pfaedle::router::motISect(mot_cfg.mots, cmd_cfg_mots);
@@ -280,7 +280,7 @@ int app::run()
         if (single_trip && !used_mots.count(single_trip->getRoute()->getType()))
             continue;
 
-        if (mot_cfg_reader_.getConfigs().size() > 1)
+        if (mot_cfg_reader_.get_configs().size() > 1)
             file_post = get_file_name_mot_str(used_mots);
 
         const std::string mot_str = pfaedle::router::getMotStr(used_mots);

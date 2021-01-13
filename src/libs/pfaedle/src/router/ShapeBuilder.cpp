@@ -56,12 +56,12 @@ using util::geo::output::GeoGraphJsonOutput;
 ShapeBuilder::ShapeBuilder(pfaedle::gtfs::Feed& feed,
              ad::cppgtfs::gtfs::Feed& evalFeed,
              MOTs mots,
-             const config::MotConfig& motCfg,
+             const config::mot_config& motCfg,
              eval::Collector& ecoll,
              trgraph::Graph& g,
              router::FeedStops& stops,
              osm::Restrictor& restr,
-             const config::Config& cfg):
+             const config::config& cfg):
     _feed(feed),
     _evalFeed(evalFeed),
     _mots(std::move(mots)),

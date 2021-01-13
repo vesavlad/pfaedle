@@ -7,7 +7,7 @@
 
 #include "configparser/config_file_parser.h"
 #include "cppgtfs/gtfs/Route.h"
-#include "pfaedle/config/MotConfig.h"
+#include "pfaedle/config/mot_config.h"
 #include "pfaedle/osm/OsmBuilder.h"
 
 #include <set>
@@ -18,24 +18,24 @@
 namespace pfaedle::config
 {
 
-class MotConfigReader
+class mot_config_reader
 {
 public:
-    MotConfigReader();
-    explicit MotConfigReader(const std::vector<std::string>&& paths);
+    mot_config_reader();
+    explicit mot_config_reader(const std::vector<std::string>&& paths);
     void parse(const std::vector<std::string>& paths);
 
-    const std::vector<MotConfig>& getConfigs() const;
+    const std::vector<mot_config>& get_configs() const;
 
 private:
-    std::vector<MotConfig> _cfgs;
-
     osm::KeyVal getKv(const std::string& kv) const;
     osm::FilterRule getFRule(const std::string& kv) const;
 
     trgraph::ReplRules getNormRules(const std::vector<std::string>& arr) const;
     osm::DeepAttrRule getDeepAttrRule(const std::string& rule) const;
     uint64_t getFlags(const std::set<string>& flags) const;
+
+    std::vector<mot_config> configs_;
 };
 }// namespace pfaedle
 

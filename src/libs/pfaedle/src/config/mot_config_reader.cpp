@@ -2,7 +2,7 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include "pfaedle/config/MotConfigReader.h"
+#include "pfaedle/config/mot_config_reader.h"
 #include "configparser/parse_exception.h"
 #include "util/Misc.h"
 #include "util/String.h"
@@ -13,18 +13,18 @@
 using ad::cppgtfs::gtfs::Route;
 using configparser::config_file_parser;
 using configparser::parse_exception;
-using pfaedle::config::MotConfig;
-using pfaedle::config::MotConfigReader;
+using pfaedle::config::mot_config;
+using pfaedle::config::mot_config_reader;
 using pfaedle::osm::DeepAttrRule;
 using pfaedle::osm::FilterRule;
 using pfaedle::osm::KeyVal;
 using pfaedle::trgraph::ReplRules;
 
 // _____________________________________________________________________________
-MotConfigReader::MotConfigReader() = default;
+mot_config_reader::mot_config_reader() = default;
 
 // _____________________________________________________________________________
-void MotConfigReader::parse(const std::vector<std::string>& paths)
+void mot_config_reader::parse(const std::vector<std::string>& paths)
 {
     config_file_parser p;
 
@@ -37,7 +37,7 @@ void MotConfigReader::parse(const std::vector<std::string>& paths)
 
     for (const auto& sec : p.getSecs())
     {
-        MotConfig curCfg;
+        mot_config curCfg;
         std::string secStr = sec.first;
         if (secStr.empty()) continue;
         std::set<std::string> procedKeys;
@@ -522,7 +522,7 @@ void MotConfigReader::parse(const std::vector<std::string>& paths)
 
         bool found = false;
 
-        for (auto& cfg : _cfgs)
+        for (auto& cfg : configs_)
         {
             if (cfg == curCfg)
             {
@@ -539,13 +539,13 @@ void MotConfigReader::parse(const std::vector<std::string>& paths)
         if (!found)
         {
             curCfg.mots = ad::cppgtfs::gtfs::flat::Route::getTypesFromString(secStr);
-            _cfgs.push_back(curCfg);
+            configs_.push_back(curCfg);
         }
     }
 }
 
 // _____________________________________________________________________________
-ReplRules MotConfigReader::getNormRules(const std::vector<std::string>& arr) const
+ReplRules mot_config_reader::getNormRules(const std::vector<std::string>& arr) const
 {
     trgraph::ReplRules ret;
 
@@ -577,7 +577,7 @@ ReplRules MotConfigReader::getNormRules(const std::vector<std::string>& arr) con
 }
 
 // _____________________________________________________________________________
-uint64_t MotConfigReader::getFlags(const std::set<string>& flags) const
+uint64_t mot_config_reader::getFlags(const std::set<string>& flags) const
 {
     uint64_t ret = osm::USE;
 
@@ -614,7 +614,7 @@ uint64_t MotConfigReader::getFlags(const std::set<string>& flags) const
 }
 
 // _____________________________________________________________________________
-FilterRule MotConfigReader::getFRule(const std::string& r) const
+FilterRule mot_config_reader::getFRule(const std::string& r) const
 {
     osm::FilterRule ret;
 
@@ -627,7 +627,7 @@ FilterRule MotConfigReader::getFRule(const std::string& r) const
 }
 
 // _____________________________________________________________________________
-KeyVal MotConfigReader::getKv(const std::string& kv) const
+KeyVal mot_config_reader::getKv(const std::string& kv) const
 {
     osm::KeyVal ret;
     size_t p = kv.find('=', 0);
@@ -642,13 +642,13 @@ KeyVal MotConfigReader::getKv(const std::string& kv) const
 }
 
 // _____________________________________________________________________________
-const std::vector<MotConfig>& MotConfigReader::getConfigs() const
+const std::vector<mot_config>& mot_config_reader::get_configs() const
 {
-    return _cfgs;
+    return configs_;
 }
 
 // _____________________________________________________________________________
-DeepAttrRule MotConfigReader::getDeepAttrRule(const std::string& rule) const
+DeepAttrRule mot_config_reader::getDeepAttrRule(const std::string& rule) const
 {
     if (rule[0] == '[' && rule.find(']') != std::string::npos)
     {
@@ -661,8 +661,8 @@ DeepAttrRule MotConfigReader::getDeepAttrRule(const std::string& rule) const
         return osm::DeepAttrRule{rule, osm::FilterRule()};
     }
 }
-pfaedle::config::MotConfigReader::MotConfigReader(const std::vector<std::string>&& paths) :
-    MotConfigReader()
+pfaedle::config::mot_config_reader::mot_config_reader(const std::vector<std::string>&& paths) :
+    mot_config_reader()
 {
     parse(paths);
 }

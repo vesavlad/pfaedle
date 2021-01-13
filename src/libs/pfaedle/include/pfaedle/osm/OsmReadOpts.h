@@ -5,9 +5,9 @@
 #ifndef PFAEDLE_OSM_OSMREADOPTS_H_
 #define PFAEDLE_OSM_OSMREADOPTS_H_
 
-#include "pfaedle/osm/Osm.h"
-#include "pfaedle/trgraph/Graph.h"
-#include "pfaedle/trgraph/Normalizer.h"
+#include <pfaedle/osm/Osm.h>
+#include <pfaedle/trgraph/Graph.h>
+#include <pfaedle/trgraph/Normalizer.h>
 
 #include <queue>
 #include <unordered_set>
@@ -38,11 +38,12 @@ using FlatRels = std::set<size_t>;
 
 using EdgTracks = std::unordered_map<const trgraph::Edge*, std::string>;
 
-struct RelLst
+class RelLst
 {
+public:
     RelVec rels;
     FlatRels flat;
-} __attribute__((aligned(64)));
+};
 
 enum FilterFlags : uint64_t
 {
@@ -54,22 +55,24 @@ enum FilterFlags : uint64_t
     MULT_VAL_MATCH = 32
 };
 
-struct FilterRule
+class FilterRule
 {
+public:
     FilterRule() :
         kv(KeyVal("", ""))
     {}
     KeyVal kv;
     std::set<std::string> flags;
-} __attribute__((aligned(128)));
+};
 
 inline bool operator==(const FilterRule& a, const FilterRule& b)
 {
     return a.kv == b.kv && a.flags == b.flags;
 }
 
-struct DeepAttrRule
+class DeepAttrRule
 {
+public:
     std::string attr;
     FilterRule relRule;
 };
@@ -81,25 +84,28 @@ inline bool operator==(const DeepAttrRule& a, const DeepAttrRule& b)
 
 using DeepAttrLst = std::vector<DeepAttrRule>;
 
-struct RelLineRules
+class RelLineRules
 {
+public:
     AttrLst sNameRule;
     AttrLst fromNameRule;
     AttrLst toNameRule;
-} __attribute__((aligned(128)));
+};
 
 inline bool operator==(const RelLineRules& a, const RelLineRules& b)
 {
-    return a.sNameRule == b.sNameRule && a.fromNameRule == b.fromNameRule &&
+    return a.sNameRule == b.sNameRule &&
+           a.fromNameRule == b.fromNameRule &&
            a.toNameRule == b.toNameRule;
 }
 
-struct StationAttrRules
+class StationAttrRules
 {
+public:
     DeepAttrLst nameRule;
     DeepAttrLst platformRule;
     DeepAttrLst idRule;
-} __attribute__((aligned(128)));
+};
 
 inline bool operator==(const StationAttrRules& a, const StationAttrRules& b)
 {
@@ -110,7 +116,7 @@ struct StatGroupNAttrRule
 {
     DeepAttrRule attr;
     double maxDist;
-} __attribute__((packed));
+};
 
 inline bool operator==(const StatGroupNAttrRule& a,
                        const StatGroupNAttrRule& b)
@@ -120,8 +126,9 @@ inline bool operator==(const StatGroupNAttrRule& a,
 
 using StAttrGroups = std::unordered_map<std::string, std::unordered_map<std::string, std::vector<trgraph::StatGroup *>>>;
 
-struct OsmReadOpts
+class OsmReadOpts
 {
+public:
     OsmReadOpts() = default;
 
     MultAttrMap noHupFilter;

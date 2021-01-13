@@ -14,7 +14,7 @@
 namespace pfaedle::config
 {
 
-struct Config
+struct config
 {
     std::string dbgOutputPath {"."};
     std::string solveMethod{"global"};

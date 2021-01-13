@@ -13,7 +13,7 @@
 namespace pfaedle::config
 {
 
-struct MotConfig
+struct mot_config
 {
     router::MOTs mots;
     osm::OsmReadOpts osmBuildOpts;
@@ -21,7 +21,7 @@ struct MotConfig
     std::map<std::string, std::string> unproced;
 };
 
-inline bool operator==(const MotConfig& a, const MotConfig& b)
+inline bool operator==(const mot_config& a, const mot_config& b)
 {
     bool unproced_eq = a.unproced.size() == b.unproced.size();
 

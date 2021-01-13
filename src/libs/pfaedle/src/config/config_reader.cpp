@@ -2,7 +2,7 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include "pfaedle/config/ConfigReader.h"
+#include "pfaedle/config/config_reader.h"
 #include "pfaedle/Def.h"
 #include "pfaedle/config.h"
 #include "util/String.h"
@@ -21,7 +21,7 @@ static const char* COPY = "University of Freiburg - Chair of Algorithms and Data
 static const char* AUTHORS = "Patrick Brosi <brosi@informatik.uni-freiburg.de> \n Vlad Vesa <vlad.vesa@outlook.com>";
 
 // _____________________________________________________________________________
-void ConfigReader::help(const char* bin)
+void config_reader::help(const char* bin)
 {
     std::cout << std::setfill(' ') << std::left << "pfaedle GTFS map matcher "
               << pfaedle::long_version() << "\n(built " << __DATE__ << " " << __TIME__
@@ -114,7 +114,7 @@ void ConfigReader::help(const char* bin)
               << std::setw(35) << " "
               << "  results\n";
 }
-ConfigReader::ConfigReader(Config& cfg) :
+config_reader::config_reader(config& cfg) :
     config_{cfg}
 {
     cxxopts::Options options("PFAEDLE", "One line description of MyProgram");
@@ -127,7 +127,7 @@ ConfigReader::ConfigReader(Config& cfg) :
 }
 
 // _____________________________________________________________________________
-void ConfigReader::read(int argc, char** argv)
+void config_reader::read(int argc, char** argv)
 {
     std::string mot_str = "all";
     bool print_opts = false;

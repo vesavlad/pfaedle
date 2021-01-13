@@ -14,13 +14,13 @@
 #include <string>
 #include <vector>
 
-#include "pfaedle/config.h"
+#include "configparser/parse_file_exception.h"
 #include "cppgtfs/Parser.h"
 #include "cppgtfs/Writer.h"
-#include "configparser/parse_file_exception.h"
-#include "pfaedle/config/ConfigReader.h"
-#include "pfaedle/config/MotConfig.h"
-#include "pfaedle/config/MotConfigReader.h"
+#include "pfaedle/config.h"
+#include "pfaedle/config/config_reader.h"
+#include "pfaedle/config/mot_config.h"
+#include "pfaedle/config/mot_config_reader.h"
 #include "pfaedle/eval/Collector.h"
 #include "pfaedle/gtfs/Feed.h"
 #include "pfaedle/gtfs/Writer.h"
@@ -28,11 +28,11 @@
 #include "pfaedle/router/ShapeBuilder.h"
 #include "pfaedle/trgraph/Graph.h"
 #include "pfaedle/trgraph/StatGroup.h"
+#include "util/Misc.h"
 #include "util/geo/output/GeoGraphJsonOutput.h"
 #include "util/geo/output/GeoJsonOutput.h"
 #include <logging/logger.h>
 #include <logging/scoped_timer.h>
-#include "util/Misc.h"
 
 class app
 {
@@ -41,10 +41,10 @@ public:
     int run();
 
 private:
-    pfaedle::config::Config cfg_;
+    pfaedle::config::config cfg_;
     bool has_config_;
     std::vector<pfaedle::gtfs::Feed> feeds_;
-    pfaedle::config::MotConfigReader mot_cfg_reader_;
+    pfaedle::config::mot_config_reader mot_cfg_reader_;
 };
 
 
