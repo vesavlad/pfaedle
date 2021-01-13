@@ -13,12 +13,18 @@
 
 #include <algorithm>
 #include <set>
-#if defined(__GNUC__) && __GNUC_PREREQ(7,5)
-#include <experimental/filesystem>
-namespace filesystem = std::experimental::filesystem;
+
+#if defined(__clang__)
+    #include <filesystem>
+    namespace filesystem = std::filesystem;
 #else
-#include <filesystem>
-namespace filesystem = std::filesystem;
+    #if __GNUC_PREREQ(7,5)
+        #include <experimental/filesystem>
+        namespace filesystem = std::experimental::filesystem;
+    #else
+        #include <filesystem>
+        namespace filesystem = std::filesystem;
+    #endif
 #endif
 #include "stacktrace.h"
 #include <fmt/format.h>
