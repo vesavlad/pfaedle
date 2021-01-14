@@ -12,19 +12,6 @@
 
 namespace
 {
-enum class ret_code
-{
-    SUCCESS = 0,
-    NO_INPUT_FEED = 1,
-    MULT_FEEDS_NOT_ALWD = 2,
-    TRIP_NOT_FOUND = 3,
-    GTFS_PARSE_ERR = 4,
-    NO_OSM_INPUT = 5,
-    MOT_CFG_PARSE_ERR = 6,
-    OSM_PARSE_ERR = 7,
-    GTFS_WRITE_ERR = 8,
-    NO_MOT_CFG = 9
-};
 
 std::string get_file_name_mot_str(const pfaedle::router::MOTs& mots)
 {
@@ -112,7 +99,7 @@ app::app(int argc, char** argv) :
 {
 }
 
-int app::run()
+ret_code app::run()
 {
     // feed containing the shapes in memory for evaluation
     ad::cppgtfs::gtfs::Feed eval_feed;
@@ -120,14 +107,14 @@ int app::run()
     if (cfg_.osmPath.empty() && !cfg_.writeOverpass)
     {
         std::cerr << "No OSM input file specified (-x), see --help." << std::endl;
-        exit(static_cast<int>(ret_code::NO_OSM_INPUT));
+        return ret_code::NO_OSM_INPUT;
     }
 
     if (mot_cfg_reader_.get_configs().empty())
     {
         LOG(ERROR) << "No MOT configurations specified and no implicit "
                       "configurations found, see --help.";
-        exit(static_cast<int>(ret_code::NO_MOT_CFG));
+        return ret_code::NO_MOT_CFG;
     }
 
     if (cfg_.feedPaths.size() == 1)
@@ -155,7 +142,7 @@ int app::run()
         {
             LOG(ERROR) << "Could not parse input GTFS feed, reason was:";
             LOG(ERROR) << ex.what();
-            exit(static_cast<int>(ret_code::GTFS_PARSE_ERR));
+            return ret_code::GTFS_PARSE_ERR;
         }
         if (!cfg_.writeOverpass)
             LOG(INFO) << "Done.";
@@ -170,6 +157,7 @@ int app::run()
             }
 
             ad::cppgtfs::Parser p;
+
             try
             {
                 p.parse(&feeds_[i], cfg_.feedPaths[i]);
@@ -178,7 +166,7 @@ int app::run()
             {
                 LOG(ERROR) << "Could not parse input GTFS feed, reason was:";
                 std::cerr << ex.what() << std::endl;
-                exit(static_cast<int>(ret_code::GTFS_PARSE_ERR));
+                return ret_code::GTFS_PARSE_ERR;
             }
             if (!cfg_.writeOverpass)
             {
@@ -189,7 +177,7 @@ int app::run()
     else if (cfg_.feedPaths.size() > 1)
     {
         std::cerr << "Multiple feeds only allowed in filter mode." << std::endl;
-        exit(static_cast<int>(ret_code::MULT_FEEDS_NOT_ALWD));
+        return ret_code::MULT_FEEDS_NOT_ALWD;
     }
 
     LOG(DEBUG) << "Read " << mot_cfg_reader_.get_configs().size() << " unique MOT configs.";
@@ -201,13 +189,13 @@ int app::run()
         if (cfg_.feedPaths.empty())
         {
             std::cout << "No input feed specified, see --help" << std::endl;
-            exit(static_cast<int>(ret_code::NO_INPUT_FEED));
+            return ret_code::NO_INPUT_FEED;
         }
         single_trip = feeds_.front().getTrips().get(cfg_.shapeTripId);
         if (!single_trip)
         {
             LOG(ERROR) << "Trip #" << cfg_.shapeTripId << " not found.";
-            exit(static_cast<int>(ret_code::TRIP_NOT_FOUND));
+            return ret_code::TRIP_NOT_FOUND;
         }
     }
 
@@ -219,6 +207,7 @@ int app::run()
         {
             pfaedle::router::shape_builder::get_gtfs_box(feeds_[i], cmd_cfg_mots, cfg_.shapeTripId, true, box);
         }
+
         pfaedle::osm::osm_builder osm_builder;
         std::vector<pfaedle::osm::osm_read_options> opts;
         for (const auto& o : mot_cfg_reader_.get_configs())
@@ -232,7 +221,7 @@ int app::run()
             }
         }
         osm_builder.filter_write(cfg_.osmPath, cfg_.writeOsm, opts, box);
-        exit(static_cast<int>(ret_code::SUCCESS));
+        return ret_code::SUCCESS;
     }
     else if (cfg_.writeOverpass)
     {
@@ -252,12 +241,12 @@ int app::run()
             }
         }
         osm_builder.overpass_query_write(std::cout, opts, box);
-        exit(static_cast<int>(ret_code::SUCCESS));
+        return ret_code::SUCCESS;
     }
     else if (cfg_.feedPaths.empty())
     {
         std::cout << "No input feed specified, see --help" << std::endl;
-        exit(static_cast<int>(ret_code::NO_INPUT_FEED));
+        return ret_code::NO_INPUT_FEED;
     }
 
     std::vector<double> df_bins;
@@ -267,7 +256,7 @@ int app::run()
     for (const auto& st : df_bin_strings)
         df_bins.push_back(atof(st.c_str()));
 
-    pfaedle::eval::collector ecoll(cfg_.evalPath, df_bins);
+    pfaedle::eval::collector collector(cfg_.evalPath, df_bins);
 
     for (const auto& mot_cfg : mot_cfg_reader_.get_configs())
     {
@@ -289,7 +278,7 @@ int app::run()
         pfaedle::router::feed_stops f_stops =
                 pfaedle::router::write_mot_stops(feeds_.front(), used_mots, cfg_.shapeTripId);
 
-        pfaedle::osm::restrictor restr;
+        pfaedle::osm::restrictor restrictor;
         pfaedle::trgraph::graph graph;
         pfaedle::osm::osm_builder osm_builder;
 
@@ -304,7 +293,7 @@ int app::run()
                              box,
                              cfg_.gridSize,
                              f_stops,
-                             restr);
+                             restrictor);
         }
 
         // TODO(patrick): move this somewhere else
@@ -324,10 +313,10 @@ int app::run()
                                                     eval_feed,
                                                     cmd_cfg_mots,
                                                     mot_cfg,
-                                                    ecoll,
+                                                     collector,
                                                     graph,
                                                     f_stops,
-                                                    restr,
+                                                     restrictor,
                                                     cfg_);
 
         if (cfg_.writeGraph)
@@ -355,7 +344,7 @@ int app::run()
             o.flush();
             pstr.close();
 
-            exit(static_cast<int>(ret_code::SUCCESS));
+            return ret_code::SUCCESS;
         }
 
         pfaedle::netgraph::graph ng;
@@ -373,7 +362,7 @@ int app::run()
     }
 
     if (cfg_.evaluate)
-        ecoll.print_stats(std::cout);
+        collector.print_stats(std::cout);
 
     if (!cfg_.feedPaths.empty())
     {
@@ -388,8 +377,8 @@ int app::run()
         {
             LOG(ERROR) << "Could not write final GTFS feed, reason was:";
             std::cerr << ex.what() << std::endl;
-            exit(static_cast<int>(ret_code::GTFS_WRITE_ERR));
+            return ret_code::GTFS_WRITE_ERR;
         }
     }
-    return static_cast<int>(ret_code::SUCCESS);
+    return ret_code::SUCCESS;
 }

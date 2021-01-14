@@ -18,7 +18,6 @@
 
 
 using ad::cppgtfs::gtfs::Shape;
-using pfaedle::eval::result;
 using pfaedle::gtfs::Trip;
 
 namespace pfaedle::eval

@@ -34,11 +34,25 @@
 #include <logging/logger.h>
 #include <logging/scoped_timer.h>
 
+enum class ret_code
+{
+    SUCCESS = 0,
+    NO_INPUT_FEED = 1,
+    MULT_FEEDS_NOT_ALWD = 2,
+    TRIP_NOT_FOUND = 3,
+    GTFS_PARSE_ERR = 4,
+    NO_OSM_INPUT = 5,
+    MOT_CFG_PARSE_ERR = 6,
+    OSM_PARSE_ERR = 7,
+    GTFS_WRITE_ERR = 8,
+    NO_MOT_CFG = 9
+};
+
 class app
 {
 public:
     app(int argc, char* argv[]);
-    int run();
+    ret_code run();
 
 private:
     pfaedle::config::config cfg_;

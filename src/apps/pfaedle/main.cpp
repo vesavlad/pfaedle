@@ -16,5 +16,5 @@ int main(int argc, char* argv[])
     logging::scoped_timer master_timer("application");
 
     app app(argc, argv);
-    app.run();
+    return static_cast<int>(app.run());
 }

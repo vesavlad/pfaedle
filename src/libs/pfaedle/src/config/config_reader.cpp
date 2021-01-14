@@ -12,7 +12,6 @@
 #include <getopt.h>
 #include <iostream>
 #include <string>
-#include <cxxopts.hpp>
 
 namespace pfaedle::config
 {
@@ -117,13 +116,13 @@ void config_reader::help(const char* bin)
 config_reader::config_reader(config& cfg) :
     config_{cfg}
 {
-    cxxopts::Options options("PFAEDLE", "One line description of MyProgram");
-    options.add_options()
-            ("b,bar", "Param bar", cxxopts::value<std::string>())
-            ("d,debug", "Enable debugging", cxxopts::value<bool>()->default_value("false"))
-            ("f,foo", "Param foo", cxxopts::value<int>()->default_value("10"))
-            ("h,help", "Print usage")
-            ;
+//    cxxopts::Options options("PFAEDLE", "One line description of MyProgram");
+//    options.add_options()
+//            ("b,bar", "Param bar", cxxopts::value<std::string>())
+//            ("d,debug", "Enable debugging", cxxopts::value<bool>()->default_value("false"))
+//            ("f,foo", "Param foo", cxxopts::value<int>()->default_value("10"))
+//            ("h,help", "Print usage")
+//            ;
 }
 
 // _____________________________________________________________________________
