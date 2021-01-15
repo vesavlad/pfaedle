@@ -13,6 +13,7 @@ target_link_libraries(pfaedle
         pfaedle-main-lib
         exceptions)
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/build")
-set_target_properties(pfaedle PROPERTIES EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/build")
-
-
+set_target_properties(pfaedle
+        PROPERTIES
+        EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/build"
+        ENABLE_EXPORTS ON)
