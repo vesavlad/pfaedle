@@ -6,6 +6,8 @@ lighteval: vitoria.lighteval stuttgart.lighteval paris.lighteval switzerland.lig
 
 eval: vitoria.eval stuttgart.eval paris.eval switzerland.eval
 
+romania: timisoara.eval
+
 clean:
 	@rm -f *.eval
 	@rm -rf gtfs
@@ -44,6 +46,27 @@ osmconvert:
 	@../build/pfaedle -x $< -i gtfs/$* -c eval-wo-osm-line-rels.cfg --eval-path evalout/$*/hmm -o gtfs/$*/shaped -D -m all --eval --eval-df-bins $(EVAL_DF_BINS) 2>&1 | tee $@
 	@find evalout/$*/hmm/ -name "*.json" -print0 | xargs -0 rm
 
+osm/romania-latest.osm.pbf:
+	@mkdir -p osm
+	@echo `date +"[%F %T.%3N]"` "EVAL : Downloading OSM data for Romania..."
+	@curl --progress-bar http://download.geofabrik.de/europe/romania-latest.osm.pbf > $@
+
+osm/romania-latest.osm: osm/romania-latest.osm.pbf osmconvert
+	@echo `date +"[%F %T.%3N]"` "EVAL : Pre-filtering OSM data to Romania..."
+	@./osmconvert $< > $@
+
+osm/timisoara-latest.osm: osm/romania-latest.osm.pbf osmconvert
+	@echo `date +"[%F %T.%3N]"` "EVAL : Pre-filtering OSM data to Timisoara..."
+	@./osmconvert -b=21.025129,45.64473,21.397301,45.870398 $< > $@
+
+osm/sibiu-latest.osm: osm/romania-latest.osm.pbf osmconvert
+	@echo `date +"[%F %T.%3N]"` "EVAL : Pre-filtering OSM data to Sibiu..."
+	@./osmconvert -b=24.071212,45.721148,24.245719,45.851563 $< > $@
+
+osm/bucharest-latest.osm: osm/romania-latest.osm.pbf osmconvert
+	@echo `date +"[%F %T.%3N]"` "EVAL : Pre-filtering OSM data to Bucharest..."
+	@./osmconvert -b=25.641702,44.199283,26.540659,44.658632 $< > $@
+
 osm/spain-latest.osm.pbf:
 	@mkdir -p osm
 	@echo `date +"[%F %T.%3N]"` "EVAL : Downloading OSM data for Spain..."
@@ -52,7 +75,7 @@ osm/spain-latest.osm.pbf:
 osm/spain-latest.osm: osm/spain-latest.osm.pbf osmconvert
 	@# pre-filter to vitoria gasteiz
 	@echo `date +"[%F %T.%3N]"` "EVAL : Pre-filtering OSM data to Vitoria-Gasteiz..."
-	@osmconvert -b=-2.8661,42.7480,-2.4788,43.0237 $< > $@
+	@./osmconvert -b=-2.8661,42.7480,-2.4788,43.0237 $< > $@
 
 osm/baden-wuerttemberg-latest.osm.pbf:
 	@mkdir -p osm
@@ -61,7 +84,7 @@ osm/baden-wuerttemberg-latest.osm.pbf:
 
 osm/baden-wuerttemberg-latest.osm: osm/baden-wuerttemberg-latest.osm.pbf osmconvert
 	@echo `date +"[%F %T.%3N]"` "EVAL : Extracting OSM data..."
-	@osmconvert $< > $@
+	@./osmconvert $< > $@
 
 osm/france-latest.osm.pbf:
 	@mkdir -p osm
@@ -71,7 +94,7 @@ osm/france-latest.osm.pbf:
 osm/paris-latest.osm: osm/france-latest.osm.pbf osmconvert
 	@# pre-filter to greater ile de france
 	@echo `date +"[%F %T.%3N]"` "EVAL : Pre-filtering OSM data to Île-de-France..."
-	@osmconvert -b=0.374,47.651,4.241,50.261 $< > $@
+	@./osmconvert -b=0.374,47.651,4.241,50.261 $< > $@
 
 osm/europe-latest.osm.pbf:
 	@mkdir -p osm
@@ -81,7 +104,15 @@ osm/europe-latest.osm.pbf:
 osm/switzerland-latest.osm: osm/europe-latest.osm.pbf osmconvert
 	@# pre-filter to greater switzerland
 	@echo `date +"[%F %T.%3N]"` "EVAL : Pre-filtering OSM data to Switzerland..."
-	@osmconvert -b=3.757,44.245,15.579,52.670 $< > $@
+	@./osmconvert -b=3.757,44.245,15.579,52.670 $< > $@
+
+gtfs/stpt/%.txt:
+	@echo `date +"[%F %T.%3N]"` "EVAL : Downloading GTFS data for STPT..."
+	@mkdir -p gtfs
+	@mkdir -p gtfs/stpt
+	@curl --progress-bar https://api.opentransport.ro/gtfs/v1/static > gtfs/stpt/gtfs.zip
+	@cd gtfs/stpt && unzip -qq -o gtfs #.zip
+	@rm gtfs/stpt/gtfs.zip
 
 gtfs/vitoria/%.txt:
 	@echo `date +"[%F %T.%3N]"` "EVAL : Downloading GTFS data for Vitoria-Gasteiz..."
@@ -131,3 +162,6 @@ osm/paris.osm: osm/paris-latest.osm gtfs/paris/stops.txt gtfs/paris/trips.txt gt
 
 osm/switzerland.osm: osm/switzerland-latest.osm gtfs/switzerland/stops.txt eval.cfg
 	@../build/pfaedle -x $< -i gtfs/switzerland/ -c eval.cfg -m all -X $@
+
+osm/timisoara.osm: osm/timisoara-latest.osm gtfs/stpt/stops.txt gtfs/stpt/trips.txt gtfs/stpt/routes.txt gtfs/stpt/stop_times.txt eval.cfg
+	@../build/pfaedle -x $< -i gtfs/stpt/ -c eval.cfg -m all -X $@
