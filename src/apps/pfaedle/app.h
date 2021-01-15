@@ -1,7 +1,3 @@
-//
-// Created by Vesa Vlad on 02.01.2021.
-//
-
 #ifndef PFAEDLE_APP_H
 #define PFAEDLE_APP_H
 

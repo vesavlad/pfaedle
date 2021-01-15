@@ -201,6 +201,7 @@ ret_code app::run()
     }
 
     LOG(DEBUG) << "Read " << mot_cfg_reader_.get_configs().size() << " unique MOT configs.";
+
     pfaedle::router::route_type_set cmd_route_types = cfg_.route_type_set;
     pfaedle::gtfs::trip* single_trip = nullptr;
 

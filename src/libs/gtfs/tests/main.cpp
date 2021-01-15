@@ -1,9 +1,11 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "catch_amalgamated.hpp"
 #include <gtfs/misc.h>
+#include <gtfs/exceptions.h>
+#include <gtfs/time.h>
 #include "config.h"
 
-namespace gtfs
+namespace pafedle::gtfs
 {
 TEST_CASE( "Quoting works", "[quote]" ) {
     REQUIRE( pfaedle::gtfs::quote_text("what the fuck") == "\"what the fuck\"" );

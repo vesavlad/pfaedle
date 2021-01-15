@@ -461,15 +461,73 @@ result feed_reader::read_calendar_dates()
 }
 result feed_reader::read_fare_rules()
 {
-//    auto handler = [this](const parsed_csv_row& record) { return feed_.add_fare_rule(record); };
-//    return parse_csv(file_fare_rules, handler);
-    return result();
+    auto handler = [this](const parsed_csv_row& row) -> result {
+        pfaedle::gtfs::fare_rule fare_rule;
+        try
+        {
+            // Required fields:
+            fare_rule.fare_id = row.at("fare_id");
+        }
+        catch (const std::out_of_range& ex)
+        {
+            return {result_code::ERROR_REQUIRED_FIELD_ABSENT, ex.what()};
+        }
+        catch (const std::invalid_argument& ex)
+        {
+            return {result_code::ERROR_INVALID_FIELD_FORMAT, ex.what()};
+        }
+        catch (const invalid_field_format& ex)
+        {
+            return {result_code::ERROR_INVALID_FIELD_FORMAT, ex.what()};
+        }
+
+        // Optional fields:
+        fare_rule.route_id = get_value_or_default(row, "route_id");
+        fare_rule.origin_id = get_value_or_default(row, "origin_id");
+        fare_rule.destination_id = get_value_or_default(row, "destination_id");
+        fare_rule.contains_id = get_value_or_default(row, "contains_id");
+
+        feed_.fare_rules.emplace(fare_rule.fare_id, fare_rule);
+
+        return result_code::OK;
+    };
+    return parse_csv(file_fare_rules, handler);
 }
 result feed_reader::read_fare_attributes()
 {
-//    auto handler = [this](const parsed_csv_row& record) { return feed_.add_fare_attributes(record); };
-//    return parse_csv(file_fare_attributes, handler);
-    return result();
+    auto handler = [this](const parsed_csv_row& row) -> result {
+        fare_attributes_item item;
+        try
+        {
+            // Required fields:
+            item.fare_id = row.at("fare_id");
+            set_fractional(item.price, row, "price", false);
+
+            item.currency_type = row.at("currency_type");
+            set_field(item.payment_method, row, "payment_method", false);
+            set_field(item.transfers, row, "transfers", false);
+
+            // Conditionally optional:
+            item.agency_id = get_value_or_default(row, "agency_id");
+            set_field(item.transfer_duration, row, "transfer_duration");
+        }
+        catch (const std::out_of_range& ex)
+        {
+            return {result_code::ERROR_REQUIRED_FIELD_ABSENT, ex.what()};
+        }
+        catch (const std::invalid_argument& ex)
+        {
+            return {result_code::ERROR_INVALID_FIELD_FORMAT, ex.what()};
+        }
+        catch (const invalid_field_format& ex)
+        {
+            return {result_code::ERROR_INVALID_FIELD_FORMAT, ex.what()};
+        }
+
+        feed_.fare_attributes.emplace(item.fare_id, item);
+        return result_code::OK;
+    };
+    return parse_csv(file_fare_attributes, handler);
 }
 result feed_reader::read_shapes()
 {
@@ -549,13 +607,38 @@ result feed_reader::read_frequencies()
       return result_code::OK;
     };
     return parse_csv(file_frequencies, handler);
-    return result();
 }
 result feed_reader::read_transfers()
 {
-//    auto handler = [this](const parsed_csv_row& record) { return feed_.add_transfer(record); };
-//    return parse_csv(file_transfers, handler);
-    return result();
+    auto handler = [this](const parsed_csv_row& row) -> result {
+        pfaedle::gtfs::transfer transfer;
+        try
+        {
+            // Required fields:
+            transfer.from_stop_id = row.at("from_stop_id");
+            transfer.to_stop_id = row.at("to_stop_id");
+            set_field(transfer.transfer_type, row, "transfer_type", false);
+
+            // Optional:
+            set_field(transfer.min_transfer_time, row, "min_transfer_time");
+        }
+        catch (const std::out_of_range& ex)
+        {
+            return {result_code::ERROR_REQUIRED_FIELD_ABSENT, ex.what()};
+        }
+        catch (const std::invalid_argument& ex)
+        {
+            return {result_code::ERROR_INVALID_FIELD_FORMAT, ex.what()};
+        }
+        catch (const invalid_field_format& ex)
+        {
+            return {result_code::ERROR_INVALID_FIELD_FORMAT, ex.what()};
+        }
+
+        feed_.transfers.emplace(std::make_tuple(transfer.from_stop_id, transfer.to_stop_id), transfer);
+        return result_code::OK;
+    };
+    return parse_csv(file_transfers, handler);
 }
 result feed_reader::read_pathways()
 {

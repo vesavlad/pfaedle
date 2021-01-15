@@ -9,6 +9,9 @@
 #include <gtfs/calendar_item.h>
 #include <gtfs/calendar_date.h>
 #include <gtfs/frequency.h>
+#include <gtfs/transfer.h>
+#include <gtfs/fare_rule.h>
+#include <gtfs/fare_attributes_item.h>
 
 #include <gtfs/access/result.h>
 
@@ -28,15 +31,15 @@ using stop_time_map = std::map<std::pair<Id,Id>,stop_time>;
 using calendar_map = std::map<Id,calendar_item>;
 using calendar_dates_map = std::map<Id,calendar_date>;
 
-//using FareRules = std::map<Id,FareRule>;
-//using FareAttributes = std::map<Id,FareAttributesItem>;
+using fare_map = std::map<Id,fare_rule>;
+using fare_attributes_map = std::map<Id,fare_attributes_item>;
 using shape_map = std::map<Id,shape>;
 using frequency_map = std::map<Id,frequency>;
-//using Transfers = std::map<Id,Transfer>;
+using transfer_map = std::map<std::tuple<Id, Id>,transfer>;
 //using Pathways = std::map<Id,Pathway>;
 //using Levels = std::map<Id,Level>;
 
-//// FeedInfo is a unique object and doesn't need a container.
+// FeedInfo is a unique object and doesn't need a container.
 //using Translations = std::map<Id,Translation>;
 //using Attributions = std::map<Id,Attribution>;
 
@@ -54,11 +57,11 @@ public:
 
     calendar_map calendar;
     calendar_dates_map calendar_dates;
-//    FareRules fare_rules_;
-//    FareAttributes fare_attributes_;
+    fare_map fare_rules;
+    fare_attributes_map fare_attributes;
     shape_map shapes;
     frequency_map frequencies;
-//    Transfers transfers_;
+    transfer_map transfers;
 //    Pathways pathways_;
 //    Levels levels_;
 //    Translations translations_;
