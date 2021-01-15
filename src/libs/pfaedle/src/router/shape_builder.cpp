@@ -270,9 +270,10 @@ void shape_builder::get_shape(pfaedle::netgraph::graph& ng)
         iters = EDijkstra::ITERS;
 
         tot_num_trips += clusters[i].size();
-#if 0
+
         for (auto t : clusters[i])
         {
+#if 0
             if (_cfg.evaluate)
             {
                 std::lock_guard<std::mutex> guard(_shpMutex);
@@ -281,19 +282,26 @@ void shape_builder::get_shape(pfaedle::netgraph::graph& ng)
                            shp,
                            distances);
             }
-
-            if (!t->getShape().empty() && shpUsage[t->getShape()] > 0)
-            {
-                shpUsage[t->getShape()]--;
-                if (shpUsage[t->getShape()] == 0)
-                {
-                    std::lock_guard<std::mutex> guard(_shpMutex);
-                    _feed.getShapes().remove(t->getShape());
-                }
-            }
-            set_shape(*t, shp, distances);
-        }
 #endif
+
+            if(t->shape.has_value())
+            {
+                gtfs::shape& shape = t->shape->get();
+                if (t->shape.has_value() && !shape.empty() && shpUsage[shape.shape_id] > 0)
+                {
+#if 0
+                    shpUsage[t->getShape()]--;
+                    if (shpUsage[t->getShape()] == 0)
+                    {
+                        std::lock_guard<std::mutex> guard(_shpMutex);
+                        _feed.shapes.remove(t->getShape());
+                    }
+#endif
+                }
+                set_shape(*t, shp, distances);
+            }
+
+        }
     }
 
     LOG(INFO) << "Matched " << tot_num_trips << " trips in " << clusters.size()
@@ -518,7 +526,7 @@ void shape_builder::get_gtfs_box(const pfaedle::gtfs::feed& feed,
         if (!tid.empty() && t.second.trip_id != tid)
             continue;
 
-        if (tid.empty() && !t.second.shape.value().get().points.empty() && !dropShapes)
+        if (tid.empty() && t.second.shape.has_value() && !t.second.shape.value().get().points.empty() && !dropShapes)
             continue;
 
         if (t.second.stop_time_list.size() < 2)
@@ -598,10 +606,10 @@ clusters shape_builder::cluster_trips(pfaedle::gtfs::feed& f, const route_type_s
     clusters ret;
     for (auto& trip : f.trips)
     {
-        if(!trip.second.shape.has_value())
-            continue;
-        if (!trip.second.shape->get().empty() && !_cfg.dropShapes)
-            continue;
+        if(trip.second.shape.has_value()){
+            if (!trip.second.shape->get().empty() && !_cfg.dropShapes)
+                continue;
+        }
         if (trip.second.stop_time_list.size() < 2)
             continue;
         if(!trip.second.route.has_value())
