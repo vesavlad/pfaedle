@@ -526,10 +526,9 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
         {
             if (cfg == curCfg)
             {
-                for (auto mot :
-                     ad::cppgtfs::gtfs::flat::Route::getTypesFromString(secStr))
+                for (auto mot : pfaedle::gtfs::get_route_types_from_string(secStr))
                 {
-                    cfg.mots.insert(mot);
+                    cfg.route_types.insert(mot);
                 }
                 found = true;
                 break;
@@ -538,7 +537,7 @@ void mot_config_reader::parse(const std::vector<std::string>& paths)
 
         if (!found)
         {
-            curCfg.mots = ad::cppgtfs::gtfs::flat::Route::getTypesFromString(secStr);
+            curCfg.route_types = pfaedle::gtfs::get_route_types_from_string(secStr);
             configs_.push_back(curCfg);
         }
     }

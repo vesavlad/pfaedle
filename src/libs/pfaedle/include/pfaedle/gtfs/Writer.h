@@ -7,11 +7,12 @@
 
 #include <string>
 #include "cppgtfs/Writer.h"
-#include "Feed.h"
+//#include "Feed.h"
+
 
 namespace pfaedle::gtfs
 {
-
+class Feed;
 class Writer
 {
 public:

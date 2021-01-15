@@ -22,10 +22,3 @@
     url=git@github.com:motis-project/fmt.git
     branch=master
     commit=34d0435ad07feb55dabd64d99482dd5d28972584
-
-[cxxopts]
-    url=git@github.com:jarro2783/cxxopts.git
-    branch=master
-    commit=302302b30839505703d37fb82f536c53cf9172fa
-
-

@@ -5,10 +5,10 @@
 #ifndef PFAEDLE_ROUTER_MISC_H_
 #define PFAEDLE_ROUTER_MISC_H_
 
-#include <cppgtfs/gtfs/Feed.h>
-#include <cppgtfs/gtfs/Route.h>
-#include <cppgtfs/gtfs/Stop.h>
-#include <pfaedle/gtfs/Feed.h>
+#include <pfaedle/gtfs/feed.h>
+#include <pfaedle/gtfs/route.h>
+#include <pfaedle/gtfs/stop.h>
+#include <pfaedle/gtfs/route_type.h>
 #include <pfaedle/trgraph/graph.h>
 #include <util/geo/Point.h>
 
@@ -152,7 +152,7 @@ inline bool angSmaller(const util::geo::Point<F>& f,
 
 using node_set = std::set<trgraph::node*>;
 using edge_set = std::set<trgraph::edge*>;
-using feed_stops = std::unordered_map<const ad::cppgtfs::gtfs::Stop*, trgraph::node*>;
+using feed_stops = std::unordered_map<const pfaedle::gtfs::stop*, trgraph::node*>;
 
 using node_candidate_group = std::vector<node_candidate>;
 using node_candidate_route = std::vector<node_candidate_group>;
@@ -172,15 +172,16 @@ struct edge_list_hop
 
 using edge_list_hops = std::vector<edge_list_hop>;
 
-using MOTs = std::set<ad::cppgtfs::gtfs::Route::TYPE>;
+using route_type_set = std::set<pfaedle::gtfs::route_type>;
 
-MOTs motISect(const MOTs& a, const MOTs& b);
+route_type_set route_type_section(const route_type_set& a, const route_type_set& b);
 
-pfaedle::router::feed_stops write_mot_stops(const pfaedle::gtfs::Feed& feed,
-                                                const MOTs& mots,
+pfaedle::router::feed_stops write_mot_stops(const pfaedle::gtfs::feed& feed,
+                                                const route_type_set& mots,
                                                 const std::string& tid);
 
-std::string get_mot_str(const MOTs& mots);
+std::string get_mot_str(const route_type_set& mots);
+
 }  // namespace pfaedle
 
 #endif  // PFAEDLE_ROUTER_MISC_H_

@@ -5,10 +5,8 @@
 #ifndef PFAEDLE_EVAL_COLLECTOR_H_
 #define PFAEDLE_EVAL_COLLECTOR_H_
 
-#include "cppgtfs/gtfs/Feed.h"
 #include "pfaedle/definitions.h"
 #include "pfaedle/eval/result.h"
-#include "pfaedle/gtfs/Feed.h"
 #include "util/geo/Geo.h"
 #include <map>
 #include <ostream>
@@ -17,9 +15,11 @@
 #include <utility>
 #include <vector>
 
-using pfaedle::gtfs::Trip;
-using ad::cppgtfs::gtfs::Shape;
-
+namespace pfaedle::gtfs
+{
+struct trip;
+struct shape;
+}
 namespace pfaedle::eval
 {
 
@@ -33,7 +33,7 @@ public:
 
     // Add a shape found by our tool newS for a trip t with newly calculated
     // station dist values with the old shape oldS
-    double add(const Trip& t, const Shape* oldS, const Shape& newS, const std::vector<double>& newDists);
+    double add(const gtfs::trip& t, const gtfs::shape* oldS, const gtfs::shape& newS, const std::vector<double>& newDists);
 
     // Return the set of all Result objects
     const std::set<result>& get_results() const;
@@ -50,14 +50,14 @@ public:
     // Return the averaged average frechet distance
     double get_average_distance() const;
 
-    static LINE get_web_merc_line(const Shape* s, double from, double to);
-    static LINE get_web_merc_line(const Shape* s, double from, double to, std::vector<double>& dists);
+    static LINE get_web_merc_line(const gtfs::shape* s, double from, double to);
+    static LINE get_web_merc_line(const gtfs::shape* s, double from, double to, std::vector<double>& dists);
 
 private:
     static std::pair<size_t, double> get_da(const std::vector<LINE>& a,
                                            const std::vector<LINE>& b);
 
-    static std::vector<LINE> segmentize(const Trip& t, const LINE& shape,
+    static std::vector<LINE> segmentize(const gtfs::trip& t, const LINE& shape,
                                         const std::vector<double>& dists,
                                         const std::vector<double>* newTripDists);
 
@@ -66,8 +66,8 @@ private:
     std::set<result> _results;
     std::set<result> _resultsAN;
     std::set<result> _resultsAL;
-    std::map<const Shape*, std::map<std::string, double>> _dCache;
-    std::map<const Shape*, std::map<std::string, std::pair<size_t, double>>> _dACache;
+    std::map<const gtfs::shape*, std::map<std::string, double>> _dCache;
+    std::map<const gtfs::shape*, std::map<std::string, std::pair<size_t, double>>> _dACache;
     size_t _noOrigShp;
 
     double _fdSum;

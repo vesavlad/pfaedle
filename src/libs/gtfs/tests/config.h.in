@@ -1,0 +1,3 @@
+#pragma once
+
+#define TEST_FOLDER_PATH "@test_folder_path@"

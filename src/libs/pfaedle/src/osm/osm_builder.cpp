@@ -494,23 +494,23 @@ void osm_builder::read_write_ways(pugi::xml_document& i,
 }
 
 
-node_payload osm_builder::payload_from_gtfs(const Stop* s, const osm_read_options& ops)
+node_payload osm_builder::payload_from_gtfs(const gtfs::stop* s, const osm_read_options& ops)
 {
     node_payload ret(
-            util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(s->getLat(), s->getLng()),
-            station_info(ops.statNormzer.norm(s->getName()),
-                         ops.trackNormzer.norm(s->getPlatformCode()), false));
+            util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(s->stop_lat, s->stop_lon),
+            station_info(ops.statNormzer.norm(s->stop_name),
+                         ops.trackNormzer.norm(s->platform_code), false));
 
 #ifdef PFAEDLE_STATION_IDS
     // debug feature, store station id from GTFS
     ret.getSI()->setId(s->getId());
 #endif
 
-    if (s->getParentStation())
-    {
-        ret.get_si()->add_alternative_name(
-                ops.statNormzer.norm(s->getParentStation()->getName()));
-    }
+#warning "to check this after doing full binding"
+//    if (s->getParentStation())
+//    {
+//        ret.get_si()->add_alternative_name(ops.statNormzer.norm(s->getParentStation()->getName()));
+//    }
 
     return ret;
 }
@@ -2209,7 +2209,7 @@ void osm_builder::snap_stats(const osm_read_options& opts,
         }
     }
 
-    std::vector<const Stop*> not_snapped;
+    std::vector<const gtfs::stop*> not_snapped;
 
     for (auto& s : fs)
     {
@@ -2234,7 +2234,7 @@ void osm_builder::snap_stats(const osm_read_options& opts,
         {
             LOG(TRACE) << "Could not snap station "
                        << "(" << pl.get_si()->get_name() << ")"
-                       << " (" << s.first->getLat() << "," << s.first->getLng()
+                       << " (" << s.first->stop_lon << "," << s.first->stop_lon
                        << ") in normal run, trying again later in orphan mode.";
             if (!bbox.contains(*pl.get_geom()))
             {
@@ -2296,7 +2296,7 @@ void osm_builder::snap_stats(const osm_read_options& opts,
             {
                 LOG(TRACE) << "Could not snap station "
                            << "(" << pl.get_si()->get_name() << ")"
-                           << " (" << s->getLat() << "," << s->getLng() << ")";
+                           << " (" << s->stop_lat << "," << s->stop_lon << ")";
                 LOG(TRACE) << "Note: '" << pl.get_si()->get_name()
                            << "' does not lie within the bounds for this graph and "
                               "may be a stray station";
@@ -2306,7 +2306,7 @@ void osm_builder::snap_stats(const osm_read_options& opts,
                 // only warn if it is contained in the BBOX for this graph
                 LOG(WARN) << "Could not snap station "
                           << "(" << pl.get_si()->get_name() << ")"
-                          << " (" << s->getLat() << "," << s->getLng() << ")";
+                          << " (" << s->stop_lat << "," << s->stop_lon << ")";
             }
         }
     }

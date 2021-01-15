@@ -5,12 +5,10 @@
 #ifndef PFAEDLE_EVAL_RESULT_H_
 #define PFAEDLE_EVAL_RESULT_H_
 
-#include "pfaedle/gtfs/Feed.h"
-#include "cppgtfs/gtfs/Feed.h"
-
-using pfaedle::gtfs::Trip;
-using ad::cppgtfs::gtfs::Shape;
-
+namespace pfaedle::gtfs
+{
+struct trip;
+}
 namespace pfaedle::eval
 {
 
@@ -20,7 +18,7 @@ namespace pfaedle::eval
 class result
 {
 public:
-    result(const Trip& t, double dist) :
+    result(const gtfs::trip& t, double dist) :
         _t(t),
         _dist(dist)
     {}
@@ -30,13 +28,13 @@ public:
         return _dist;
     }
 
-    const Trip& get_trip() const
+    const gtfs::trip& get_trip() const
     {
         return _t;
     }
 
 private:
-    const Trip& _t;
+    const gtfs::trip& _t;
     double _dist;
 };
 

@@ -1,4 +1,29 @@
 #include "app.h"
+
+#include <climits>
+#include <pwd.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <string>
+
+
+#include <pfaedle/config.h>
+#include <pfaedle/config/config_reader.h>
+#include <pfaedle/config/mot_config.h>
+#include <pfaedle/eval/collector.h>
+#include <pfaedle/netgraph/graph.h>
+#include <pfaedle/router/shape_builder.h>
+#include <pfaedle/trgraph/graph.h>
+#include <pfaedle/trgraph/station_group.h>
+
+#include <util/Misc.h>
+#include <util/geo/output/GeoGraphJsonOutput.h>
+#include <util/geo/output/GeoJsonOutput.h>
+
+#include <configparser/parse_file_exception.h>
+#include <logging/logger.h>
+#include <logging/scoped_timer.h>
+
 #ifndef CFG_HOME_SUFFIX
 #define CFG_HOME_SUFFIX "/.config"
 #endif
@@ -8,17 +33,18 @@
 #ifndef CFG_FILE_NAME
 #define CFG_FILE_NAME "pfaedle.cfg"
 #endif
-
+#include <pfaedle/gtfs/feed.h>
+#include <pfaedle/gtfs/access/feed_reader.h>
 
 namespace
 {
 
-std::string get_file_name_mot_str(const pfaedle::router::MOTs& mots)
+std::string get_file_name_mot_str(const pfaedle::router::route_type_set& mots)
 {
     std::string mot_str;
     for (const auto& mot : mots)
     {
-        mot_str += "-" + ad::cppgtfs::gtfs::flat::Route::getTypeString(mot);
+        mot_str += "-" + pfaedle::gtfs::get_route_type_string(mot);
     }
 
     return mot_str;
@@ -102,11 +128,12 @@ app::app(int argc, char** argv) :
 ret_code app::run()
 {
     // feed containing the shapes in memory for evaluation
-    ad::cppgtfs::gtfs::Feed eval_feed;
+    pfaedle::gtfs::feed eval_feed;
+
 
     if (cfg_.osmPath.empty() && !cfg_.writeOverpass)
     {
-        std::cerr << "No OSM input file specified (-x), see --help." << std::endl;
+        LOG_ERROR() << "No OSM input file specified (-x), see --help.";
         return ret_code::NO_OSM_INPUT;
     }
 
@@ -128,22 +155,16 @@ ret_code app::run()
             LOG(INFO) << "Reading " << cfg_.feedPaths.front() << " ...";
         }
 
-        try
-        {
-            ad::cppgtfs::Parser p;
-            p.parse(&feeds_.front(), cfg_.feedPaths.front());
-            if (cfg_.evaluate)
-            {
-                // read the shapes and store them in memory
-                p.parseShapes(&eval_feed, cfg_.feedPaths.front());
-            }
-        }
-        catch (const ad::cppgtfs::ParserException& ex)
+        pfaedle::gtfs::access::feed_reader reader(feeds_.front(), cfg_.feedPaths.front());
+        pfaedle::gtfs::access::feed_reader::read_config read_config;
+        read_config.shapes = cfg_.evaluate;
+        if(auto res = reader.read(read_config); res != pfaedle::gtfs::access::result_code::OK)
         {
             LOG(ERROR) << "Could not parse input GTFS feed, reason was:";
-            LOG(ERROR) << ex.what();
+            LOG(ERROR) << res.message;
             return ret_code::GTFS_PARSE_ERR;
         }
+
         if (!cfg_.writeOverpass)
             LOG(INFO) << "Done.";
     }
@@ -156,16 +177,13 @@ ret_code app::run()
                 LOG(INFO) << "Reading " << cfg_.feedPaths[i] << " ...";
             }
 
-            ad::cppgtfs::Parser p;
-
-            try
-            {
-                p.parse(&feeds_[i], cfg_.feedPaths[i]);
-            }
-            catch (const ad::cppgtfs::ParserException& ex)
+            pfaedle::gtfs::access::feed_reader reader(feeds_[i], cfg_.feedPaths[i]);
+            pfaedle::gtfs::access::feed_reader::read_config read_config;
+            read_config.shapes = cfg_.evaluate;
+            if(auto res = reader.read(read_config); res != pfaedle::gtfs::access::result_code::OK)
             {
                 LOG(ERROR) << "Could not parse input GTFS feed, reason was:";
-                std::cerr << ex.what() << std::endl;
+                LOG(ERROR) << res.message;
                 return ret_code::GTFS_PARSE_ERR;
             }
             if (!cfg_.writeOverpass)
@@ -181,8 +199,8 @@ ret_code app::run()
     }
 
     LOG(DEBUG) << "Read " << mot_cfg_reader_.get_configs().size() << " unique MOT configs.";
-    pfaedle::router::MOTs cmd_cfg_mots = cfg_.mots;
-    pfaedle::gtfs::Trip* single_trip = nullptr;
+    pfaedle::router::route_type_set cmd_route_types = cfg_.route_type_set;
+    pfaedle::gtfs::trip* single_trip = nullptr;
 
     if (!cfg_.shapeTripId.empty())
     {
@@ -191,11 +209,14 @@ ret_code app::run()
             std::cout << "No input feed specified, see --help" << std::endl;
             return ret_code::NO_INPUT_FEED;
         }
-        single_trip = feeds_.front().getTrips().get(cfg_.shapeTripId);
-        if (!single_trip)
+        if (!feeds_.front().trips.count(cfg_.shapeTripId))
         {
             LOG(ERROR) << "Trip #" << cfg_.shapeTripId << " not found.";
             return ret_code::TRIP_NOT_FOUND;
+        }
+        else
+        {
+            single_trip = &feeds_.front().trips[cfg_.shapeTripId];
         }
     }
 
@@ -205,17 +226,17 @@ ret_code app::run()
         pfaedle::osm::bounding_box box(BOX_PADDING);
         for (size_t i = 0; i < cfg_.feedPaths.size(); i++)
         {
-            pfaedle::router::shape_builder::get_gtfs_box(feeds_[i], cmd_cfg_mots, cfg_.shapeTripId, true, box);
+            pfaedle::router::shape_builder::get_gtfs_box(feeds_[i], cmd_route_types, cfg_.shapeTripId, true, box);
         }
 
         pfaedle::osm::osm_builder osm_builder;
         std::vector<pfaedle::osm::osm_read_options> opts;
         for (const auto& o : mot_cfg_reader_.get_configs())
         {
-            if (std::find_first_of(o.mots.begin(),
-                                   o.mots.end(),
-                                   cmd_cfg_mots.begin(),
-                                   cmd_cfg_mots.end()) != o.mots.end())
+            if (std::find_first_of(o.route_types.begin(),
+                                   o.route_types.end(),
+                                   cmd_route_types.begin(),
+                                   cmd_route_types.end()) != o.route_types.end())
             {
                 opts.push_back(o.osmBuildOpts);
             }
@@ -228,14 +249,15 @@ ret_code app::run()
         pfaedle::osm::bounding_box box(BOX_PADDING);
         for (size_t i = 0; i < cfg_.feedPaths.size(); i++)
         {
-            pfaedle::router::shape_builder::get_gtfs_box(feeds_[i], cmd_cfg_mots, cfg_.shapeTripId, true, box);
+            pfaedle::router::shape_builder::get_gtfs_box(feeds_[i], cmd_route_types, cfg_.shapeTripId, true, box);
         }
 
         pfaedle::osm::osm_builder osm_builder;
         std::vector<pfaedle::osm::osm_read_options> opts;
         for (const auto& o : mot_cfg_reader_.get_configs())
         {
-            if (std::find_first_of(o.mots.begin(), o.mots.end(), cmd_cfg_mots.begin(), cmd_cfg_mots.end()) != o.mots.end())
+            if (std::find_first_of(o.route_types.begin(), o.route_types.end(), cmd_route_types.begin(),
+                                   cmd_route_types.end()) != o.route_types.end())
             {
                 opts.push_back(o.osmBuildOpts);
             }
@@ -261,12 +283,12 @@ ret_code app::run()
     for (const auto& mot_cfg : mot_cfg_reader_.get_configs())
     {
         std::string file_post;
-        auto used_mots = pfaedle::router::motISect(mot_cfg.mots, cmd_cfg_mots);
+        auto used_mots = pfaedle::router::route_type_section(mot_cfg.route_types, cmd_route_types);
 
         if (used_mots.empty())
             continue;
 
-        if (single_trip && !used_mots.count(single_trip->getRoute()->getType()))
+        if (single_trip && single_trip->route.has_value() && !used_mots.count(single_trip->route.value().get().route_type))
             continue;
 
         if (mot_cfg_reader_.get_configs().size() > 1)
@@ -283,7 +305,7 @@ ret_code app::run()
         pfaedle::osm::osm_builder osm_builder;
 
         pfaedle::osm::bounding_box box(BOX_PADDING);
-        pfaedle::router::shape_builder::get_gtfs_box(feeds_.front(), cmd_cfg_mots, cfg_.shapeTripId, cfg_.dropShapes, box);
+        pfaedle::router::shape_builder::get_gtfs_box(feeds_.front(), cmd_route_types, cfg_.shapeTripId, cfg_.dropShapes, box);
 
         if (!f_stops.empty())
         {
@@ -311,7 +333,7 @@ ret_code app::run()
 
         pfaedle::router::shape_builder shape_builder(feeds_.front(),
                                                     eval_feed,
-                                                    cmd_cfg_mots,
+                                                    cmd_route_types,
                                                     mot_cfg,
                                                      collector,
                                                     graph,
@@ -370,8 +392,8 @@ ret_code app::run()
         {
             mkdir(cfg_.outputPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
             LOG(INFO) << "Writing output GTFS to " << cfg_.outputPath << " ...";
-            pfaedle::gtfs::Writer w;
-            w.write(&feeds_[0], cfg_.outputPath);
+//            pfaedle::gtfs::Writer w;
+//            w.write(&feeds_[0], cfg_.outputPath);
         }
         catch (const ad::cppgtfs::WriterException& ex)
         {

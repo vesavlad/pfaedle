@@ -6,6 +6,7 @@
 #define PFAEDLE_CONFIG_PFAEDLECONFIG_H_
 
 #include "cppgtfs/gtfs/Route.h"
+#include <pfaedle/gtfs/route_type.h>
 #include <set>
 #include <sstream>
 #include <string>
@@ -27,6 +28,7 @@ struct config
     std::vector<std::string> feedPaths;
     std::vector<std::string> configPaths;
     std::set<ad::cppgtfs::gtfs::Route::TYPE> mots;
+    std::set<pfaedle::gtfs::route_type> route_type_set;
     bool dropShapes{false};
     bool useHMM{false};
     bool writeGraph{false};

@@ -146,7 +146,7 @@ util::json::Dict node_payload::get_attrs() const
         {
             for (auto* s : _si->get_group()->get_stops())
             {
-                gtfs_ids << s->getId() << " (" << s->getName() << "),";
+                gtfs_ids << s->stop_id << " (" << s->stop_name << "),";
             }
         }
 

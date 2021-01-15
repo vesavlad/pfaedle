@@ -8,9 +8,10 @@
 #include <set>
 #include <string>
 #include <vector>
-#include "cppgtfs/gtfs/Feed.h"
-#include "pfaedle/gtfs/Feed.h"
-
+namespace pfaedle::gtfs
+{
+struct trip;
+}
 namespace pfaedle::netgraph
 {
 /*
@@ -21,14 +22,18 @@ class edge_payload
 {
 public:
     edge_payload() = default;
-    edge_payload(const LINE& l, const std::set<const pfaedle::gtfs::Trip*>& trips) :
+    edge_payload(const LINE& l, const std::set<const pfaedle::gtfs::trip*>& trips) :
         _l(l),
         _trips(trips)
     {
         for (const auto t : _trips)
         {
-            _routeShortNames.insert(t->getRoute()->getShortName());
-            _tripShortNames.insert(t->getShortname());
+            if(t->route.has_value())
+            {
+                gtfs::route& r = t->route->get();
+                _routeShortNames.insert(r.route_short_name);
+            }
+            _tripShortNames.insert(t->trip_short_name);
         }
     }
     const LINE* get_geom() const
@@ -47,7 +52,7 @@ public:
 
 private:
     LINE _l;
-    std::set<const pfaedle::gtfs::Trip*> _trips;
+    std::set<const pfaedle::gtfs::trip*> _trips;
     std::set<std::string> _routeShortNames;
     std::set<std::string> _tripShortNames;
 };

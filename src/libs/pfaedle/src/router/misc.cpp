@@ -2,7 +2,7 @@
 
 namespace pfaedle::router
 {
-std::string get_mot_str(const pfaedle::router::MOTs& mots)
+std::string get_mot_str(const pfaedle::router::route_type_set& mots)
 {
     bool first = false;
     std::string motStr;
@@ -12,36 +12,46 @@ std::string get_mot_str(const pfaedle::router::MOTs& mots)
         {
             motStr += ", ";
         }
-        motStr += "<" + ad::cppgtfs::gtfs::flat::Route::getTypeString(mot) + ">";
+        motStr += "<" + pfaedle::gtfs::get_route_type_string(mot) + ">";
         first = true;
     }
 
     return motStr;
 }
 
-pfaedle::router::feed_stops write_mot_stops(const gtfs::Feed& feed, const MOTs& mots, const string& tid)
+pfaedle::router::feed_stops write_mot_stops(const gtfs::feed& feed, const route_type_set& mots, const string& tid)
 {
     pfaedle::router::feed_stops ret;
-    for (auto t : feed.getTrips())
+    for (auto& t : feed.trips)
     {
-        if (!tid.empty() && t.getId() != tid)
+        if (!tid.empty() && t.second.trip_id != tid)
             continue;
 
-        if (mots.count(t.getRoute()->getType()))
+        if(t.second.route.has_value() && mots.count(t.second.route.value().get().route_type))
         {
-            for (auto st : t.getStopTimes())
+            for (const gtfs::stop_time& st : t.second.stop_time_list)
             {
+                if(!st.stop.has_value())
+                    continue;
+
+                const gtfs::stop& stop = st.stop.value();
                 // if the station has type STATION_ENTRANCE, use the parent
                 // station for routing. Normally, this should not occur, as
                 // this is not allowed in stop_times.txt
-                if (st.getStop()->getLocationType() == ad::cppgtfs::gtfs::flat::Stop::STATION_ENTRANCE &&
-                    st.getStop()->getParentStation())
+                if (stop.location_type == pfaedle::gtfs::stop_location_type::EntranceExit && !stop.parent_station.empty())
                 {
-                    ret[st.getStop()->getParentStation()] = nullptr;
+                    const auto& parrent_id = stop.parent_station;
+                    const auto it = std::find_if(std::begin(feed.stops), std::end(feed.stops), [parrent_id](const std::pair<gtfs::Id, gtfs::stop>& stop_pair) {
+                        return stop_pair.second.stop_id == parrent_id;
+                    });
+                    if (it != std::end(feed.stops))
+                    {
+                        ret[&it->second] = nullptr;
+                    }
                 }
                 else
                 {
-                    ret[st.getStop()] = nullptr;
+                    ret[&stop] = nullptr;
                 }
             }
         }
@@ -49,9 +59,10 @@ pfaedle::router::feed_stops write_mot_stops(const gtfs::Feed& feed, const MOTs& 
     return ret;
 }
 
-MOTs motISect(const MOTs& a, const MOTs& b)
+
+route_type_set route_type_section(const route_type_set& a, const route_type_set& b)
 {
-    MOTs ret;
+    route_type_set ret;
     for (auto mot : a)
     {
         if (b.count(mot))

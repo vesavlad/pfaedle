@@ -3,11 +3,15 @@
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
 #include "pfaedle/eval/collector.h"
-#include "cppgtfs/gtfs/Feed.h"
 #include "pfaedle/definitions.h"
 #include "pfaedle/eval/result.h"
 #include "util/geo/Geo.h"
 #include "util/geo/output/GeoJsonOutput.h"
+
+#include <pfaedle/gtfs/trip.h>
+#include <pfaedle/gtfs/shape.h>
+#include <pfaedle/gtfs/stop.h>
+#include <pfaedle/gtfs/stop_time.h>
 
 #include <logging/logger.h>
 #include <cmath>
@@ -16,9 +20,6 @@
 #include <string>
 #include <utility>
 
-
-using ad::cppgtfs::gtfs::Shape;
-using pfaedle::gtfs::Trip;
 
 namespace pfaedle::eval
 {
@@ -32,9 +33,9 @@ collector::collector(const std::string& evalOutPath, const std::vector<double>& 
     _dfBins(dfBins)
 {}
 
-double collector::add(const Trip& t,
-                      const Shape* oldS,
-                      const Shape& newS,
+double collector::add(const gtfs::trip& t,
+                      const gtfs::shape* oldS,
+                      const gtfs::shape& newS,
                       const std::vector<double>& newTripDists)
 {
     if (!oldS)
@@ -43,9 +44,9 @@ double collector::add(const Trip& t,
         return 0;
     }
 
-    for (auto st : t.getStopTimes())
+    for (auto st : t.stop_time_list)
     {
-        if (st.getShapeDistanceTravelled() < 0)
+        if (st.get().shape_dist_traveled < 0)
         {
             // we cannot safely compare trips without shape dist travelled
             // info
@@ -60,13 +61,13 @@ double collector::add(const Trip& t,
 
     std::vector<double> old_dists;
     LINE old_line = get_web_merc_line(
-            oldS, t.getStopTimes().begin()->getShapeDistanceTravelled(),
-            (--t.getStopTimes().end())->getShapeDistanceTravelled(), old_dists);
+            oldS, t.stop_time_list.begin()->get().shape_dist_traveled,
+            (--t.stop_time_list.end())->get().shape_dist_traveled, old_dists);
 
     std::vector<double> new_dists;
     LINE new_line = get_web_merc_line(&newS, -1, -1, new_dists);
 
-    std::ofstream fstr(_evalOutPath + "/trip-" + t.getId() + ".json");
+    std::ofstream fstr(_evalOutPath + "/trip-" + t.trip_id + ".json");
     util::geo::output::GeoJsonOutput gjout(fstr);
 
     auto old_segs = segmentize(t, old_line, old_dists, nullptr);
@@ -136,25 +137,25 @@ double collector::add(const Trip& t,
                                   6378137.0)) -
                      1.5707965);
 
-    if (_dCache.count(oldS) && _dCache.find(oldS)->second.count(newS.getId()))
+    if (_dCache.count(oldS) && _dCache.find(oldS)->second.count(newS.shape_id))
     {
-        fd = _dCache[oldS][newS.getId()];
+        fd = _dCache[oldS][newS.shape_id];
     }
     else
     {
         fd = util::geo::accFrechetDistC(old_l_cut, new_l_cut, 5 / fac) * fac;
-        _dCache[oldS][newS.getId()] = fd;
+        _dCache[oldS][newS.shape_id] = fd;
     }
 
-    if (_dACache.count(oldS) && _dACache.find(oldS)->second.count(newS.getId()))
+    if (_dACache.count(oldS) && _dACache.find(oldS)->second.count(newS.shape_id))
     {
-        unmatched_segments = _dACache[oldS][newS.getId()].first;
-        unmatched_segments_length = _dACache[oldS][newS.getId()].second;
+        unmatched_segments = _dACache[oldS][newS.shape_id].first;
+        unmatched_segments_length = _dACache[oldS][newS.shape_id].second;
     }
     else
     {
         auto dA = get_da(old_segs, new_segs);
-        _dACache[oldS][newS.getId()] = dA;
+        _dACache[oldS][newS.shape_id] = dA;
         unmatched_segments = dA.first;
         unmatched_segments_length = dA.second;
     }
@@ -178,7 +179,7 @@ double collector::add(const Trip& t,
     _resultsAN.insert(result(t, static_cast<double>(unmatched_segments) / static_cast<double>(old_segs.size())));
     _resultsAL.insert(result(t, unmatched_segments_length / total_length));
 
-    LOG(DEBUG) << "This result (" << t.getId()
+    LOG(DEBUG) << "This result (" << t.trip_id
                << "): A_N/N = " << unmatched_segments << "/" << old_segs.size()
                << " = "
                << static_cast<double>(unmatched_segments) /
@@ -190,32 +191,36 @@ double collector::add(const Trip& t,
 }
 
 std::vector<LINE> collector::segmentize(
-        const Trip& t,
+        const pfaedle::gtfs::trip& t,
         const LINE& shape,
         const std::vector<double>& dists,
         const std::vector<double>* new_trip_dists)
 {
     std::vector<LINE> ret;
 
-    if (t.getStopTimes().size() < 2) return ret;
+    if (t.stop_time_list.size() < 2) return ret;
 
     POLYLINE pl(shape);
     std::vector<std::pair<POINT, double>> cuts;
 
     size_t i = 0;
-    for (auto st : t.getStopTimes())
+    for (auto st : t.stop_time_list)
     {
+        if(!st.get().stop.has_value())
+            continue;
+        gtfs::stop& stop = st.get().stop.value();
+
         if (new_trip_dists)
         {
             cuts.emplace_back(
-                    util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(st.getStop()->getLat(), st.getStop()->getLng()),
+                    util::geo::latLngToWebMerc(stop.stop_lat, stop.stop_lon),
                     (*new_trip_dists)[i]);
         }
         else
         {
             cuts.emplace_back(
-                    util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(st.getStop()->getLat(), st.getStop()->getLng()),
-                    st.getShapeDistanceTravelled());
+                    util::geo::latLngToWebMerc(stop.stop_lat, stop.stop_lon),
+                    st.get().shape_dist_traveled);
         }
         i++;
     }
@@ -252,30 +257,30 @@ std::vector<LINE> collector::segmentize(
     return ret;
 }
 
-LINE collector::get_web_merc_line(const Shape* s, double from, double to)
+LINE collector::get_web_merc_line(const gtfs::shape* s, double from, double to)
 {
     std::vector<double> distances;
     return get_web_merc_line(s, from, to, distances);
 }
 
-LINE collector::get_web_merc_line(const Shape* s, double from, double to, std::vector<double>& dists)
+LINE collector::get_web_merc_line(const gtfs::shape* s, double from, double to, std::vector<double>& dists)
 {
     LINE ret;
 
-    auto i = s->getPoints().begin();
+    auto i = s->points.begin();
 
-    for (; i != s->getPoints().end(); i++)
+    for (; i != s->points.end(); i++)
     {
         auto p = *i;
 
-        if ((from < 0 || (p.travelDist - from) > -0.01))
+        if ((from < 0 || (p.shape_dist_traveled - from) > -0.01))
         {
-            if (to >= 0 && (p.travelDist - to) > 0.01) break;
+            if (to >= 0 && (p.shape_dist_traveled - to) > 0.01) break;
 
-            POINT merc_p = util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(p.lat, p.lng);
+            POINT merc_p = util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(p.shape_pt_lat, p.shape_pt_lon);
 
             ret.push_back(merc_p);
-            dists.push_back(p.travelDist);
+            dists.push_back(p.shape_dist_traveled);
         }
     }
 
@@ -292,13 +297,13 @@ void collector::print_histogram(std::ostream& os, const std::set<result>& result
 
     auto it = result.begin();
     std::vector<std::pair<double, size_t>> res;
-    std::vector<const Trip*> examples;
+    std::vector<const gtfs::trip*> examples;
     size_t maxC = 0;
 
     for (double bin : bins)
     {
         size_t c = 0;
-        const Trip* trip = nullptr;
+        const gtfs::trip* trip = nullptr;
 
         while (it != result.end() && it->get_dist() <= (bin + 0.001))
         {
@@ -328,7 +333,7 @@ void collector::print_histogram(std::ostream& os, const std::set<result>& result
         }
 
         if (r.second)
-            os << " (" << r.second << ", e.g. #" << examples[j]->getId() << ")";
+            os << " (" << r.second << ", e.g. #" << examples[j]->trip_id << ")";
         os << std::endl;
         j++;
     }
@@ -358,7 +363,7 @@ void collector::print_csv(std::ostream& os,
     for (double bin : bins)
     {
         size_t c = 0;
-        const Trip* trip = nullptr;
+        const gtfs::trip* trip = nullptr;
 
         while (it != result.end() && (it->get_dist() <= (bin + 0.001)))
         {
@@ -395,10 +400,10 @@ void collector::print_stats(std::ostream& os) const
     {
         os << std::setw(30) << "  highest distance to input shapes: "
            << (--_results.end())->get_dist() << " (on trip #"
-           << (--_results.end())->get_trip().getId() << ")\n";
+           << (--_results.end())->get_trip().trip_id << ")\n";
         os << std::setw(30) << "  lowest distance to input shapes: "
            << (_results.begin())->get_dist() << " (on trip #"
-           << (_results.begin())->get_trip().getId() << ")\n";
+           << (_results.begin())->get_trip().trip_id << ")\n";
         os << std::setw(30) << "  avg total frechet distance: " << get_average_distance()
            << "\n";
 

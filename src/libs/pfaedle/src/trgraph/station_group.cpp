@@ -6,7 +6,6 @@
 #include "util/geo/Geo.h"
 #include <set>
 
-using ad::cppgtfs::gtfs::Stop;
 using pfaedle::router::node_candidate_group;
 
 namespace pfaedle::trgraph
@@ -14,7 +13,7 @@ namespace pfaedle::trgraph
 
 station_group::station_group() = default;
 
-void station_group::add_stop(const Stop* s) { _stops.insert(s); }
+void station_group::add_stop(const gtfs::stop* s) { _stops.insert(s); }
 
 void station_group::add_node(trgraph::node* n) { _nodes.insert(n); }
 
@@ -23,7 +22,7 @@ void station_group::merge(station_group* other)
     if (other == this) return;
 
     std::set<node*> nds = other->get_nodes();
-    std::set<const Stop*> stops = other->get_stops();
+    std::set<const gtfs::stop*> stops = other->get_stops();
 
     for (auto on : nds)
     {
@@ -37,7 +36,7 @@ void station_group::merge(station_group* other)
     }
 }
 
-const node_candidate_group& station_group::get_node_candidates(const Stop* s) const
+const node_candidate_group& station_group::get_node_candidates(const gtfs::stop* s) const
 {
     return _stopNodePens.at(s);
 }
@@ -52,19 +51,19 @@ void station_group::remove_node(trgraph::node* n)
 
 std::set<node*>& station_group::get_nodes() { return _nodes; }
 
-const std::set<const Stop*>& station_group::get_stops() const { return _stops; }
+const std::set<const gtfs::stop*>& station_group::get_stops() const { return _stops; }
 
-double station_group::get_penalty(const Stop* s, trgraph::node* n,
+double station_group::get_penalty(const gtfs::stop* s, trgraph::node* n,
                              const trgraph::normalizer& norm,
                              double trackPen, double distPenFac,
                              double nonOsmPen) const
 {
-    POINT p = util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(s->getLat(), s->getLng());
+    POINT p = util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(s->stop_lat, s->stop_lon);
 
     double distPen = util::geo::webMercMeterDist(p, *n->pl().get_geom());
     distPen *= distPenFac;
 
-    std::string platform = norm.norm(s->getPlatformCode());
+    std::string platform = norm.norm(s->platform_code);
 
     if (!platform.empty() && !n->pl().get_si()->get_track().empty() &&
         n->pl().get_si()->get_track() == platform)

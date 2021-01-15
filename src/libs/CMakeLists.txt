@@ -1,4 +1,5 @@
 add_subdirectory(logging)
 add_subdirectory(exceptions)
+add_subdirectory(gtfs)
 add_subdirectory(util)
 add_subdirectory(pfaedle)

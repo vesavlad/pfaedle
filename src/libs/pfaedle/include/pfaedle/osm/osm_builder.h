@@ -5,7 +5,6 @@
 #ifndef PFAEDLE_OSM_OSMBUILDER_H_
 #define PFAEDLE_OSM_OSMBUILDER_H_
 
-#include <cppgtfs/gtfs/Feed.h>
 #include <pfaedle/definitions.h>
 #include <pfaedle/osm/bounding_box.h>
 #include <pfaedle/osm/osm_filter.h>
@@ -35,10 +34,12 @@ class xml_document;
 class xml_node;
 }  // namespace pugi
 
+namespace pfaedle::gtfs
+{
+struct stop;
+}
 namespace pfaedle::osm
 {
-
-using ad::cppgtfs::gtfs::Stop;
 
 struct NodeCand
 {
@@ -254,7 +255,7 @@ private:
 
     static trgraph::station_group* group_stats(const router::node_set& s);
 
-    static trgraph::node_payload payload_from_gtfs(const Stop* s, const osm_read_options& ops);
+    static trgraph::node_payload payload_from_gtfs(const pfaedle::gtfs::stop* s, const osm_read_options& ops);
 
     std::vector<trgraph::transit_edge_line*> get_lines(const std::vector<size_t>& edgeRels,
                                                        const relation_list& rels,

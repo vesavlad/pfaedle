@@ -15,7 +15,7 @@ namespace pfaedle::config
 
 struct mot_config
 {
-    router::MOTs mots;
+    router::route_type_set route_types;
     osm::osm_read_options osmBuildOpts;
     router::routing_options routingOpts;
     std::map<std::string, std::string> unproced;

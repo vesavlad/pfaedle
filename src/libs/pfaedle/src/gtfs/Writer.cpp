@@ -15,9 +15,8 @@
 
 using ad::cppgtfs::Parser;
 using ad::util::CsvWriter;
-using pfaedle::getTmpFName;
 using pfaedle::gtfs::Writer;
-
+#if 0
 // ____________________________________________________________________________
 bool Writer::write(gtfs::Feed* sourceFeed, const std::string& path) const
 {
@@ -551,3 +550,4 @@ void Writer::cannotWrite(const std::string& file, const std::string& file2)
     ss << "(temporary file for " << file2 << ") Could not write to file";
     throw ad::cppgtfs::WriterException(ss.str(), file);
 }
+#endif
