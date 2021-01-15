@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string>
+#include <fstream>
 
 
 #include <pfaedle/config.h>
@@ -24,6 +25,9 @@
 #include <logging/logger.h>
 #include <logging/scoped_timer.h>
 
+#include <gtfs/access/feed_reader.h>
+#include <gtfs/access/feed_writter.h>
+
 #ifndef CFG_HOME_SUFFIX
 #define CFG_HOME_SUFFIX "/.config"
 #endif
@@ -33,8 +37,6 @@
 #ifndef CFG_FILE_NAME
 #define CFG_FILE_NAME "pfaedle.cfg"
 #endif
-#include <pfaedle/gtfs/feed.h>
-#include <pfaedle/gtfs/access/feed_reader.h>
 
 namespace
 {
@@ -388,17 +390,14 @@ ret_code app::run()
 
     if (!cfg_.feedPaths.empty())
     {
-        try
-        {
-            mkdir(cfg_.outputPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-            LOG(INFO) << "Writing output GTFS to " << cfg_.outputPath << " ...";
-//            pfaedle::gtfs::Writer w;
-//            w.write(&feeds_[0], cfg_.outputPath);
-        }
-        catch (const ad::cppgtfs::WriterException& ex)
+        mkdir(cfg_.outputPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        LOG(INFO) << "Writing output GTFS to " << cfg_.outputPath << " ...";
+        pfaedle::gtfs::access::feed_writter writter(feeds_[0], cfg_.outputPath);
+        pfaedle::gtfs::access::feed_writter::write_config config;
+        if(auto res = writter.write(config); res != pfaedle::gtfs::access::result_code::OK)
         {
             LOG(ERROR) << "Could not write final GTFS feed, reason was:";
-            std::cerr << ex.what() << std::endl;
+            LOG(ERROR) << res.message;
             return ret_code::GTFS_WRITE_ERR;
         }
     }

@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace util
@@ -156,7 +157,7 @@ inline std::string rtrim(std::string str)
     return str;
 }
 
-inline std::string trim(std::string str) { return ltrim(rtrim(str)); }
+inline std::string trim(std::string str) { return ltrim(rtrim(std::move(str))); }
 
 inline size_t editDist(const std::string& s1, const std::string& s2)
 {

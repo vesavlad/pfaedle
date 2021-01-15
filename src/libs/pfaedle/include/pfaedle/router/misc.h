@@ -5,10 +5,10 @@
 #ifndef PFAEDLE_ROUTER_MISC_H_
 #define PFAEDLE_ROUTER_MISC_H_
 
-#include <pfaedle/gtfs/feed.h>
-#include <pfaedle/gtfs/route.h>
-#include <pfaedle/gtfs/stop.h>
-#include <pfaedle/gtfs/route_type.h>
+#include <gtfs/feed.h>
+#include <gtfs/route.h>
+#include <gtfs/stop.h>
+#include <gtfs/route_type.h>
 #include <pfaedle/trgraph/graph.h>
 #include <util/geo/Point.h>
 

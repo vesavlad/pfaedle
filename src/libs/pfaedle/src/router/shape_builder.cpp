@@ -9,9 +9,8 @@
 #define omp_get_num_procs() 1
 #endif
 
-#include <pfaedle/gtfs/feed.h>
+#include <gtfs/feed.h>
 
-#include <cppgtfs/gtfs/Feed.h>
 #include <pfaedle/definitions.h>
 #include <pfaedle/eval/collector.h>
 #include <pfaedle/osm/osm_builder.h>
@@ -27,6 +26,7 @@
 #include <mutex>
 #include <random>
 #include <thread>
+#include <fstream>
 #include <utility>
 #include <stdexcept>
 #include <exception>

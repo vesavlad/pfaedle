@@ -5,8 +5,7 @@
 #ifndef PFAEDLE_CONFIG_PFAEDLECONFIG_H_
 #define PFAEDLE_CONFIG_PFAEDLECONFIG_H_
 
-#include "cppgtfs/gtfs/Route.h"
-#include <pfaedle/gtfs/route_type.h>
+#include <gtfs/route_type.h>
 #include <set>
 #include <sstream>
 #include <string>
@@ -27,7 +26,6 @@ struct config
     std::string evalDfBins;
     std::vector<std::string> feedPaths;
     std::vector<std::string> configPaths;
-    std::set<ad::cppgtfs::gtfs::Route::TYPE> mots;
     std::set<pfaedle::gtfs::route_type> route_type_set;
     bool dropShapes{false};
     bool useHMM{false};
@@ -71,9 +69,9 @@ struct config
 
         ss << "\nmots: ";
 
-        for (const auto& mot : mots)
+        for (const auto& mot : route_type_set)
         {
-            ss << mot << " ";
+            ss << static_cast<size_t>(mot) << " ";
         }
 
         ss << "\n";

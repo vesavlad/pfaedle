@@ -5,7 +5,7 @@
 #ifndef PFAEDLE_TRGRAPH_STATGROUP_H_
 #define PFAEDLE_TRGRAPH_STATGROUP_H_
 
-#include <pfaedle/gtfs/stop.h>
+#include <gtfs/stop.h>
 #include "pfaedle/router/router.h"
 #include "pfaedle/trgraph/graph.h"
 #include "pfaedle/trgraph/normalizer.h"

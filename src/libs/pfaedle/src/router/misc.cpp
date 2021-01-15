@@ -19,7 +19,7 @@ std::string get_mot_str(const pfaedle::router::route_type_set& mots)
     return motStr;
 }
 
-pfaedle::router::feed_stops write_mot_stops(const gtfs::feed& feed, const route_type_set& mots, const string& tid)
+pfaedle::router::feed_stops write_mot_stops(const gtfs::feed& feed, const route_type_set& mots, const std::string& tid)
 {
     pfaedle::router::feed_stops ret;
     for (auto& t : feed.trips)

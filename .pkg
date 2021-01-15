@@ -1,8 +1,3 @@
-[cppgtfs]
-	url=git@github.com:vesavlad/cppgtfs.git
-    branch=c++17
-    commit=cf61162a1e80ac64f6b92e7c91394668039c667f
-
 [configparser]
     url=git@github.com:vesavlad/configparser.git
     branch=master

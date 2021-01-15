@@ -8,10 +8,10 @@
 #include "util/geo/Geo.h"
 #include "util/geo/output/GeoJsonOutput.h"
 
-#include <pfaedle/gtfs/trip.h>
-#include <pfaedle/gtfs/shape.h>
-#include <pfaedle/gtfs/stop.h>
-#include <pfaedle/gtfs/stop_time.h>
+#include <gtfs/trip.h>
+#include <gtfs/shape.h>
+#include <gtfs/stop.h>
+#include <gtfs/stop_time.h>
 
 #include <logging/logger.h>
 #include <cmath>
@@ -19,6 +19,7 @@
 #include <set>
 #include <string>
 #include <utility>
+#include <fstream>
 
 
 namespace pfaedle::eval

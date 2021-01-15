@@ -11,6 +11,5 @@ target_link_libraries(pfaedle
         pfaedle-lib
         pfaedle-util
         configparser
-        cppgtfs
         -lpthread)
 

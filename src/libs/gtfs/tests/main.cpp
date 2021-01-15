@@ -1,16 +1,22 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "catch_amalgamated.hpp"
+#include <gtfs/misc.h>
 #include "config.h"
 
-unsigned int Factorial( unsigned int number ) {
-    return number <= 1 ? number : Factorial(number-1)*number;
+namespace gtfs
+{
+TEST_CASE( "Quoting works", "[quote]" ) {
+    REQUIRE( pfaedle::gtfs::quote_text("what the fuck") == "\"what the fuck\"" );
+    REQUIRE( pfaedle::gtfs::quote_text("this is the 2`nd try") == "\"this is the 2`nd try\"" );
+    REQUIRE( pfaedle::gtfs::quote_text("this is the 3'rd try") == "\"this is the 3'rd try\"" );
+    REQUIRE( pfaedle::gtfs::quote_text("this is \" the 4'th try") == "\"this is \"\" the 4'th try\"" );
 }
 
-TEST_CASE( "Factorials are computed", "[factorial]" ) {
-    REQUIRE( Factorial(1) == 1 );
-    REQUIRE( Factorial(2) == 2 );
-    REQUIRE( Factorial(3) == 6 );
-    REQUIRE( Factorial(10) == 3628800 );
+TEST_CASE( "Unquoting works", "[quote]" ) {
+    REQUIRE( pfaedle::gtfs::unquote_text("\"what the fuck\"") == "what the fuck" );
+    REQUIRE( pfaedle::gtfs::unquote_text("\"this is the 2`nd try\"") == "this is the 2`nd try" );
+    REQUIRE( pfaedle::gtfs::unquote_text("\"this is the 3'rd try\"") == "this is the 3'rd try" );
+    REQUIRE( pfaedle::gtfs::unquote_text("\"this is \"\" the 4'th try\"") == "this is \" the 4'th try" );
 }
 
 TEST_CASE( "vectors can be sized and resized", "[vector]" ) {
@@ -87,4 +93,5 @@ SCENARIO( "vectors can be sized and resized", "[vector]" ) {
             }
         }
     }
+}
 }

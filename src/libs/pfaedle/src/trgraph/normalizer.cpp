@@ -16,20 +16,17 @@
 
 using pfaedle::trgraph::normalizer;
 
-// _____________________________________________________________________________
 normalizer::normalizer(const ReplRules& rules) :
     _rulesOrig(rules)
 {
     build_rules(rules);
 }
 
-// _____________________________________________________________________________
 normalizer::normalizer(const normalizer& other) :
     _rules(other._rules),
     _rulesOrig(other._rulesOrig),
     _cache(other._cache) {}
 
-// _____________________________________________________________________________
 normalizer& normalizer::operator=(normalizer other)
 {
     std::swap(this->_rules, other._rules);
@@ -39,20 +36,17 @@ normalizer& normalizer::operator=(normalizer other)
     return *this;
 }
 
-// _____________________________________________________________________________
 std::string normalizer::operator()(std::string sn) const
 {
     return normTS(sn);
 }
 
-// _____________________________________________________________________________
 std::string normalizer::normTS(const std::string& sn) const
 {
     std::lock_guard<std::mutex> lock(_mutex);
     return norm(sn);
 }
 
-// _____________________________________________________________________________
 std::string normalizer::norm(const std::string& sn) const
 {
     auto i = _cache.find(sn);
@@ -75,13 +69,11 @@ std::string normalizer::norm(const std::string& sn) const
     return ret;
 }
 
-// _____________________________________________________________________________
 bool normalizer::operator==(const normalizer& b) const
 {
     return _rulesOrig == b._rulesOrig;
 }
 
-// _____________________________________________________________________________
 void normalizer::build_rules(const ReplRules& rules)
 {
     for (const auto& rule : rules)

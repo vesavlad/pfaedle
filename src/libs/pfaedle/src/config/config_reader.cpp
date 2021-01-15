@@ -5,8 +5,8 @@
 #include "pfaedle/config/config_reader.h"
 #include "pfaedle/config.h"
 #include "pfaedle/definitions.h"
-#include <pfaedle/gtfs/misc.h>
-#include <pfaedle/gtfs/route_type.h>
+#include <gtfs/misc.h>
+#include <gtfs/route_type.h>
 
 #include "util/String.h"
 
@@ -259,9 +259,6 @@ void config_reader::read(int argc, char** argv)
     auto v = util::split(mot_str, ',');
     for (const auto& mot_str : v)
     {
-        const auto& mots = ad::cppgtfs::gtfs::flat::Route::getTypesFromString(util::trim(mot_str));
-        config_.mots.insert(mots.begin(), mots.end());
-
         const auto& mots_alternative = pfaedle::gtfs::get_route_types_from_string(util::trim(mot_str));
         config_.route_type_set.insert(mots_alternative.begin(), mots_alternative.end());
     }

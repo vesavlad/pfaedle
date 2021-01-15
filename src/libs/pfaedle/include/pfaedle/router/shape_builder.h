@@ -5,17 +5,18 @@
 #ifndef PFAEDLE_ROUTER_SHAPEBUILDER_H_
 #define PFAEDLE_ROUTER_SHAPEBUILDER_H_
 
-#include "pfaedle/config/config.h"
-#include "pfaedle/config/mot_config.h"
-#include "pfaedle/definitions.h"
-#include "pfaedle/eval/collector.h"
-#include "pfaedle/gtfs/trip.h"
-#include "pfaedle/netgraph/graph.h"
-#include "pfaedle/osm/restrictor.h"
-#include "pfaedle/router/misc.h"
-#include "pfaedle/router/router.h"
-#include "pfaedle/trgraph/graph.h"
-#include "util/geo/Geo.h"
+#include <pfaedle/config/config.h>
+#include <pfaedle/config/mot_config.h>
+#include <pfaedle/definitions.h>
+#include <pfaedle/eval/collector.h>
+#include <pfaedle/netgraph/graph.h>
+#include <pfaedle/osm/restrictor.h>
+#include <pfaedle/router/misc.h>
+#include <pfaedle/router/router.h>
+#include <pfaedle/trgraph/graph.h>
+
+#include <gtfs/trip.h>
+#include <util/geo/Geo.h>
 
 #include <mutex>
 #include <set>

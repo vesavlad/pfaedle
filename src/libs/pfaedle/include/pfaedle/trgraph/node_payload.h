@@ -5,7 +5,6 @@
 #ifndef PFAEDLE_TRGRAPH_NODEPL_H_
 #define PFAEDLE_TRGRAPH_NODEPL_H_
 
-#include "cppgtfs/gtfs/Feed.h"
 #include "pfaedle/definitions.h"
 #include "pfaedle/trgraph/station_info.h"
 #include "util/geo/Geo.h"

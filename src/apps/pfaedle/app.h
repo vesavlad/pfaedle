@@ -5,7 +5,7 @@
 #ifndef PFAEDLE_APP_H
 #define PFAEDLE_APP_H
 
-#include <pfaedle/gtfs/feed.h>
+#include <gtfs/feed.h>
 #include <pfaedle/config/config.h>
 #include <pfaedle/config/mot_config_reader.h>
 

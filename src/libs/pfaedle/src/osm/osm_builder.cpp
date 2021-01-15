@@ -21,8 +21,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <fstream>
 
-using ad::cppgtfs::gtfs::Stop;
 using pfaedle::trgraph::component;
 using pfaedle::trgraph::edge;
 using pfaedle::trgraph::edge_payload;

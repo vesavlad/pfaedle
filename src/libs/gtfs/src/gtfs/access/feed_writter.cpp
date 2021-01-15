@@ -354,6 +354,15 @@ result feed_writter::write_stop_times() const
 }
 result feed_writter::write_calendar() const {}
 result feed_writter::write_calendar_dates() const {}
+result feed_writter::write_transfers() const {}
+result feed_writter::write_frequencies() const {}
+result feed_writter::write_fare_attributes() const {}
+result feed_writter::write_fare_rules() const {}
+result feed_writter::write_pathways() const {}
+result feed_writter::write_levels() const {}
+result feed_writter::write_feed_info() const {}
+result feed_writter::write_translations() const {}
+result feed_writter::write_attributions() const {}
 }
 
 }

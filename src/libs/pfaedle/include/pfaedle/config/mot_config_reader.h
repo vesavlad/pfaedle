@@ -6,7 +6,6 @@
 #define PFAEDLE_CONFIG_MOTCONFIGREADER_H_
 
 #include "configparser/config_file_parser.h"
-#include "cppgtfs/gtfs/Route.h"
 #include "pfaedle/config/mot_config.h"
 #include "pfaedle/osm/osm_builder.h"
 
@@ -33,7 +32,7 @@ private:
 
     trgraph::ReplRules getNormRules(const std::vector<std::string>& arr) const;
     osm::deep_attribute_rule getDeepAttrRule(const std::string& rule) const;
-    uint64_t getFlags(const std::set<string>& flags) const;
+    uint64_t getFlags(const std::set<std::string>& flags) const;
 
     std::vector<mot_config> configs_;
 };

@@ -10,7 +10,6 @@
 #include <set>
 #include <string>
 
-using ad::cppgtfs::gtfs::Route;
 using configparser::config_file_parser;
 using configparser::parse_exception;
 using pfaedle::config::mot_config;
@@ -576,7 +575,7 @@ ReplRules mot_config_reader::getNormRules(const std::vector<std::string>& arr) c
 }
 
 // _____________________________________________________________________________
-uint64_t mot_config_reader::getFlags(const std::set<string>& flags) const
+uint64_t mot_config_reader::getFlags(const std::set<std::string>& flags) const
 {
     uint64_t ret = osm::USE;
 
