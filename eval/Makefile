@@ -111,7 +111,7 @@ gtfs/stpt/%.txt:
 	@mkdir -p gtfs
 	@mkdir -p gtfs/stpt
 	@curl --progress-bar https://api.opentransport.ro/gtfs/v1/static > gtfs/stpt/gtfs.zip
-	@cd gtfs/stpt && unzip -qq -o gtfs #.zip
+	@cd gtfs/stpt && unzip -qq -o gtfs.zip
 	@rm gtfs/stpt/gtfs.zip
 
 gtfs/vitoria/%.txt:
