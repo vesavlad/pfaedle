@@ -45,7 +45,7 @@ double collector::add(const gtfs::trip& t,
         return 0;
     }
 
-    for (auto st : t.stop_time_list)
+    for (auto st : t.stop_times())
     {
         if (st.get().shape_dist_traveled < 0)
         {
@@ -62,8 +62,8 @@ double collector::add(const gtfs::trip& t,
 
     std::vector<double> old_dists;
     LINE old_line = get_web_merc_line(
-            oldS, t.stop_time_list.begin()->get().shape_dist_traveled,
-            (--t.stop_time_list.end())->get().shape_dist_traveled, old_dists);
+            oldS, t.stop_times().begin()->get().shape_dist_traveled,
+            (--t.stop_times().end())->get().shape_dist_traveled, old_dists);
 
     std::vector<double> new_dists;
     LINE new_line = get_web_merc_line(&newS, -1, -1, new_dists);
@@ -199,17 +199,17 @@ std::vector<LINE> collector::segmentize(
 {
     std::vector<LINE> ret;
 
-    if (t.stop_time_list.size() < 2) return ret;
+    if (t.stop_times().size() < 2) return ret;
 
     POLYLINE pl(shape);
     std::vector<std::pair<POINT, double>> cuts;
 
     size_t i = 0;
-    for (auto st : t.stop_time_list)
+    for (auto st : t.stop_times())
     {
-        if(!st.get().stop.has_value())
+        if(!st.get().stop().has_value())
             continue;
-        gtfs::stop& stop = st.get().stop.value();
+        gtfs::stop& stop = st.get().stop().value();
 
         if (new_trip_dists)
         {

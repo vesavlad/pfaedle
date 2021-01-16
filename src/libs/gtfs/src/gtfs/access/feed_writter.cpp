@@ -28,7 +28,7 @@ void write_routes_header(std::ofstream & out)
 void write_shapes_header(std::ofstream & out)
 {
     std::vector<std::string> fields = {"shape_id", "shape_pt_lat", "shape_pt_lon",
-                                       "shape_pt_sequence"};
+                                       "shape_pt_sequence", "shape_dist_traveled"};
     write_joined(out, std::move(fields));
 }
 
@@ -201,24 +201,8 @@ result feed_writter::write(const write_config& config) noexcept
         if (auto res = write_fare_rules(); res != result_code::OK)
             return res;
 
-    if (config.pathways)
-        if (auto res = write_pathways(); res != result_code::OK)
-            return res;
-
-    if (config.levels)
-        if (auto res = write_levels(); res != result_code::OK)
-            return res;
-
-    if (config.attributions)
-        if (auto res = write_attributions(); res != result_code::OK)
-            return res;
-
     if (config.feed_info)
         if (auto res = write_feed_info(); res != result_code::OK)
-            return res;
-
-    if (config.translations)
-        if (auto res = write_translations(); res != result_code::OK)
             return res;
 
     return result_code::OK;
@@ -331,9 +315,8 @@ result feed_writter::write_stops() const
 result feed_writter::write_stop_times() const
 {
     auto container_writer = [this](std::ofstream& out) {
-        for (const auto& stop_time_pair : feed_.stop_times)
+        for (const auto& stop_time : feed_.stop_times)
         {
-            const auto& stop_time = stop_time_pair.second;
             std::vector<std::string> fields{wrap(stop_time.trip_id),
                                             stop_time.arrival_time.get_raw_time(),
                                             stop_time.departure_time.get_raw_time(),
@@ -350,7 +333,7 @@ result feed_writter::write_stop_times() const
             write_joined(out, std::move(fields));
         }
     };
-    return write_csv(gtfs_directory_, file_stops, write_stops_header, container_writer);
+    return write_csv(gtfs_directory_, file_stop_times, write_stop_times_header, container_writer);
 }
 result feed_writter::write_calendar() const {}
 result feed_writter::write_calendar_dates() const {}
@@ -358,11 +341,7 @@ result feed_writter::write_transfers() const {}
 result feed_writter::write_frequencies() const {}
 result feed_writter::write_fare_attributes() const {}
 result feed_writter::write_fare_rules() const {}
-result feed_writter::write_pathways() const {}
-result feed_writter::write_levels() const {}
 result feed_writter::write_feed_info() const {}
-result feed_writter::write_translations() const {}
-result feed_writter::write_attributions() const {}
 }
 
 }

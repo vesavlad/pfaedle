@@ -1,6 +1,6 @@
 #include <gtfs/date.h>
+#include <gtfs/exceptions/invalid_field_format.h>
 #include <gtfs/misc.h>
-#include <gtfs/exceptions.h>
 
 namespace pfaedle::gtfs
 {

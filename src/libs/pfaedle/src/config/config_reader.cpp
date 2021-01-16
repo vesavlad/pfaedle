@@ -5,8 +5,8 @@
 #include "pfaedle/config/config_reader.h"
 #include "pfaedle/config.h"
 #include "pfaedle/definitions.h"
+#include <gtfs/enums/route_type.h>
 #include <gtfs/misc.h>
-#include <gtfs/route_type.h>
 
 #include "util/String.h"
 

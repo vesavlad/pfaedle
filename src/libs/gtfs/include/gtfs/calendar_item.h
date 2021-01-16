@@ -1,7 +1,7 @@
 #pragma once
-#include <gtfs/types.h>
-#include <gtfs/calendar_availability.h>
 #include <gtfs/date.h>
+#include <gtfs/enums/calendar_availability.h>
+#include <gtfs/types.h>
 
 namespace pfaedle::gtfs
 {

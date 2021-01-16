@@ -1,10 +1,10 @@
 #pragma once
-#include <gtfs/exceptions.h>
-#include <gtfs/route_type.h>
-#include <string>
-#include <vector>
-#include <type_traits>
+#include <gtfs/enums/route_type.h>
+#include <gtfs/exceptions/invalid_field_format.h>
 #include <set>
+#include <string>
+#include <type_traits>
+#include <vector>
 
 namespace pfaedle::gtfs
 {
@@ -22,11 +22,7 @@ const std::string file_fare_rules = "fare_rules.txt";
 const std::string file_shapes = "shapes.txt";
 const std::string file_frequencies = "frequencies.txt";
 const std::string file_transfers = "transfers.txt";
-const std::string file_pathways = "pathways.txt";
-const std::string file_levels = "levels.txt";
 const std::string file_feed_info = "feed_info.txt";
-const std::string file_translations = "translations.txt";
-const std::string file_attributions = "attributions.txt";
 
 constexpr char csv_separator = ',';
 constexpr char quote = '"';

@@ -1,6 +1,7 @@
 #pragma once
+#include <gtfs/record.h>
 #include <gtfs/types.h>
-#include <gtfs/stop_location_type.h>
+#include <gtfs/enums/stop_location_type.h>
 
 #include <functional>
 #include <vector>
@@ -8,8 +9,12 @@
 namespace pfaedle::gtfs
 {
 struct stop_time;
-struct stop
+class feed;
+
+struct stop: public record
 {
+    stop(pfaedle::gtfs::feed& feed);
+
     // Required:
     Id stop_id;
 
@@ -32,7 +37,10 @@ struct stop
     Id level_id;
     Text platform_code;
 
-    std::vector<std::reference_wrapper<stop_time>> stop_time_list;
+    const std::vector<std::reference_wrapper<stop_time>>& get_stop_times() const;
+    std::vector<std::reference_wrapper<stop_time>>& get_stop_times();
+    std::optional<std::reference_wrapper<stop>> get_parent_station() const;
+
 };
 }
 

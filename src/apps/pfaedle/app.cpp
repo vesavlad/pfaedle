@@ -219,7 +219,7 @@ ret_code app::run()
         }
         else
         {
-            single_trip = &feeds_.front().trips[cfg_.shapeTripId];
+            single_trip = &feeds_.front().trips.at(cfg_.shapeTripId);
         }
     }
 
@@ -291,7 +291,7 @@ ret_code app::run()
         if (used_mots.empty())
             continue;
 
-        if (single_trip && single_trip->route.has_value() && !used_mots.count(single_trip->route.value().get().route_type))
+        if (single_trip && single_trip->route().has_value() && !used_mots.count(single_trip->route().value().get().route_type))
             continue;
 
         if (mot_cfg_reader_.get_configs().size() > 1)

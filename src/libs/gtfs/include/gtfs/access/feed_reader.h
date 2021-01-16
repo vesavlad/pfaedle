@@ -72,17 +72,8 @@ protected:
 
     result read_transfers();
 
-    result read_pathways();
-
-
-    result read_levels();
 
     result read_feed_info();
-
-    result read_translations();
-
-
-    result read_attributions();
 
 private:
     feed& feed_;

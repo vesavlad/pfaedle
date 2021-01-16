@@ -39,7 +39,7 @@ endif ()
 add_library(exceptions STATIC
         src/factory.cpp
         src/exception_trace.cpp
-        src/exceptions.cpp
+        src/invalid_field_format.cpp
         src/is_sub_class_of.cpp
         src/exception_handler.cpp
         src/stacktrace.cpp

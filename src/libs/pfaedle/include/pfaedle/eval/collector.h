@@ -33,7 +33,10 @@ public:
 
     // Add a shape found by our tool newS for a trip t with newly calculated
     // station dist values with the old shape oldS
-    double add(const gtfs::trip& t, const gtfs::shape* oldS, const gtfs::shape& newS, const std::vector<double>& newDists);
+    double add(const gtfs::trip& t,
+               const gtfs::shape* oldS,
+               const gtfs::shape& newS,
+               const std::vector<double>& newDists);
 
     // Return the set of all Result objects
     const std::set<result>& get_results() const;

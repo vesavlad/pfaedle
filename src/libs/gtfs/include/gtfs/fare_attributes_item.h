@@ -1,7 +1,7 @@
 #pragma once
+#include <gtfs/enums/fare_payment.h>
+#include <gtfs/enums/fare_transfers.h>
 #include <gtfs/types.h>
-#include <gtfs/fare_payment.h>
-#include <gtfs/fare_transfers.h>
 
 namespace pfaedle::gtfs
 {

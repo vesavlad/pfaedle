@@ -497,20 +497,22 @@ void osm_builder::read_write_ways(pugi::xml_document& i,
 node_payload osm_builder::payload_from_gtfs(const gtfs::stop* s, const osm_read_options& ops)
 {
     node_payload ret(
-            util::geo::latLngToWebMerc<PFAEDLE_PRECISION>(s->stop_lat, s->stop_lon),
-            station_info(ops.statNormzer.norm(s->stop_name),
-                         ops.trackNormzer.norm(s->platform_code), false));
+            util::geo::latLngToWebMerc(s->stop_lat, s->stop_lon),
+            station_info(
+                    ops.statNormzer.norm(s->stop_name),
+                    ops.trackNormzer.norm(s->platform_code),
+                    false)
+            );
 
 #ifdef PFAEDLE_STATION_IDS
     // debug feature, store station id from GTFS
     ret.getSI()->setId(s->getId());
 #endif
 
-#warning "to check this after doing full binding"
-//    if (s->getParentStation())
-//    {
-//        ret.get_si()->add_alternative_name(ops.statNormzer.norm(s->getParentStation()->getName()));
-//    }
+    if (s->get_parent_station().has_value())
+    {
+        ret.get_si()->add_alternative_name(ops.statNormzer.norm(s->get_parent_station()->get().stop_name));
+    }
 
     return ret;
 }

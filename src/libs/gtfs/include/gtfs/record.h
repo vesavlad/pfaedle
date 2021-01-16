@@ -6,34 +6,62 @@
 namespace pfaedle::gtfs
 {
 class feed;
-struct record
+
+class basic_record
 {
+public:
     using payload_type = std::map<std::string, std::variant<std::string, double, int32_t>>;
-    record(pfaedle::gtfs::feed& feed): //NOLINT
-        feed(feed)
-    {
-    }
 
-    record(const record& record) = delete;
-    record& operator=(const record& record) = delete;
+    basic_record() = default;
+    virtual ~basic_record() = default;
 
-    record(record&& record) noexcept:
-        feed(record.feed),
+    basic_record(const basic_record& record) = delete;
+    basic_record& operator=(const basic_record& record) = delete;
+
+    basic_record(basic_record&& record) noexcept:
         payload(std::move(record.payload))
     {
-
     }
 
-    record& operator=(record&& record) noexcept
+    basic_record& operator=(basic_record&& record) noexcept
     {
         this->payload = std::move(record.payload);
         return *this;
     }
+private:
+    payload_type payload;
+};
 
-    virtual ~record() = default;
+class record: public basic_record
+{
+public:
+    record(pfaedle::gtfs::feed& feed): //NOLINT
+        basic_record(),
+        feed(feed)
+    {
+    }
+
+    record(record&& record) noexcept:
+        basic_record(std::move(record)),
+        feed(record.feed)
+    {
+    }
+
+    record& operator=(record&& record) noexcept
+    {
+        basic_record::operator=(std::move(record));
+        return *this;
+    }
+
+    ~record() override = default;
 
 protected:
     pfaedle::gtfs::feed& feed;
-    payload_type payload;
+};
+
+template<typename T>
+class gtfs_record: public record
+{
+public:
 };
 }

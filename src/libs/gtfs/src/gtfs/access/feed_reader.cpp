@@ -7,6 +7,21 @@
 namespace pfaedle::gtfs::access
 {
 
+class preparation_handler
+{
+public:
+    preparation_handler(feed& f):
+        feed_(f)
+    {
+    }
+
+    ~preparation_handler(){
+        feed_.build();
+    }
+private:
+    feed& feed_;
+};
+
 std::string get_value_or_default(const parsed_csv_row& container, const std::string& key,
                                  const std::string& default_value = "")
 {
@@ -66,6 +81,7 @@ bool error_parsing_optional_file(const result & res)
 
 result feed_reader::read(const read_config& config) noexcept
 {
+    preparation_handler handler(feed_);
     // Read required files:
     if (config.agencies)
         if (auto res = read_agencies(); res != result_code::OK)
@@ -117,24 +133,8 @@ result feed_reader::read(const read_config& config) noexcept
         if (auto res = read_fare_rules(); error_parsing_optional_file(res))
             return res;
 
-    if (config.pathways)
-        if (auto res = read_pathways(); error_parsing_optional_file(res))
-            return res;
-
-    if (config.levels)
-        if (auto res = read_levels(); error_parsing_optional_file(res))
-            return res;
-
-    if (config.attributions)
-        if (auto res = read_attributions(); error_parsing_optional_file(res))
-            return res;
-
     if (config.feed_info)
         if (auto res = read_feed_info(); error_parsing_optional_file(res))
-            return res;
-
-    if (config.translations)
-        if (auto res = read_translations(); error_parsing_optional_file(res))
             return res;
 
     return result_code::OK;
@@ -202,7 +202,7 @@ result feed_reader::read_agencies()
 result feed_reader::read_stops()
 {
     auto handler = [this](const parsed_csv_row& row) ->result {
-      stop s;
+      stop s(feed_);
 
       try
       {
@@ -239,7 +239,8 @@ result feed_reader::read_stops()
       s.level_id = get_value_or_default(row, "level_id");
       s.platform_code = get_value_or_default(row, "platform_code");
 
-      feed_.stops.emplace(s.stop_id, s);
+
+      feed_.stops.insert(std::make_pair(s.stop_id, std::move(s)));
 
       return result_code::OK;
 
@@ -249,7 +250,7 @@ result feed_reader::read_stops()
 result feed_reader::read_routes()
 {
     auto handler = [this](const parsed_csv_row& row) -> result {
-      route r;
+      route r(feed_);
 
       try
       {
@@ -286,13 +287,7 @@ result feed_reader::read_routes()
       r.route_desc = get_value_or_default(row, "route_desc");
       r.route_url = get_value_or_default(row, "route_url");
 
-      auto& agency = feed_.agencies.at(r.agency_id);
-      r.referenced_agency = std::ref(agency);
-
-      const auto& it = feed_.routes.emplace(r.route_id, r);
-      agency.routes.push_back(std::ref(it.first->second));
-
-
+      feed_.routes.insert(std::make_pair(r.route_id, std::move(r)));
 
       return result_code::OK;
     };
@@ -301,7 +296,7 @@ result feed_reader::read_routes()
 result feed_reader::read_trips()
 {
     auto handler = [this](const parsed_csv_row& row) -> result {
-      trip t;
+      trip t(feed_);
       try
       {
           // Required:
@@ -329,10 +324,7 @@ result feed_reader::read_trips()
       t.trip_short_name = get_value_or_default(row, "trip_short_name");
       t.block_id = get_value_or_default(row, "block_id");
 
-      t.route = std::ref(feed_.routes[t.route_id]);
-
-      const auto& it = feed_.trips.emplace(t.trip_id, t);
-      feed_.routes[t.route_id].trips.push_back(std::ref(it.first->second));
+      feed_.trips.insert(std::make_pair(t.trip_id, std::move(t)));
 
       return result_code::OK;
     };
@@ -341,7 +333,7 @@ result feed_reader::read_trips()
 result feed_reader::read_stop_times()
 {
     auto handler = [this](const parsed_csv_row& row) -> result{
-      stop_time st;
+      stop_time st(feed_);
 
       try
       {
@@ -379,13 +371,8 @@ result feed_reader::read_stop_times()
 
       // Optional fields:
       st.stop_headsign = get_value_or_default(row, "stop_headsign");
-      st.trip = std::ref(feed_.trips[st.trip_id]);
-      st.stop = std::ref(feed_.stops[st.stop_id]);
 
-      const auto& pair = feed_.stop_times.emplace(std::make_pair(st.stop_id,st.trip_id), st);
-
-      feed_.trips[st.trip_id].stop_time_list.push_back(std::ref(pair.first->second));
-      feed_.stops[st.stop_id].stop_time_list.push_back(std::ref(pair.first->second));
+      feed_.stop_times.push_back(std::move(st));
 
       return result_code::OK;
     };
@@ -561,13 +548,6 @@ result feed_reader::read_shapes()
       if(shape.points.empty())
       {
           shape.shape_id = pt.shape_id;
-          const auto& it = std::find_if(std::begin(feed_.trips), std::end(feed_.trips), [&shape](const std::pair<Id, trip>& trip_pair) {
-              return trip_pair.second.shape_id == shape.shape_id;
-          });
-          if (it != std::end(feed_.trips))
-          {
-              it->second.shape = shape;
-          }
       }
       shape.points.emplace_back(pt);
 
@@ -578,7 +558,7 @@ result feed_reader::read_shapes()
 result feed_reader::read_frequencies()
 {
     auto handler = [this](const parsed_csv_row& row) -> result{
-      pfaedle::gtfs::frequency frequency;
+      pfaedle::gtfs::frequency frequency(feed_);
       try
       {
           // Required fields:
@@ -603,7 +583,7 @@ result feed_reader::read_frequencies()
           return {result_code::ERROR_INVALID_FIELD_FORMAT, ex.what()};
       }
 
-      feed_.frequencies.emplace(frequency.trip_id, frequency);
+      feed_.frequencies.push_back(std::move(frequency));
       return result_code::OK;
     };
     return parse_csv(file_frequencies, handler);
@@ -611,7 +591,7 @@ result feed_reader::read_frequencies()
 result feed_reader::read_transfers()
 {
     auto handler = [this](const parsed_csv_row& row) -> result {
-        pfaedle::gtfs::transfer transfer;
+        pfaedle::gtfs::transfer transfer(feed_);
         try
         {
             // Required fields:
@@ -635,22 +615,10 @@ result feed_reader::read_transfers()
             return {result_code::ERROR_INVALID_FIELD_FORMAT, ex.what()};
         }
 
-        feed_.transfers.emplace(std::make_tuple(transfer.from_stop_id, transfer.to_stop_id), transfer);
+        feed_.transfers.insert(std::make_pair(std::make_tuple(transfer.from_stop_id, transfer.to_stop_id), std::move(transfer)));
         return result_code::OK;
     };
     return parse_csv(file_transfers, handler);
-}
-result feed_reader::read_pathways()
-{
-//    auto handler = [this](const parsed_csv_row& record) { return feed_.add_pathway(record); };
-//    return parse_csv(file_pathways, handler);
-    return result();
-}
-result feed_reader::read_levels()
-{
-//    auto handler = [this](const parsed_csv_row& record) { return feed_.add_level(record); };
-//    return parse_csv(file_levels, handler);
-    return result();
 }
 result feed_reader::read_feed_info()
 {
@@ -687,18 +655,6 @@ result feed_reader::read_feed_info()
         return result_code::OK;
     };
     return parse_csv(file_feed_info, handler);
-}
-result feed_reader::read_translations()
-{
-//    auto handler = [this](const parsed_csv_row& record) { return feed_.add_translation(record); };
-//    return parse_csv(file_translations, handler);
-    return result();
-}
-result feed_reader::read_attributions()
-{
-//    auto handler = [this](const parsed_csv_row& record) { return feed_.add_attribution(record); };
-//    return parse_csv(file_attributions, handler);
-    return result();
 }
 
 

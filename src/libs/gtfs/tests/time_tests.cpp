@@ -1,7 +1,7 @@
 #include "catch_amalgamated.hpp"
-#include <gtfs/exceptions.h>
-#include <gtfs/time.h>
 #include "config.h"
+#include <gtfs/exceptions/invalid_field_format.h>
+#include <gtfs/time.h>
 
 namespace pafedle::gtfs
 {

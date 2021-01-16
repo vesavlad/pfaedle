@@ -57,11 +57,7 @@ protected:
     result write_frequencies() const;
     result write_fare_attributes() const;
     result write_fare_rules() const;
-    result write_pathways() const;
-    result write_levels() const;
     result write_feed_info() const;
-    result write_translations() const;
-    result write_attributions() const;
 private:
     feed& feed_;
     std::string gtfs_directory_;

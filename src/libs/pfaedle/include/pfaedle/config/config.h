@@ -5,7 +5,7 @@
 #ifndef PFAEDLE_CONFIG_PFAEDLECONFIG_H_
 #define PFAEDLE_CONFIG_PFAEDLECONFIG_H_
 
-#include <gtfs/route_type.h>
+#include <gtfs/enums/route_type.h>
 #include <set>
 #include <sstream>
 #include <string>

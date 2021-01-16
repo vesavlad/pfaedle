@@ -1,9 +1,9 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "catch_amalgamated.hpp"
-#include <gtfs/misc.h>
-#include <gtfs/exceptions.h>
-#include <gtfs/time.h>
 #include "config.h"
+#include <gtfs/exceptions/invalid_field_format.h>
+#include <gtfs/misc.h>
+#include <gtfs/time.h>
 
 namespace pafedle::gtfs
 {

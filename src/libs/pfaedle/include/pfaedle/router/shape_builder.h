@@ -30,6 +30,7 @@ class feed;
 struct stop;
 struct trip;
 }
+
 namespace pfaedle::router
 {
 
@@ -56,15 +57,15 @@ public:
                   pfaedle::gtfs::feed& evalFeed,
                   route_type_set mots,
                   const config::mot_config& motCfg,
-                  eval::collector& ecoll,
-                  trgraph::graph& g,
+                  eval::collector& collector,
+                  trgraph::graph& graph,
                   feed_stops& stops,
                   osm::restrictor& restr,
                   const config::config& cfg);
 
     void get_shape(pfaedle::netgraph::graph& ng);
 
-    const node_candidate_group& getNodeCands(const pfaedle::gtfs::stop& s) const;
+    const node_candidate_group& get_node_candidates(const pfaedle::gtfs::stop& s) const;
 
     LINE get_shape_line(const node_candidate_route& ncr, const routing_attributes& rAttrs);
     LINE get_shape_line(pfaedle::gtfs::trip& trip);

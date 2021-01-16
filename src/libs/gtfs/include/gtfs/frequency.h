@@ -1,13 +1,21 @@
 #pragma once
-#include <gtfs/types.h>
 #include <gtfs/time.h>
-#include <gtfs/frequency_trip_service.h>
+#include <gtfs/types.h>
+#include <gtfs/record.h>
+#include <gtfs/enums/frequency_trip_service.h>
 
 namespace pfaedle::gtfs
 {
+struct trip;
 // Optional dataset file
-struct frequency
+struct frequency: public record
 {
+    frequency(pfaedle::gtfs::feed& feed):
+        record(feed)
+    {
+
+    }
+
     // Required:
     Id trip_id;
     time start_time;
@@ -16,5 +24,8 @@ struct frequency
 
     // Optional:
     frequency_trip_service exact_times = frequency_trip_service::FrequencyBased;
+
+    trip& trip() const;
 };
+
 }

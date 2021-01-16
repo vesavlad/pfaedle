@@ -28,9 +28,9 @@ public:
     {
         for (const auto t : _trips)
         {
-            if(t->route.has_value())
+            if(t->route().has_value())
             {
-                gtfs::route& r = t->route->get();
+                gtfs::route& r = t->route()->get();
                 _routeShortNames.insert(r.route_short_name);
             }
             _tripShortNames.insert(t->trip_short_name);

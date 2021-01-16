@@ -1,8 +1,9 @@
 #pragma once
-#include <gtfs/types.h>
+#include <gtfs/enums/stop_time_boarding.h>
+#include <gtfs/enums/stop_time_point.h>
+#include <gtfs/record.h>
 #include <gtfs/time.h>
-#include <gtfs/stop_time_boarding.h>
-#include <gtfs/stop_time_point.h>
+#include <gtfs/types.h>
 
 #include <functional>
 
@@ -10,8 +11,13 @@ namespace pfaedle::gtfs
 {
 struct stop;
 struct trip;
-struct stop_time
+class feed;
+struct stop_time: public record
 {
+    stop_time(pfaedle::gtfs::feed& feed):
+        record(feed)
+    {}
+
     // Required:
     Id trip_id;
     Id stop_id;
@@ -30,8 +36,8 @@ struct stop_time
     double shape_dist_traveled = 0.0;
     stop_time_point timepoint = stop_time_point::Exact;
 
-    std::optional<std::reference_wrapper<pfaedle::gtfs::stop>> stop;
-    std::optional<std::reference_wrapper<pfaedle::gtfs::trip>> trip;
+    std::optional<std::reference_wrapper<pfaedle::gtfs::stop>> stop() const;
+    std::optional<std::reference_wrapper<pfaedle::gtfs::trip>> trip() const;
 };
 }
 

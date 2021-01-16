@@ -8,7 +8,7 @@
 namespace pfaedle::gtfs
 {
 struct route;
-struct stop;
+
 struct agency: public record
 {
     agency(pfaedle::gtfs::feed& feed):
@@ -29,7 +29,7 @@ struct agency: public record
     Text agency_fare_url;
     Text agency_email;
 
-    std::vector<std::reference_wrapper<route>> routes;
+    std::vector<std::reference_wrapper<route>> routes() const;
 };
 }
 
