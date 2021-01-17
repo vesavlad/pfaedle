@@ -402,21 +402,21 @@ edge_list_hops router::route(const edge_candidate_route& route,
                            const osm::restrictor& rest) const
 {
     graph cg;
-    return router::route(route, rAttrs, rOpts, rest, &cg);
+    return router::route(route, rAttrs, rOpts, rest, cg);
 }
 
 edge_list_hops router::route(const edge_candidate_route& route,
                            const routing_attributes& rAttrs, const routing_options& rOpts,
                            const osm::restrictor& rest,
-                           graph* cgraph) const
+                           graph& cgraph) const
 {
     if (route.size() < 2)
         return edge_list_hops();
     edge_list_hops ret(route.size() - 1);
 
     CombCostFunc ccost(rOpts);
-    node* source = cgraph->addNd();
-    node* sink = cgraph->addNd();
+    node* source = cgraph.addNd();
+    node* sink = cgraph.addNd();
     CombNodeMap nodes;
     CombNodeMap nextNodes;
 
@@ -425,8 +425,8 @@ edge_list_hops router::route(const edge_candidate_route& route,
         auto e = i.e;
         // we can be sure that each edge is exactly assigned to only one
         // node because the transitgraph is directed
-        nodes[e] = cgraph->addNd(i.e->getFrom());
-        cgraph->addEdg(source, nodes[e])
+        nodes[e] = cgraph.addNd(i.e->getFrom());
+        cgraph.addEdg(source, nodes[e])
                 ->pl()
                 .set_cost(edge_cost(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                     i.pen, nullptr));
@@ -465,12 +465,12 @@ edge_list_hops router::route(const edge_candidate_route& route,
                 tos.insert(eTo);
 
                 if (!nextNodes.count(eTo))
-                    nextNodes[eTo] = cgraph->addNd(to.e->getFrom());
+                    nextNodes[eTo] = cgraph.addNd(to.e->getFrom());
 
                 if (i == route.size() - 2)
-                    cgraph->addEdg(nextNodes[eTo], sink);
+                    cgraph.addEdg(nextNodes[eTo], sink);
 
-                edges[eTo] = cgraph->addEdg(cNodeFr, nextNodes[eTo]);
+                edges[eTo] = cgraph.addEdg(cNodeFr, nextNodes[eTo]);
                 pens[eTo] = to.pen;
 
                 edgeLists[eTo] = edges[eTo]->pl().get_edges();
@@ -551,13 +551,13 @@ edge_list_hops router::route(const node_candidate_route& route,
                            const osm::restrictor& rest) const
 {
     graph cg;
-    return router::route(route, rAttrs, rOpts, rest, &cg);
+    return router::route(route, rAttrs, rOpts, rest, cg);
 }
 
 edge_list_hops router::route(const node_candidate_route& route,
                            const routing_attributes& rAttrs, const routing_options& rOpts,
                            const osm::restrictor& rest,
-                           graph* cgraph) const
+                           graph& cgraph) const
 {
     edge_candidate_route r;
     for (auto& nCands : route)

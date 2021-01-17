@@ -130,7 +130,7 @@ edge_list_hops shape_builder::route(const node_candidate_route& ncr,
 
     if (_cfg.solveMethod == "global")
     {
-        const edge_list_hops& ret = _crouter.route(ncr, rAttrs, _motCfg.routingOpts, _restr, &g);
+        const edge_list_hops& ret = _crouter.route(ncr, rAttrs, _motCfg.routingOpts, _restr, g);
 
         // write combination graph
         if (!_cfg.shapeTripId.empty() && _cfg.writeCombGraph)
@@ -253,7 +253,7 @@ void shape_builder::get_shape(pfaedle::netgraph::graph& ng)
 
         // explicitly call const version of shape here for thread safety
         const pfaedle::router::shape cshp =
-                std::move(const_cast<const shape_builder&>(*this).get_shape(*clusters[i][0]));
+                const_cast<const shape_builder&>(*this).get_shape(*clusters[i][0]);
         tot_avg_dist += cshp.avgHopDist;
 
         if (_cfg.buildTransitGraph)
@@ -559,14 +559,15 @@ void shape_builder::get_gtfs_box(const pfaedle::gtfs::feed& feed,
 
 node_candidate_route shape_builder::get_node_candidate_route(pfaedle::gtfs::trip& trip) const
 {
-    node_candidate_route ncr(trip.stop_times().size());
+    const auto& trip_stop_times = trip.stop_times();
+    node_candidate_route ncr(trip_stop_times.size());
 
     size_t i = 0;
 
-    for (const gtfs::stop_time& st : trip.stop_times())
+    for (const gtfs::stop_time& st : trip_stop_times)
     {
 
-        ncr[i] = get_node_candidates(st.stop()->get());
+        ncr[i] = get_node_candidates(st.stop().value());
         if (ncr[i].empty())
         {
             throw std::runtime_error("No node candidate found for station '" +

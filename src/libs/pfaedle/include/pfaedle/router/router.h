@@ -140,7 +140,7 @@ public:
                        const osm::restrictor& rest) const;
     edge_list_hops route(const node_candidate_route& route, const routing_attributes& rAttrs,
                        const routing_options& rOpts, const osm::restrictor& rest,
-                       graph* cgraph) const;
+                       graph& cgraph) const;
 
     // Find the most likely path through the graph for an edge candidate route.
     edge_list_hops route(const edge_candidate_route& route, const routing_attributes& rAttrs,
@@ -148,7 +148,7 @@ public:
                        const osm::restrictor& rest) const;
     edge_list_hops route(const edge_candidate_route& route, const routing_attributes& rAttrs,
                        const routing_options& rOpts, const osm::restrictor& rest,
-                       graph* cgraph) const;
+                       graph& cgraph) const;
 
     // Find the most likely path through cgraph for a node candidate route, but
     // based on a greedy node to node approach
