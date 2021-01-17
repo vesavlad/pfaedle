@@ -40,14 +40,11 @@ pfaedle::router::feed_stops write_mot_stops(const gtfs::feed& feed, const route_
                 // this is not allowed in stop_times.txt
                 if (stop.location_type == pfaedle::gtfs::stop_location_type::EntranceExit && !stop.parent_station.empty())
                 {
-                    const std::string_view parrent_id = stop.parent_station;
-                    const auto it = std::find_if(std::begin(feed.stops), std::end(feed.stops), [parrent_id](const auto & stop_pair) {
-                        return stop_pair.second.stop_id == parrent_id;
-                    });
-                    if (it != std::end(feed.stops))
-                    {
-                        ret[&it->second] = nullptr;
-                    }
+                    const auto& parent = stop.get_parent_station();
+                    if(parent.has_value())
+                        ret[&(parent->get())] = nullptr;
+                    else
+                        ret[&stop] = nullptr;
                 }
                 else
                 {
