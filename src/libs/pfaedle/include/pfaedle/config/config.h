@@ -37,6 +37,8 @@ struct config
     bool writeOverpass{false};
     bool inPlace{false};
     double gridSize{2000};
+    bool interpolate_times{false};
+    bool import_osm_stops{false};
 
     std::string to_string()
     {
@@ -53,6 +55,8 @@ struct config
            << "grid-size: " << gridSize << "\n"
            << "use-cache: " << useCaching << "\n"
            << "write-overpass: " << writeOverpass << "\n"
+           << "interpolate-times: " << interpolate_times << "\n"
+           << "import-osm-stops: " << import_osm_stops << "\n"
            << "feed-paths: ";
 
         for (const auto& p : feedPaths)

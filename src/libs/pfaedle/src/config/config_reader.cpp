@@ -156,6 +156,8 @@ void config_reader::read(int argc, char** argv)
                            {"help", no_argument, nullptr, 'h'},
                            {"inplace", no_argument, nullptr, 9},
                            {"use-route-cache", no_argument, nullptr, 8},
+                           {"interpolate-times", no_argument, nullptr, 10},
+                           {"import-osm-stops", no_argument, nullptr, 11},
                            {nullptr, 0, nullptr, 0}};
 
     char c = 0;
@@ -186,6 +188,12 @@ void config_reader::read(int argc, char** argv)
                 break;
             case 8:
                 config_.useCaching = true;
+                break;
+            case 10:
+                config_.interpolate_times = true;
+                break;
+            case 11:
+                config_.import_osm_stops = true;
                 break;
             case 'o':
                 config_.outputPath = optarg;
