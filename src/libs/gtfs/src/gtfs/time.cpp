@@ -48,6 +48,23 @@ time::time(const std::string & raw_time_str) : raw_time(raw_time_str)
     time_is_provided = true;
 }
 
+time::time(size_t seconds)
+{
+    hh = seconds / 3600;
+    seconds = seconds % 3600;
+    mm = seconds / 60;
+    ss = seconds % 60;
+
+    if (mm > 60 || ss > 60)
+        throw invalid_field_format("time is out of range: " + std::to_string(mm) + "minutes " +
+                                   std::to_string(ss) + "seconds");
+
+    set_total_seconds();
+    set_raw_time();
+    time_is_provided = true;
+}
+
+
 time::time(uint16_t hours, uint16_t minutes, uint16_t seconds)
         : hh(hours), mm(minutes), ss(seconds)
 {
@@ -67,6 +84,32 @@ size_t time::get_total_seconds() const { return total_seconds; }
 std::tuple<uint16_t, uint16_t, uint16_t> time::get_hh_mm_ss() const { return {hh, mm, ss}; }
 
 std::string time::get_raw_time() const { return raw_time; }
+time& time::add_seconds(size_t seconds)
+{
+    auto h = seconds / 3600;
+    seconds = seconds % 3600;
+    auto m = seconds / 60;
+    auto s = seconds % 60;
+
+    ss += s;
+    if (ss > 60)
+    {
+        ss = ss % 60;
+        mm++;
+    }
+
+    mm += m;
+    if (mm > 60)
+    {
+        mm = mm % 60;
+        hh++;
+    }
+
+    hh += h;
+    set_total_seconds();
+    set_raw_time();
+    return *this;
+}
 
 bool operator==(const time& lhs, const time& rhs)
 {

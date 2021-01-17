@@ -12,7 +12,10 @@ class time
 public:
     time() = default;
     explicit time(const std::string & raw_time_str);
+    time(size_t seconds);
     time(uint16_t hours, uint16_t minutes, uint16_t seconds);
+
+    time& add_seconds(size_t seconds);
     bool is_provided() const;
     size_t get_total_seconds() const;
     std::tuple<uint16_t, uint16_t, uint16_t> get_hh_mm_ss() const;
