@@ -195,7 +195,7 @@ void osm_builder::read(const std::string& path,
     write_geometries(g);
 
     LOG(TRACE) << "Snapping stations...";
-    snap_stats(opts, g, bbox, gridSize, fs, res, orphan_stations);
+    snap_stations(opts, g, bbox, gridSize, fs, res, orphan_stations);
 
     LOG(TRACE) << "Deleting orphan nodes...";
     delete_orphan_nodes(g);
@@ -2239,8 +2239,8 @@ bool osm_builder::keep_full_turn(const trgraph::node* n, double ang)
 }
 
 
-void osm_builder::snap_stats(const osm_read_options& opts,
-                           graph& g,
+void osm_builder::snap_stations(const osm_read_options& opts,
+                                graph& g,
                            const bounding_box& bbox,
                            size_t gridSize,
                            router::feed_stops& fs,

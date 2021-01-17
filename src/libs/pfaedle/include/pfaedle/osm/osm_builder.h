@@ -200,7 +200,7 @@ private:
                                                        const relation_map& nodeRels, const relation_list& rels,
                                                        const osm_read_options& ops) const;
 
-    static void snap_stats(const osm_read_options& opts,
+    static void snap_stations(const osm_read_options& opts,
                            trgraph::graph& g,
                            const bounding_box& bbox,
                            size_t gridSize,
