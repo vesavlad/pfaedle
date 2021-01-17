@@ -159,6 +159,12 @@ inline std::string rtrim(std::string str)
 
 inline std::string trim(std::string str) { return ltrim(rtrim(std::move(str))); }
 
+inline bool ends_with(std::string const & value, std::string const & ending)
+{
+    if (ending.size() > value.size()) return false;
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
+
 inline size_t editDist(const std::string& s1, const std::string& s2)
 {
     // https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#C++
