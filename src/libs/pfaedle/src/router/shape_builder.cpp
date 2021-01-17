@@ -231,14 +231,14 @@ void shape_builder::get_shape(pfaedle::netgraph::graph& ng)
     double tot_avg_dist = 0;
     size_t tot_num_trips = 0;
 
-#pragma omp parallel for num_threads(_numThreads)
+//#pragma omp parallel for num_threads(_numThreads)
     for (size_t i = 0; i < clusters.size(); i++)
     {
         j++;
 
         if (j % 10 == 0)
         {
-#pragma omp critical
+//#pragma omp critical
             {
                 LOG(INFO) << "@ " << j << " / " << clusters.size() << " ("
                           << (static_cast<int>((j * 1.0) / clusters.size() * 100))
@@ -258,14 +258,16 @@ void shape_builder::get_shape(pfaedle::netgraph::graph& ng)
 
         if (_cfg.buildTransitGraph)
         {
-#pragma omp critical
+//#pragma omp critical
             {
                 write_transit_graph(cshp, gtfsGraph, clusters[i]);
             }
         }
 
         std::vector<double> distances;
-        const pfaedle::gtfs::shape& shp = get_gtfs_shape(cshp, *clusters[i][0], distances);
+        std::vector<double> times;
+        std::vector<double> costs;
+        const pfaedle::gtfs::shape& shp = get_gtfs_shape(cshp, *clusters[i][0], distances, times, costs);
 
         LOG(TRACE) << "Took " << EDijkstra::ITERS - iters << " iterations.";
         iters = EDijkstra::ITERS;
@@ -306,7 +308,7 @@ void shape_builder::get_shape(pfaedle::netgraph::graph& ng)
                     }
                 }
             }
-            set_shape(*t, shp, distances);
+            set_shape(*t, shp, distances, costs);
 
         }
     }
@@ -332,18 +334,45 @@ void shape_builder::get_shape(pfaedle::netgraph::graph& ng)
     }
 }
 
-void shape_builder::set_shape(pfaedle::gtfs::trip& t, const pfaedle::gtfs::shape& s, const std::vector<double>& dists)
+void shape_builder::set_shape(pfaedle::gtfs::trip& t, const pfaedle::gtfs::shape& s, const std::vector<double>& dists, const std::vector<double>& costs)
 {
-    assert(dists.size() == t.stop_times().size());
+    const auto& stop_times = t.stop_times();
+    assert(dists.size() == stop_times.size() && costs.size() == stop_times.size());
+
+    double total_cost = 0.f;
+    for (auto& n : costs) total_cost += n;
+    static constexpr size_t dwell_time_seconds = 10;
+
+    const gtfs::stop_time& st_begin = *stop_times.begin();
+    const gtfs::stop_time& st_end = *(stop_times.end() - 1);
+    const size_t time_span = st_end.departure_time.get_total_seconds() - st_begin.departure_time.get_total_seconds();
+
     // set distances
     size_t i = 0;
-    for (gtfs::stop_time& st : t.stop_times())
+    size_t previous_time = st_begin.departure_time.get_total_seconds();
+    for (gtfs::stop_time& st : stop_times)
     {
+        if (&st != &st_begin && &st != &st_end &&
+                (!st.arrival_time.is_provided() || !st.departure_time.is_provided() || _cfg.interpolate_times))
+        {
+            previous_time = (time_span * costs[i] / total_cost) + previous_time;
+            gtfs::time time(previous_time);
+#if 0
+            LOG(INFO) << "Reaching stop " << st.stop()->get().stop_name
+                      << " \n\t - has a calculated cost of " << costs[i]
+                      << " \n\t - has a calculated time of " << time.get_raw_time()
+                      << " \n\t - and a provided time of " << st.departure_time.get_raw_time();
+            LOG(INFO) << "Reaching stop " << st.stop()->get().stop_name << " has a distance of " << dists[i];
+#endif
+            st.arrival_time = time;
+            st.departure_time = time.add_seconds(dwell_time_seconds);
+        }
+
         st.shape_dist_traveled = dists[i];
         i++;
     }
 
-    std::lock_guard<std::mutex> guard(_shpMutex);
+    std::lock_guard guard(_shpMutex);
     _feed.shapes.emplace(s.shape_id, s);
     t.shape_id = s.shape_id;
 }
@@ -351,7 +380,9 @@ void shape_builder::set_shape(pfaedle::gtfs::trip& t, const pfaedle::gtfs::shape
 pfaedle::gtfs::shape shape_builder::get_gtfs_shape(
         const pfaedle::router::shape& shp,
         pfaedle::gtfs::trip& t,
-        std::vector<double>& hopDists)
+        std::vector<double>& hopDists,
+        std::vector<double>& hopTimes,
+        std::vector<double>& costs)
 {
     pfaedle::gtfs::shape ret;
     ret.shape_id = get_free_shapeId(t);
@@ -359,13 +390,20 @@ pfaedle::gtfs::shape shape_builder::get_gtfs_shape(
     assert(shp.hops.size() == t.stop_times().size() - 1);
 
     size_t seq = 0;
+
+    double time = 0;
+    double lastTime = 0;
+    double last_speed = 50.f;
+
     double dist = -1;
     double lastDist = -1;
+
     hopDists.push_back(0);
+    costs.push_back(0);
     POINT last(0, 0);
     for (const auto& hop : shp.hops)
     {
-        const trgraph::node* l = hop.start;
+        const trgraph::node* node = hop.start;
         if (hop.edges.empty())
         {
             POINT ll = webMercToLatLng(
@@ -373,9 +411,16 @@ pfaedle::gtfs::shape shape_builder::get_gtfs_shape(
                     hop.start->pl().get_geom()->getY());
 
             if (dist > -0.5)
-                dist += webMercMeterDist(last, *hop.start->pl().get_geom());
+            {
+                const double distance_between_points = webMercMeterDist(last, *hop.start->pl().get_geom());
+                time += 3.6f * distance_between_points / last_speed;
+                dist += distance_between_points;
+            }
             else
+            {
                 dist = 0;
+                time = 0;
+            }
 
             last = *hop.start->pl().get_geom();
 
@@ -385,9 +430,12 @@ pfaedle::gtfs::shape shape_builder::get_gtfs_shape(
                 ret.points.push_back(point);
                 seq++;
                 lastDist = dist;
+                lastTime = time;
             }
 
-            dist += webMercMeterDist(last, *hop.end->pl().get_geom());
+            const double distance_between_points = webMercMeterDist(last, *hop.end->pl().get_geom());
+            time += 3.6f * distance_between_points / last_speed;
+            dist += distance_between_points;
             last = *hop.end->pl().get_geom();
 
             if (dist - lastDist > 0.01)
@@ -399,22 +447,33 @@ pfaedle::gtfs::shape shape_builder::get_gtfs_shape(
                 ret.points.push_back(point);
                 seq++;
                 lastDist = dist;
+                lastTime = time;
             }
         }
 
-        for (auto i = hop.edges.rbegin(); i != hop.edges.rend(); i++)
+        for (auto it = hop.edges.rbegin(); it != hop.edges.rend(); it++)
         {
-            const auto* e = *i;
+            const auto* edge = *it;
 
-            if ((e->getFrom() == l) ^ e->pl().is_reversed())
+            // time = 3.6f * distance(m) / speed (km/h)
+            last_speed = edge->pl().get_max_speed() - 10.0f;
+
+            if ((edge->getFrom() == node) ^ edge->pl().is_reversed())
             {
-                for (size_t i = 0; i < e->pl().get_geom()->size(); i++)
+                for (size_t i = 0; i < edge->pl().get_geom()->size(); i++)
                 {
-                    const POINT& cur = (*e->pl().get_geom())[i];
+                    const POINT& cur = (*edge->pl().get_geom())[i];
                     if (dist > -0.5)
-                        dist += webMercMeterDist(last, cur);
-                    else
+                    {
+                        const double distance_between_points = webMercMeterDist(last, cur);
+                        time += 3.6f * distance_between_points / last_speed;
+                        dist += distance_between_points;
+                    }else
+                    {
                         dist = 0;
+                        time = 0;
+                    }
+
                     last = cur;
                     if (dist - lastDist > 0.01)
                     {
@@ -424,34 +483,43 @@ pfaedle::gtfs::shape shape_builder::get_gtfs_shape(
 
                         seq++;
                         lastDist = dist;
+                        lastTime = time;
                     }
                 }
             }
             else
             {
-                for (int64_t i = e->pl().get_geom()->size() - 1; i >= 0; i--)
+                for (int64_t i = edge->pl().get_geom()->size() - 1; i >= 0; i--)
                 {
-                    const POINT& cur = (*e->pl().get_geom())[i];
+                    const POINT& cur = (*edge->pl().get_geom())[i];
                     if (dist > -0.5)
-                        dist += webMercMeterDist(last, cur);
-                    else
+                    {
+                        const double distance_between_points = webMercMeterDist(last, cur);
+                        time += 3.6f * distance_between_points / last_speed;
+                        dist += distance_between_points;
+                    }else
+                    {
                         dist = 0;
+                        time = 0;
+                    }
                     last = cur;
                     if (dist - lastDist > 0.01)
                     {
-                        POINT ll =
-                                webMercToLatLng<PFAEDLE_PRECISION>(cur.getX(), cur.getY());
+                        POINT ll = webMercToLatLng(cur.getX(), cur.getY());
                         gtfs::shape_point point{ret.shape_id, ll.getY(), ll.getX(), seq, dist};
                         ret.points.push_back(point);
                         seq++;
                         lastDist = dist;
+                        lastTime = time;
                     }
                 }
             }
-            l = e->getOtherNd(l);
+            node = edge->getOtherNd(node);
         }
 
         hopDists.push_back(lastDist);
+        hopTimes.push_back(lastTime);
+        costs.push_back(hop.cost);
     }
 
     return ret;

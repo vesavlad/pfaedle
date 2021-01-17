@@ -68,6 +68,12 @@ public:
     // Set the length in meters for this edge payload
     void set_length(double d);
 
+    // Return the max speed in km/h stored for this edge payload
+    double get_max_speed() const;
+
+    // Set the length in km/h for this edge payload
+    void set_max_speed(double speed);
+
     // Set this edge as a one way node, either in the default direction of
     // the edge (no arg), or the direction specified in dir
     void setOneWay();
@@ -116,6 +122,7 @@ public:
 
 private:
     float _length;
+    double _max_speed;
     uint8_t _oneWay : 2;
     bool _hasRestr : 1;
     bool _rev : 1;

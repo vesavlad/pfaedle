@@ -17,7 +17,7 @@ std::map<const transit_edge_line*, size_t> edge_payload::_tlines;
 
 // _____________________________________________________________________________
 edge_payload::edge_payload() :
-    _length(0), _oneWay(0), _hasRestr(false), _rev(false), _lvl(0)
+    _length(0), _max_speed(50.f), _oneWay(0), _hasRestr(false), _rev(false), _lvl(0)
 {
     _l = new LINE();
     _flines[_l] = 1;
@@ -30,6 +30,7 @@ edge_payload::edge_payload(const edge_payload& pl) :
 // _____________________________________________________________________________
 edge_payload::edge_payload(const edge_payload& pl, bool geoflat) :
     _length(pl._length),
+    _max_speed(pl._max_speed),
     _oneWay(pl._oneWay),
     _hasRestr(pl._hasRestr),
     _rev(pl._rev),
@@ -93,6 +94,12 @@ void edge_payload::set_length(double d) { _length = d; }
 double edge_payload::get_length() const { return _length; }
 
 // _____________________________________________________________________________
+void edge_payload::set_max_speed(double speed){ _max_speed = speed; }
+
+// _____________________________________________________________________________
+double edge_payload::get_max_speed() const { return _max_speed; }
+
+// _____________________________________________________________________________
 void edge_payload::add_line(const transit_edge_line* l)
 {
     if (std::find(_lines.begin(), _lines.end(), l) == _lines.end())
@@ -132,6 +139,7 @@ util::json::Dict edge_payload::get_attrs() const
 {
     util::json::Dict obj;
     obj["m_length"] = std::to_string(_length);
+    obj["maxspeed"] = std::to_string(_max_speed);
     obj["oneway"] = std::to_string(static_cast<int>(_oneWay));
     obj["level"] = std::to_string(_lvl);
     obj["restriction"] = is_restricted() ? "yes" : "no";

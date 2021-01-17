@@ -166,6 +166,7 @@ using node_list = std::vector<trgraph::node*>;
 struct edge_list_hop
 {
     edge_list edges;
+    double cost;
     const trgraph::node* start;
     const trgraph::node* end;
 };

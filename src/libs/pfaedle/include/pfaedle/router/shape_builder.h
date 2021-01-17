@@ -92,11 +92,14 @@ private:
 
     pfaedle::gtfs::shape get_gtfs_shape(const pfaedle::router::shape& shp,
                                             pfaedle::gtfs::trip& t,
-                                            std::vector<double>& hopDists);
+                                            std::vector<double>& hopDists,
+                                            std::vector<double>& hopTimes,
+                                            std::vector<double>& costs);
 
     void set_shape(pfaedle::gtfs::trip& t,
                    const pfaedle::gtfs::shape& s,
-                   const std::vector<double>& dists);
+                   const std::vector<double>& dists,
+                   const std::vector<double>& costs);
 
     node_candidate_route get_node_candidate_route(pfaedle::gtfs::trip& trip) const;
     double get_average_hop_distance(pfaedle::gtfs::trip& trip) const;

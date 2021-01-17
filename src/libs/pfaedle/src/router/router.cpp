@@ -536,8 +536,10 @@ edge_list_hops router::route(const edge_candidate_route& route,
             assert(e->pl().front_node());
             assert(e->pl().back_node());
 
-            ret[j] = edge_list_hop{std::move(*e->pl().get_edges()), e->pl().front_node(),
-                                   e->pl().back_node()};
+            ret[j] = edge_list_hop{std::move(*e->pl().get_edges()),
+                                           e->pl().get_cost().getValue(),
+                                           e->pl().front_node(),
+                                           e->pl().back_node()};
             j++;
         }
     }

@@ -10,6 +10,7 @@
 #include "pfaedle/osm/restrictor.h"
 #include "pfaedle/trgraph/station_group.h"
 #include "util/Misc.h"
+#include "util/String.h"
 
 #include <logging/logger.h>
 #include <pugixml.hpp>
@@ -38,6 +39,65 @@ using util::geo::Point;
 
 namespace pfaedle::osm
 {
+
+/**
+ * @return the speed in km/h
+ */
+inline double string_to_kmh(std::string str) {
+    /**
+     * The speed value used for "none" speed limit on German Autobahn is 150=30*5 as this is the biggest value
+     * not explicitly used in OSM and can be precisely returned for a factor of 5, 3, 2 and 1. It is fixed and
+     * not DecimalEncodedValue.getMaxInt to allow special case handling.
+     */
+    static constexpr double UNLIMITED_SIGN_SPEED = 150;
+
+    if (str.empty() || util::trim(str).empty())
+        return 50;
+
+    // on some German autobahns and a very few other places
+    if ("none" == str)
+        return UNLIMITED_SIGN_SPEED;
+
+    if (util::ends_with(str, ":rural") || util::ends_with(str, ":trunk"))
+        return 80;
+
+    if (util::ends_with(str, ":urban"))
+        return 50;
+
+    if (str == "walk" || util::ends_with(str, ":living_street"))
+        return 6;
+
+    size_t mpInteger = str.find("mp");
+    size_t knotInteger = str.find("knots");
+    size_t kmInteger = str.find("km");
+    size_t kphInteger = str.find("kph");
+
+    double factor;
+    if (mpInteger != std::string::npos) {
+        str = util::trim(str.substr(0, mpInteger));
+        // factor = DistanceCalcEarth.KM_MILE;
+        factor = 1.609344f;
+    } else if (knotInteger != std::string::npos) {
+        str = util::trim(str.substr(0, knotInteger));
+        factor = 1.852; // see https://en.wikipedia.org/wiki/Knot_%28unit%29#Definitions
+    } else {
+        if (kmInteger !=std::string::npos) {
+            str = util::trim(str.substr(0, kmInteger));
+        } else if (kphInteger !=std::string::npos) {
+            str = util::trim(str.substr(0, kphInteger));
+        }
+        factor = 1;
+    }
+
+    double value = stoi(str) * factor;
+
+    if (value <= 0) {
+        return 50;
+    }
+
+    return value;
+}
+
 bool eq_search_functor::operator()(const node* cand, const station_info* si) const
 {
     if (orphanSnap && cand->pl().get_si() &&
@@ -711,6 +771,7 @@ void osm_builder::read_edges(pugi::xml_document& xml,
 
                     e->pl().add_lines(lines);
                     e->pl().set_level(filter.level(w.attrs));
+                    e->pl().set_max_speed(string_to_kmh(w.attrs["maxspeed"]));
                     if (!track.empty()) etracks[e] = track;
 
                     if (filter.oneway(w.attrs)) e->pl().setOneWay(1);
@@ -778,8 +839,7 @@ bool osm_builder::keep_node(const osm_node& n,
     if (n.id &&
         (nodes.count(n.id) || multNodes.count(n.id) || should_keep_relation(n.id, nodeRels, fl) || filter.keep(n.attrs, osm_filter::NODE)) &&
         (nodes.count(n.id) || bBoxNodes.has(n.id)) &&
-        (nodes.count(n.id) || multNodes.count(n.id) ||
-         !filter.drop(n.attrs, osm_filter::NODE)))
+        (nodes.count(n.id) || multNodes.count(n.id) || !filter.drop(n.attrs, osm_filter::NODE)))
     {
         return true;
     }
@@ -866,7 +926,7 @@ void osm_builder::read_nodes(pugi::xml_document& xml,
         if (keep_node(nd, nodes, multNodes, nodeRels, bBoxNodes, filter, fl))
         {
             node* n = nullptr;
-            auto pos = util::geo::latLngToWebMerc<double>(nd.lat, nd.lng);
+            auto pos = util::geo::latLngToWebMerc(nd.lat, nd.lng);
             if (nodes.count(nd.id))
             {
                 n = nodes[nd.id];
@@ -877,6 +937,7 @@ void osm_builder::read_nodes(pugi::xml_document& xml,
                                                rels, opts);
                     if (si.has_value())
                     {
+                        LOG_INFO()<<si.value().get_name();
                         n->pl().set_si(si.value());
                     }
                 }
@@ -1804,6 +1865,7 @@ void osm_builder::get_kept_attribute_keys(const osm_read_options& opts,
         sets[2].insert(i.first);
     }
 
+    sets[1].insert("maxspeed");
     sets[2].insert("from");
     sets[2].insert("via");
     sets[2].insert("to");
