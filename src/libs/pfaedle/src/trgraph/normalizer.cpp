@@ -62,7 +62,7 @@ std::string normalizer::norm(const std::string& sn) const
         std::swap(ret, tmp);
     }
 
-    std::transform(ret.begin(), ret.end(), ret.begin(), ::tolower);
+    //std::transform(ret.begin(), ret.end(), ret.begin(), ::tolower);
 
     _cache[sn] = ret;
 
