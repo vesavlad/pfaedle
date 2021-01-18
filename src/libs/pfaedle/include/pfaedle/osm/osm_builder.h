@@ -95,7 +95,8 @@ public:
               const bounding_box& box,
               size_t gridSize,
               router::feed_stops& fs,
-              restrictor& res);
+              restrictor& res,
+              bool import_osm_stations);
 
     // Based on the list of options, output an overpass XML query for getting
     // the data needed for routing
@@ -206,7 +207,8 @@ private:
                            size_t gridSize,
                            router::feed_stops& fs,
                            restrictor& res,
-                           const router::node_set& orphanStations);
+                           const router::node_set& orphanStations,
+                              const bool import_osm_stations);
     static void write_geometries(trgraph::graph& g);
     static void delete_orphan_nodes(trgraph::graph& g);
     static void delete_orphan_edges(trgraph::graph& g, const osm_read_options& opts);
@@ -234,9 +236,18 @@ private:
 
     static trgraph::node* get_matching_node(const trgraph::node_payload& s, trgraph::node_grid& ng, double d);
 
-    static router::node_set snap_station(trgraph::graph& g, trgraph::node_payload& s, trgraph::edge_grid& eg, trgraph::node_grid& sng,
-                                         const osm_read_options& opts, restrictor& restor,
-                                         bool surHeur, bool orphSnap, double maxD);
+    static trgraph::node* get_distance_matching_node(const trgraph::node_payload& s, trgraph::node_grid& ng, double d);
+
+    static router::node_set snap_station(trgraph::graph& g,
+                                         trgraph::node_payload& s,
+                                         trgraph::edge_grid& eg,
+                                         trgraph::node_grid& sng,
+                                         const osm_read_options& opts,
+                                         restrictor& restor,
+                                         bool surHeur,
+                                         bool orphSnap,
+                                         double maxD,
+                                         bool import_osm_stations);
 
     // Checks if from the edge e, a station similar to si can be reach with less
     // than maxD distance and less or equal to "maxFullTurns" full turns. If

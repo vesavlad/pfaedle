@@ -119,7 +119,8 @@ void osm_builder::read(const std::string& path,
                       const bounding_box& bbox,
                       size_t gridSize,
                       router::feed_stops& fs,
-                      restrictor& res)
+                      restrictor& res,
+                       bool import_osm_stations)
 {
     if (!bbox.size())
         return;
@@ -195,7 +196,7 @@ void osm_builder::read(const std::string& path,
     write_geometries(g);
 
     LOG(TRACE) << "Snapping stations...";
-    snap_stations(opts, g, bbox, gridSize, fs, res, orphan_stations);
+    snap_stations(opts, g, bbox, gridSize, fs, res, orphan_stations, import_osm_stations);
 
     LOG(TRACE) << "Deleting orphan nodes...";
     delete_orphan_nodes(g);
@@ -937,7 +938,6 @@ void osm_builder::read_nodes(pugi::xml_document& xml,
                                                rels, opts);
                     if (si.has_value())
                     {
-                        LOG_INFO()<<si.value().get_name();
                         n->pl().set_si(si.value());
                     }
                 }
@@ -1463,8 +1463,7 @@ node* osm_builder::eqStatReach(const edge* e, const station_info* si, const POIN
                               double maxD, int maxFullTurns, double minAngle,
                               bool orphanSnap)
 {
-    return depth_search(e, si, p, maxD, maxFullTurns, minAngle,
-                        eq_search_functor(orphanSnap));
+    return depth_search(e, si, p, maxD, maxFullTurns, minAngle, eq_search_functor(orphanSnap));
 }
 
 
@@ -1510,6 +1509,35 @@ std::set<node*> osm_builder::get_matching_nodes(const node_payload& s, trgraph::
 }
 
 
+node* osm_builder::get_distance_matching_node(const trgraph::node_payload& s, trgraph::node_grid& ng, double d)
+{
+    double distor = util::geo::webMercDistFactor(*s.get_geom());
+    std::set<node*> neighs;
+    BOX box = util::geo::pad(util::geo::getBoundingBox(*s.get_geom()), d / distor);
+    ng.get(box, &neighs);
+
+    node* ret = nullptr;
+    double best_d = std::numeric_limits<double>::max();
+
+    for (auto* n : neighs)
+    {
+        // name can be different therefore don't enfore name similarities
+        if(n->pl().get_si())
+        {
+            double dist = webMercMeterDist(*n->pl().get_geom(), *s.get_geom());
+
+            if (dist < d && dist < best_d)
+            {
+                best_d = dist;
+                ret = n;
+            }
+        }
+    }
+
+    return ret;
+}
+
+
 node* osm_builder::get_matching_node(const node_payload& s, trgraph::node_grid& ng, double d)
 {
     double distor = util::geo::webMercDistFactor(*s.get_geom());
@@ -1545,14 +1573,32 @@ std::set<node*> osm_builder::snap_station(graph& g,
                                         restrictor& restor,
                                         bool surHeur,
                                         bool orphSnap,
-                                        double maxD)
+                                        double maxD,
+                                          bool import_osm_stations)
 {
     assert(s.get_si());
     std::set<node*> ret;
 
     edge_candidate_priority_queue pq;
 
-    get_edge_candidates(*s.get_geom(), pq, eg, maxD);
+    if(import_osm_stations)
+    {
+        // importing data from osm -> mainly used to correct stations and positions
+        const auto* best = get_distance_matching_node(s, sng, opts.maxSnapFallbackHeurDistance);
+        if (best)
+        {
+            get_edge_candidates(*best->pl().get_geom(), pq, eg, maxD);
+            s.set_si(station_info(*best->pl().get_si()));
+        }
+        else
+        {
+            get_edge_candidates(*s.get_geom(), pq, eg, maxD);
+        }
+    } else
+    {
+        // fallback to normal operating mode
+        get_edge_candidates(*s.get_geom(), pq, eg, maxD);
+    }
 
     if (pq.empty() && surHeur)
     {
@@ -1579,10 +1625,10 @@ std::set<node*> osm_builder::snap_station(graph& g,
                                          *e->getTo()->pl().get_geom());
 
         node* eq = nullptr;
-        if (!(eq = eqStatReach(e, s.get_si(), geom, 2 * maxD, 0,
-                               opts.maxAngleSnapReach, orphSnap)))
+        if (!(eq = eqStatReach(e, s.get_si(), geom, 2 * maxD, 0,opts.maxAngleSnapReach, orphSnap)))
         {
-            if (e->pl().level() > opts.maxSnapLevel) continue;
+            if (e->pl().level() > opts.maxSnapLevel)
+                continue;
             if (is_blocked(e,
                            s.get_si(),
                            geom,
@@ -2241,11 +2287,12 @@ bool osm_builder::keep_full_turn(const trgraph::node* n, double ang)
 
 void osm_builder::snap_stations(const osm_read_options& opts,
                                 graph& g,
-                           const bounding_box& bbox,
-                           size_t gridSize,
-                           router::feed_stops& fs,
-                           restrictor& res,
-                           const router::node_set& orphanStations)
+                               const bounding_box& bbox,
+                               size_t gridSize,
+                               router::feed_stops& fs,
+                               restrictor& res,
+                               const router::node_set& orphanStations,
+                                const bool import_osm_stations)
 {
     trgraph::node_grid sng = build_node_grid(g, gridSize, bbox.get_full_web_merc_box(), true);
     trgraph::edge_grid eg = build_edge_grid(g, gridSize, bbox.get_full_web_merc_box());
@@ -2259,7 +2306,7 @@ void osm_builder::snap_stations(const osm_read_options& opts,
             POINT geom = *s->pl().get_geom();
             node_payload pl = s->pl();
             pl.get_si()->set_is_from_osm(false);
-            const auto& r = snap_station(g, pl, eg, sng, opts, res, false, false, d);
+            const auto& r = snap_station(g, pl, eg, sng, opts, res, false, false, d, import_osm_stations);
             group_stats(r);
             for (auto n : r)
             {
@@ -2285,7 +2332,7 @@ void osm_builder::snap_stations(const osm_read_options& opts,
 
             trgraph::station_group* group = group_stats(
                     snap_station(g, pl, eg, sng, opts, res,
-                                 i == opts.maxSnapDistances.size() - 1, false, d));
+                                 i == opts.maxSnapDistances.size() - 1, false, d, import_osm_stations));
 
             if (group)
             {
@@ -2328,7 +2375,7 @@ void osm_builder::snap_stations(const osm_read_options& opts,
 
             trgraph::station_group* group = group_stats(
                     snap_station(g, pl, eg, sng, opts, res,
-                                 i == opts.maxSnapDistances.size() - 1, true, d));
+                                 i == opts.maxSnapDistances.size() - 1, true, d, import_osm_stations));
 
             if (group)
             {

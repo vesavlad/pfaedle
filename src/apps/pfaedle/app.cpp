@@ -318,7 +318,8 @@ ret_code app::run()
                              box,
                              cfg_.gridSize,
                              f_stops,
-                             restrictor);
+                             restrictor,
+                             cfg_.import_osm_stops);
         }
 
         // TODO(patrick): move this somewhere else
@@ -331,6 +332,16 @@ ret_code app::run()
                         mot_cfg.routingOpts.platformUnmatchedPen,
                         mot_cfg.routingOpts.stationDistPenFactor,
                         mot_cfg.routingOpts.nonOsmPen);
+
+
+                if(cfg_.import_osm_stops && feed_stop.second->pl().get_si()->is_from_osm())
+                {
+                    LOG(INFO) << "Replacing " << feed_stop.first->stop_name << " with " << feed_stop.second->pl().get_si()->get_name();
+                    feeds_[0].stops.at(feed_stop.first->stop_id).stop_name = feed_stop.second->pl().get_si()->get_name();
+                }
+
+                feeds_[0].stops.at(feed_stop.first->stop_id).stop_name =
+                        mot_cfg.osmBuildOpts.statNormzer.norm(feeds_[0].stops.at(feed_stop.first->stop_id).stop_name);
             }
         }
 
