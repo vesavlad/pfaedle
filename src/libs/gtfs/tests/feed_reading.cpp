@@ -104,20 +104,18 @@ TEST_CASE("Read GTFS feed")
     CHECK(feed.agencies.size() == 1);
     CHECK(feed.routes.size() == 5);
     CHECK(feed.trips.size() == 11);
-    CHECK(feed.shapes.size() == 8);
+    CHECK(feed.shapes.size() == 2);
+    CHECK((*feed.shapes.begin()).second.size() == 4);
+    CHECK((*(feed.shapes.begin()++)).second.size() == 4);
     CHECK(feed.stops.size() == 9);
     CHECK(feed.stop_times.size() == 28);
-//    CHECK(feed.get_transfers().size() == 4);
+    CHECK(feed.transfers.size() == 4);
     CHECK(feed.frequencies.size() == 11);
-//    CHECK(feed.get_attributions().size() == 1);
     CHECK(feed.calendar.size() == 2);
     CHECK(feed.calendar_dates.size() == 1);
-//    CHECK(feed.get_fare_attributes().size() == 2);
-//    CHECK(feed.get_fare_rules().size() == 4);
+    CHECK(feed.fare_attributes.size() == 2);
+    CHECK(feed.fare_rules.size() == 2);
     CHECK(!feed.feed_info.feed_publisher_name.empty());
-//    CHECK(feed.get_levels().size() == 3);
-//    CHECK(feed.get_pathways().size() == 3);
-//    CHECK(feed.get_translations().size() == 1);
 }
 
 TEST_CASE("Agency")
