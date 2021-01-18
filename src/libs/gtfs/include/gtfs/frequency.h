@@ -25,7 +25,7 @@ struct frequency: public record
     // Optional:
     frequency_trip_service exact_times = frequency_trip_service::FrequencyBased;
 
-    trip& trip() const;
+    pfaedle::gtfs::trip& trip() const;
 };
 
 }

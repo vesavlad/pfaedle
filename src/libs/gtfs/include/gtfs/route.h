@@ -37,8 +37,8 @@ public:
     size_t route_sort_order = 0;  // Routes with smaller value values should be displayed first
 
 
-    std::vector<std::reference_wrapper<trip>> trips() const;
+    std::vector<std::reference_wrapper<pfaedle::gtfs::trip>> trips() const;
 
-    std::optional<std::reference_wrapper<agency>> agency() const;
+    std::optional<std::reference_wrapper<pfaedle::gtfs::agency>> agency() const;
 };
 }

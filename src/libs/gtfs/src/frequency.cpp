@@ -3,7 +3,7 @@
 
 namespace pfaedle::gtfs
 {
-trip& frequency::trip() const
+pfaedle::gtfs::trip& frequency::trip() const
 {
     return feed.trips.at(trip_id);
 }
