@@ -10,4 +10,4 @@ include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
 target_include_directories(logging PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_link_libraries(logging
-        PRIVATE spdlog)
+        PRIVATE spdlog::spdlog_header_only)

@@ -11,9 +11,4 @@
 [spdlog]
     url=git@github.com:gabime/spdlog.git
     branch=master
-    commit=cbe9448650176797739dbab13961ef4c07f4290f
-
-[fmt]
-    url=git@github.com:motis-project/fmt.git
-    branch=master
-    commit=34d0435ad07feb55dabd64d99482dd5d28972584
+    commit=de0dbfa3596a18cd70a4619b6a9766847a941276

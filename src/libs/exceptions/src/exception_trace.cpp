@@ -27,7 +27,6 @@
     #endif
 #endif
 #include "stacktrace.h"
-#include <fmt/format.h>
 
 namespace exceptions
 {
@@ -66,7 +65,10 @@ std::vector<pid_t> get_tids()
 {
     pid_t pid = getpid();
     std::vector<pid_t> tids;
-    const std::string procDir = fmt::format("/proc/{}/task", pid);
+
+    std::stringstream stream;
+    stream << "/proc/"<<pid<<"/task";
+    const std::string procDir = stream.str();
 
     if (!filesystem::exists(procDir))
     {

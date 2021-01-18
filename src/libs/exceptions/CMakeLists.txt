@@ -62,8 +62,7 @@ elseif (APPLE)
 endif ()
 
 target_link_libraries(exceptions
-        PRIVATE logging
-        PRIVATE fmt)
+        PRIVATE logging)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 target_link_libraries(exceptions PRIVATE stdc++fs)
