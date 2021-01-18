@@ -5,24 +5,31 @@
 *Left: station-to-station path of a single bus through Stuttgart obtained from official schedule data. Right: path of the same bus map-matched by pfaedle.*
 
 [![Build
-Status](https://travis-ci.org/ad-freiburg/pfaedle.svg?branch=master)](https://travis-ci.org/ad-freiburg/pfaedle)
+Status](https://github.com/vesavlad/pfaedle/workflows/ci/badge.svg?branch=v2)](https://github.com/vesavlad/pfaedle)
 
 # pfaedle
 
 Precise OpenStreetMap (OSM) map-matching for public transit schedules ([GTFS](https://developers.google.com/transit/gtfs/reference/) data).
 Implementation and evaluation code for our paper [Sparse Map-Matching in Public Transit Networks with Turn restrictions](http://ad-publications.informatik.uni-freiburg.de/SIGSPATIAL_Sparse%20map%20matching%202018.pdf).
 
+**This is a fork of [ad-freiburg/pfaedle](https://github.com/ad-freiburg/pfaedle) that contains several differences from the base repo**:
+ - use of new c++ standards as much as possible
+ - reorganized and changed class namings to make things much clearer (for me atleast)
+ - new gtfs library underneath for handling gtfs feeds (much simpler and lighter)
+ - use of pugixml instead of pfxml for parsing xml osm data
+ - enhanced logging support (using spdlog for that)
+
 ## Requirements
 
  * `cmake`
- * `gcc >= 4.9` (or `clang >= 5.0`)
+ * `gcc >= 7.5` (or `clang >= 7.0`)
 
 ## Building and Installation
 
 Fetch this repository and init submodules:
 
 ```
-git clone --recurse-submodules https://github.com/ad-freiburg/pfaedle
+git clone https://github.com/vesavlad/pfaedle
 ```
 
 ```
@@ -61,7 +68,7 @@ $ pfaedle -D -x freiburg-regbez-latest.osm .
 
 To generate shapes for a specific mot only, use the `-m` option. Possible
 values are either `tram`, `bus`, `coach`, `rail`, `subway`, `ferry`, `funicular`,
-`gondola`, `all` (default) or GTFS vehicle type codes (0, 1, 2, 3, 4, 5, 6, 7).
+`gondola`, `trolleybus`, `all` (default) or GTFS vehicle type codes (0, 1, 2, 3, 4, 5, 6, 7, 11).
 
 Multiple values can be specified (comma separated).
 
@@ -77,7 +84,7 @@ run.
 
 ## via Docker
 
-You can use the [`adfreiburg/pfaedle` Docker image](https://hub.docker.com/repository/docker/adfreiburg/pfaedle) by mounting the OSM & GTFS data into the container:
+You can use the [`vesavlad/pfaedle` Docker image](https://hub.docker.com/repository/docker/vesavlad/pfaedle) by mounting the OSM & GTFS data into the container:
 
 ```shell
 docker run -i --rm \
