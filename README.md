@@ -4,20 +4,36 @@
 [![Left: station-to-station path of a single bus through Stuttgart obtained from official schedule data. Right: path of the same bus map-matched by pfaedle.](geo/stuttgart_ex_res.png?raw=true)](geo/stuttgart_ex.png?raw=true)
 *Left: station-to-station path of a single bus through Stuttgart obtained from official schedule data. Right: path of the same bus map-matched by pfaedle.*
 
+
+```
+                 _-====-__-=-__-===-__-=======-__
+               _(                               _)
+            OO(         PFAEDLE                )
+         . o  '===-______-===-____-==-__-====='
+      .o
+     . ______          _______________
+   _()_||__|| __o^o___ | [] [] [] [] |
+  (           |      | |             |o
+ /-OO----OO""="OO--OO"="OO---------OO"
+############################################################
+```
+
+# pfaedle 
+
 [![Build
 Status](https://github.com/vesavlad/pfaedle/workflows/ci/badge.svg?branch=v2)](https://github.com/vesavlad/pfaedle)
 
-# pfaedle
 
 Precise OpenStreetMap (OSM) map-matching for public transit schedules ([GTFS](https://developers.google.com/transit/gtfs/reference/) data).
 Implementation and evaluation code for our paper [Sparse Map-Matching in Public Transit Networks with Turn restrictions](http://ad-publications.informatik.uni-freiburg.de/SIGSPATIAL_Sparse%20map%20matching%202018.pdf).
 
 **This is a fork of [ad-freiburg/pfaedle](https://github.com/ad-freiburg/pfaedle) that contains several differences from the base repo**:
- - use of new c++ standards as much as possible
- - reorganized and changed class namings to make things much clearer (for me atleast)
- - new gtfs library underneath for handling gtfs feeds (much simpler and lighter)
- - use of pugixml instead of pfxml for parsing xml osm data
- - enhanced logging support (using spdlog for that)
+ - [x] use of new c++ standards as much as possible
+ - [x] use new dependency management system named [pkg](https://github.com/motis-project/pkg)
+ - [x] reorganized and changed class namings to make things much clearer (for me atleast)
+ - [x] new gtfs library underneath for handling gtfs feeds (much simpler and lighter)
+ - [x] use of [pugixml](https://pugixml.org) instead of pfxml for parsing xml osm data
+ - [x] enhanced logging support (using [spdlog](https://github.com/gabime/spdlog) for that)
 
 ## Requirements
 
