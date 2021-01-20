@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-DOCKER_IMAGE="vesavlad/pfaedle"
+DOCKER_IMAGE="vladvesa/pfaedle"
 
 COMMIT_HASH=$(git rev-parse --short "$GITHUB_SHA")
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
