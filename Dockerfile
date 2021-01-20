@@ -1,9 +1,9 @@
-FROM debian:buster-slim AS builder
+FROM ubuntu AS builder
 
 WORKDIR /app
 
 RUN apt-get update && \
-	apt-get install -y g++ cmake git
+	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends clang cmake git make
 
 ADD . /app
 RUN mkdir build && \
@@ -13,7 +13,7 @@ RUN mkdir build && \
 	pwd && \
 	make install
 
-FROM debian:buster-slim
+FROM ubuntu
 
 RUN apt-get update && \
 	apt-get install -y libgomp1 && \
