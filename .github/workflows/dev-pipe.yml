@@ -38,6 +38,7 @@ jobs:
       run: ctest -C ${{ matrix.build_type }}
 
   docker-push:
+    if: github.ref == 'refs/heads/v1' || github.ref == 'refs/heads/v2'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
