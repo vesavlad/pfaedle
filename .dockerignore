@@ -2,3 +2,10 @@
 
 /Dockerfile
 /push-docker-image.sh
+/cmake-build-*
+/eval
+/gtfs-out
+/logs
+/.idea
+/.github
+/.git
