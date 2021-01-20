@@ -52,7 +52,6 @@ jobs:
       run: ctest -C ${{ matrix.build_type }}
 
   docker-push:
-    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
