@@ -3,7 +3,12 @@ FROM ubuntu AS builder
 WORKDIR /app
 
 RUN apt-get update && \
-	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends clang cmake git make
+	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends clang cmake git make ca-certificates wget
+
+RUN mkdir /usr/local/share/ca-certificates/cacert.org && \
+	wget -P /usr/local/share/ca-certificates/cacert.org http://www.cacert.org/certs/root.crt http://www.cacert.org/certs/class3.crt && \
+	update-ca-certificates && \
+	git config --global http.sslCAinfo /etc/ssl/certs/ca-certificates.crt
 
 ADD . /app
 RUN mkdir build && \
