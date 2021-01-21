@@ -1,11 +1,13 @@
 #include "exception_handler.h"
 #include "exception_trace.h"
 #include "is_sub_class_of.h"
+
+#include <exceptions/exceptions.h>
+#include <logging/logger.h>
+
 #include <dlfcn.h>
 #include <exception>
-#include <exceptions/exceptions.h>
 #include <iostream>
-#include <logging/logger.h>
 #include <string>
 #include <typeinfo>
 
@@ -33,14 +35,23 @@ std::string build_throw_message(const std::type_info* type_info, void* thrown_ex
  * but earlier than in the list of libraries to be linked (stdlib is not mentioned explicitly, so comes last).
  * This function is not in a namespace (otherwise the original one would not be overloaded).
  */
-extern "C" void __cxa_throw(void* thrown_exception, void* pvtinfo, void (*dest)(void*))// NOLINT
+typedef void (*cxa_throw_type)(void *, void *, void (*) (void *));
+cxa_throw_type orig_cxa_throw = nullptr;
+
+void load_orig_throw_code()
 {
-    const std::string throwMsg = build_throw_message(static_cast<const std::type_info*>(pvtinfo), thrown_exception);
-    LOG(logging::error) << throwMsg;
+    orig_cxa_throw = (cxa_throw_type) dlsym(RTLD_NEXT, "__cxa_throw");
+}
+
+extern "C"
+void __cxa_throw(void* thrown_exception, std::type_info* pvtinfo, void (*dest)(void*))// NOLINT
+{
+    LOG(logging::error) << build_throw_message(static_cast<const std::type_info*>(pvtinfo), thrown_exception);
+
+    if (orig_cxa_throw == nullptr)
+        load_orig_throw_code();
 
     /// Pass the exception to the standard exception handling mechanism, by calling __cxa_throw from stdlib
-    typedef void (*cxa_throw_type)(void*, void*, void (*)(void*)) __attribute__((__noreturn__));// NOLINT
-    static const auto orig_cxa_throw = (cxa_throw_type) dlsym(RTLD_NEXT, "__cxa_throw");
     orig_cxa_throw(thrown_exception, pvtinfo, dest);
 }
 
