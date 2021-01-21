@@ -62,9 +62,9 @@ public:
     {
         return _nodes;
     }
-    std::set<Node<N, E>*>* getNds()
+    std::set<Node<N, E>*>& getNds()
     {
-        return &_nodes;
+        return _nodes;
     }
 
     typename std::set<Node<N, E>*>::iterator delNd(Node<N, E>* n)

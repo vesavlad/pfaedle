@@ -139,8 +139,7 @@ void osm_builder::read(const std::string& path,
 
         restrictions raw_rests;
 
-        attribute_key_set attr_keys[3] = {};
-        get_kept_attribute_keys(opts, attr_keys);
+        std::vector<attribute_key_set> attr_keys = opts.get_kept_attribute_keys();
 
         osm_filter filter(opts);
 
@@ -188,53 +187,53 @@ void osm_builder::read(const std::string& path,
 
     {
         LOG(TRACE) << "Fixing gaps...";
-        trgraph::node_grid ng = build_node_grid(g, gridSize, bbox.get_full_web_merc_box(), false);
-        fix_gaps(g, &ng);
+        trgraph::node_grid ng = trgraph::node_grid::build_node_grid(g, gridSize, bbox.get_full_web_merc_box(), false);
+        g.fix_gaps(ng);
     }
 
     LOG(TRACE) << "Writing edge geoms...";
-    write_geometries(g);
+    g.write_geometries();
 
     LOG(TRACE) << "Snapping stations...";
     snap_stations(opts, g, bbox, gridSize, fs, res, orphan_stations, import_osm_stations);
 
     LOG(TRACE) << "Deleting orphan nodes...";
-    delete_orphan_nodes(g);
+    g.delete_orphan_nodes();
 
     LOG(TRACE) << "Deleting orphan edges...";
-    delete_orphan_edges(g, opts);
+    g.delete_orphan_edges(opts.fullTurnAngle);
 
     LOG(TRACE) << "Collapsing edges...";
-    collapse_edges(g);
+    g.collapse_edges();
 
     LOG(TRACE) << "Deleting orphan nodes...";
-    delete_orphan_nodes(g);
+    g.delete_orphan_nodes();
 
     LOG(TRACE) << "Deleting orphan edges...";
-    delete_orphan_edges(g, opts);
+    g.delete_orphan_edges(opts.fullTurnAngle);
 
     LOG(TRACE) << "Writing graph components...";
     // the restrictor is needed here to prevent connections in the graph
     // which are not possible in reality
-    uint32_t comps = write_components(g);
+    uint32_t comps = g.write_components();
 
     LOG(TRACE) << "Simplifying geometries...";
-    simplify_geometries(g);
+    g.simplify_geometries();
 
     LOG(TRACE) << "Writing other-direction edges...";
     writeODirEdgs(g, res);
 
     LOG(TRACE) << "Write dummy node self-edges...";
-    writeSelfEdgs(g);
+    g.writeSelfEdgs();
 
     size_t num_edges = 0;
 
-    for (auto* n : *g.getNds())
+    for (const auto& n : g.getNds())
     {
         num_edges += n->getAdjListOut().size();
     }
 
-    LOG(DEBUG) << "Graph has " << g.getNds()->size() << " nodes, " << num_edges
+    LOG(DEBUG) << "Graph has " << g.getNds().size() << " nodes, " << num_edges
                << " edges and " << comps << " connected component(s)";
 }
 
@@ -361,18 +360,22 @@ void osm_builder::filter_write(const std::string& in,
 
 
     osm_filter filter;
-    attribute_key_set attr_keys[3] = {};
+    std::vector<attribute_key_set> attr_keys(3);
 
     for (const osm_read_options& o : opts)
     {
-        get_kept_attribute_keys(o, attr_keys);
+        auto result = o.get_kept_attribute_keys();
+        for (size_t i = 0; i < attr_keys.size(); ++i)
+        {
+            attr_keys[i].merge(result[i]);
+        }
         filter = filter.merge(osm_filter(o.keepFilter, o.dropFilter));
     }
 
     filter_nodes(input_doc, bboxNodes, noHupNodes, filter, box);
 
     read_relations(input_doc, rels, nodeRels, wayRels, filter, attr_keys[2], rests);
-    read_edges(input_doc, wayRels, filter, bboxNodes, attr_keys[1], ways, nodes, rels.flat);
+    read_ways(input_doc, wayRels, filter, bboxNodes, attr_keys[1], ways, nodes, rels.flat);
 
     read_write_nodes(input_doc, osm_child, nodeRels, filter, bboxNodes, nodes, attr_keys[0], rels.flat);
     read_write_ways(input_doc, osm_child, ways, attr_keys[1]);
@@ -616,8 +619,7 @@ int osm_builder::filter_nodes(pugi::xml_document& xml,
 }
 
 
-bool osm_builder::should_keep_relation(osmid id, const relation_map& rels,
-                         const flat_relations& fl) const
+bool osm_builder::should_keep_relation(osmid id, const relation_map& rels, const flat_relations& fl) const
 {
     auto it = rels.find(id);
 
@@ -654,7 +656,7 @@ bool osm_builder::keep_way(const osm_way& w, const relation_map& wayRels,
 }
 
 
-void osm_builder::read_edges(pugi::xml_document& xml,
+void osm_builder::read_ways(pugi::xml_document& xml,
                            const relation_map& wayRels,
                            const osm_filter& filter,
                            const osm_id_set& bBoxNodes,
@@ -1202,7 +1204,7 @@ std::optional<station_info> osm_builder::get_station_info(node* node, osmid nid,
     auto ret = station_info(names[0], platform, true);
 
 #ifdef PFAEDLE_STATION_IDS
-    ret.setId(getAttrByFirstMatch(ops.statAttrRules.idRule, nid, m, nodeRels,
+    ret.setId(getAttrByFirstMatch(ops.statAttrRules.idRule, nid, m, node_relations_,
                                   rels, ops.idNormzer));
 #endif
 
@@ -1257,119 +1259,11 @@ std::optional<station_info> osm_builder::get_station_info(node* node, osmid nid,
 }
 
 
-double osm_builder::distance(const node& a, const node& b)
-{
-    return webMercMeterDist(*a.pl().get_geom(), *b.pl().get_geom());
-}
-
-
 double osm_builder::webMercDist(const node& a, const node& b)
 {
     return webMercMeterDist(*a.pl().get_geom(), *b.pl().get_geom());
 }
 
-
-void osm_builder::write_geometries(graph& g)
-{
-    for (auto* n : *g.getNds())
-    {
-        for (auto* e : n->getAdjListOut())
-        {
-            e->pl().add_point(*e->getFrom()->pl().get_geom());
-            e->pl().set_length(distance(*e->getFrom(), *e->getTo()));
-            e->pl().add_point(*e->getTo()->pl().get_geom());
-        }
-    }
-}
-
-
-void osm_builder::fix_gaps(graph& g, trgraph::node_grid* ng)
-{
-    double meter = 1;
-    for (auto* n : *g.getNds())
-    {
-        if (n->getInDeg() + n->getOutDeg() == 1)
-        {
-            // get all nodes in distance
-            std::set<node*> ret;
-            double distor = util::geo::webMercDistFactor(*n->pl().get_geom());
-            ng->get(util::geo::pad(util::geo::getBoundingBox(*n->pl().get_geom()),
-                                   meter / distor),
-                    &ret);
-            for (auto* nb : ret)
-            {
-                if (nb != n && (nb->getInDeg() + nb->getOutDeg()) == 1 &&
-                    webMercDist(*nb, *n) <= meter / distor)
-                {
-                    // special case: both node are non-stations, move
-                    // the end point nb to n and delete nb
-                    if (!nb->pl().get_si() && !n->pl().get_si())
-                    {
-                        node* otherN;
-                        if (nb->getOutDeg())
-                            otherN = (*nb->getAdjListOut().begin())->getOtherNd(nb);
-                        else
-                            otherN = (*nb->getAdjListIn().begin())->getOtherNd(nb);
-                        LINE l;
-                        l.push_back(*otherN->pl().get_geom());
-                        l.push_back(*n->pl().get_geom());
-
-                        edge* e;
-                        if (nb->getOutDeg())
-                            e = g.addEdg(otherN, n, (*nb->getAdjListOut().begin())->pl());
-                        else
-                            e = g.addEdg(otherN, n, (*nb->getAdjListIn().begin())->pl());
-                        if (e)
-                        {
-                            *e->pl().get_geom() = l;
-                            g.delNd(nb);
-                            ng->remove(nb);
-                        }
-                    }
-                    else
-                    {
-                        // if one of the nodes is a station, just add an edge between them
-                        if (nb->getOutDeg())
-                            g.addEdg(n, nb, (*nb->getAdjListOut().begin())->pl());
-                        else
-                            g.addEdg(n, nb, (*nb->getAdjListIn().begin())->pl());
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-trgraph::edge_grid osm_builder::build_edge_grid(graph& g, size_t size,
-                                  const BOX& webMercBox)
-{
-    trgraph::edge_grid ret(size, size, webMercBox, false);
-    for (auto* n : *g.getNds())
-    {
-        for (auto* e : n->getAdjListOut())
-        {
-            assert(e->pl().get_geom());
-            ret.add(*e->pl().get_geom(), e);
-        }
-    }
-    return ret;
-}
-
-
-trgraph::node_grid osm_builder::build_node_grid(graph& g, size_t size, const BOX& webMercBox,
-                                  bool which)
-{
-    trgraph::node_grid ret(size, size, webMercBox, false);
-    for (auto* n : *g.getNds())
-    {
-        if (!which && n->getInDeg() + n->getOutDeg() == 1)
-            ret.add(*n->pl().get_geom(), n);
-        else if (which && n->pl().get_si())
-            ret.add(*n->pl().get_geom(), n);
-    }
-    return ret;
-}
 
 
 node* osm_builder::depth_search(const edge* e, const station_info* si, const POINT& p,
@@ -1467,104 +1361,6 @@ node* osm_builder::eqStatReach(const edge* e, const station_info* si, const POIN
 }
 
 
-void osm_builder::get_edge_candidates(const POINT& s, edge_candidate_priority_queue& ret, trgraph::edge_grid& eg, double d)
-{
-    double distor = util::geo::webMercDistFactor(s);
-    std::set<edge*> neighs;
-    BOX box = util::geo::pad(util::geo::getBoundingBox(s), d / distor);
-    eg.get(box, &neighs);
-
-    for (auto* e : neighs)
-    {
-        double dist = util::geo::distToSegment(*e->getFrom()->pl().get_geom(),
-                                               *e->getTo()->pl().get_geom(), s);
-
-        if (dist * distor <= d)
-        {
-            ret.push(edge_candidate(-dist, e));
-        }
-    }
-}
-
-
-std::set<node*> osm_builder::get_matching_nodes(const node_payload& s, trgraph::node_grid* ng,
-                                           double d)
-{
-    std::set<node*> ret;
-    double distor = util::geo::webMercDistFactor(*s.get_geom());
-    std::set<node*> neighs;
-    BOX box = util::geo::pad(util::geo::getBoundingBox(*s.get_geom()), d / distor);
-    ng->get(box, &neighs);
-
-    for (auto* n : neighs)
-    {
-        if (n->pl().get_si() && n->pl().get_si()->simi(s.get_si()) > 0.5)
-        {
-            double dist = webMercMeterDist(*n->pl().get_geom(), *s.get_geom());
-            if (dist < d) ret.insert(n);
-        }
-    }
-
-    return ret;
-}
-
-
-node* osm_builder::get_distance_matching_node(const trgraph::node_payload& s, trgraph::node_grid& ng, double d)
-{
-    double distor = util::geo::webMercDistFactor(*s.get_geom());
-    std::set<node*> neighs;
-    BOX box = util::geo::pad(util::geo::getBoundingBox(*s.get_geom()), d / distor);
-    ng.get(box, &neighs);
-
-    node* ret = nullptr;
-    double best_d = std::numeric_limits<double>::max();
-
-    for (auto* n : neighs)
-    {
-        // name can be different therefore don't enfore name similarities
-        if(n->pl().get_si())
-        {
-            double dist = webMercMeterDist(*n->pl().get_geom(), *s.get_geom());
-
-            if (dist < d && dist < best_d)
-            {
-                best_d = dist;
-                ret = n;
-            }
-        }
-    }
-
-    return ret;
-}
-
-
-node* osm_builder::get_matching_node(const node_payload& s, trgraph::node_grid& ng, double d)
-{
-    double distor = util::geo::webMercDistFactor(*s.get_geom());
-    std::set<node*> neighs;
-    BOX box = util::geo::pad(util::geo::getBoundingBox(*s.get_geom()), d / distor);
-    ng.get(box, &neighs);
-
-    node* ret = nullptr;
-    double best_d = std::numeric_limits<double>::max();
-
-    for (auto* n : neighs)
-    {
-        if (n->pl().get_si() && n->pl().get_si()->simi(s.get_si()) > 0.5)
-        {
-            double dist = webMercMeterDist(*n->pl().get_geom(), *s.get_geom());
-            if (dist < d && dist < best_d)
-            {
-                best_d = dist;
-                ret = n;
-            }
-        }
-    }
-
-    return ret;
-}
-
-
 std::set<node*> osm_builder::snap_station(graph& g,
                                         node_payload& s,
                                         trgraph::edge_grid& eg,
@@ -1584,35 +1380,35 @@ std::set<node*> osm_builder::snap_station(graph& g,
     if(import_osm_stations)
     {
         // importing data from osm -> mainly used to correct stations and positions
-        const auto* best = get_distance_matching_node(s, sng, opts.maxSnapFallbackHeurDistance);
+        const auto* best = sng.get_distance_matching_node(s, opts.maxSnapFallbackHeurDistance);
         if (best)
         {
-            get_edge_candidates(*best->pl().get_geom(), pq, eg, maxD);
+            pq = eg.get_edge_candidates(*best->pl().get_geom(), maxD);
             s.set_si(station_info(*best->pl().get_si()));
         }
         else
         {
-            get_edge_candidates(*s.get_geom(), pq, eg, maxD);
+            pq = eg.get_edge_candidates(*s.get_geom(), maxD);
         }
     } else
     {
         // fallback to normal operating mode
-        get_edge_candidates(*s.get_geom(), pq, eg, maxD);
+        pq = eg.get_edge_candidates(*s.get_geom(), maxD);
     }
 
     if (pq.empty() && surHeur)
     {
         // no station found in the first round, try again with the nearest
         // surrounding station with matching name
-        const node* best = get_matching_node(s, sng, opts.maxSnapFallbackHeurDistance);
+        const node* best = sng.get_matching_node(s,  opts.maxSnapFallbackHeurDistance);
         if (best)
         {
-            get_edge_candidates(*best->pl().get_geom(), pq, eg, maxD);
+            pq  = eg.get_edge_candidates(*best->pl().get_geom(),  maxD);
         }
         else
         {
             // if still no luck, get edge cands in fallback snap distance
-            get_edge_candidates(*s.get_geom(), pq, eg, opts.maxSnapFallbackHeurDistance);
+            pq = eg.get_edge_candidates(*s.get_geom(), opts.maxSnapFallbackHeurDistance);
         }
     }
 
@@ -1832,367 +1628,6 @@ std::vector<transit_edge_line*> osm_builder::get_lines(
 }
 
 
-void osm_builder::get_kept_attribute_keys(const osm_read_options& opts,
-                                          attribute_key_set sets[]) const
-{
-    for (const auto& i : opts.statGroupNAttrRules)
-    {
-        if (i.attr.relRule.kv.first.empty())
-        {
-            sets[0].insert(i.attr.attr);
-        }
-        else
-        {
-            sets[2].insert(i.attr.relRule.kv.first);
-            sets[2].insert(i.attr.attr);
-        }
-    }
-
-    for (const auto& i : opts.keepFilter)
-    {
-        for (size_t j = 0; j < 3; j++) sets[j].insert(i.first);
-    }
-
-    for (const auto& i : opts.dropFilter)
-    {
-        for (size_t j = 0; j < 3; j++) sets[j].insert(i.first);
-    }
-
-    for (const auto& i : opts.noHupFilter)
-    {
-        sets[0].insert(i.first);
-    }
-
-    for (const auto& i : opts.oneWayFilter)
-    {
-        sets[1].insert(i.first);
-    }
-
-    for (const auto& i : opts.oneWayFilterRev)
-    {
-        sets[1].insert(i.first);
-    }
-
-    for (const auto& i : opts.twoWayFilter)
-    {
-        sets[1].insert(i.first);
-    }
-
-    for (const auto& i : opts.stationFilter)
-    {
-        sets[0].insert(i.first);
-        sets[2].insert(i.first);
-    }
-
-    for (const auto& i : opts.stationBlockerFilter)
-    {
-        sets[0].insert(i.first);
-    }
-
-    for (uint8_t j = 0; j < 7; j++)
-    {
-        for (const auto& kv : *(opts.levelFilters + j))
-        {
-            sets[1].insert(kv.first);
-        }
-    }
-
-    // restriction system
-    for (const auto& i : opts.restrPosRestr)
-    {
-        sets[2].insert(i.first);
-    }
-    for (const auto& i : opts.restrNegRestr)
-    {
-        sets[2].insert(i.first);
-    }
-    for (const auto& i : opts.noRestrFilter)
-    {
-        sets[2].insert(i.first);
-    }
-
-    sets[1].insert("maxspeed");
-    sets[2].insert("from");
-    sets[2].insert("via");
-    sets[2].insert("to");
-
-    sets[2].insert(opts.relLinerules.toNameRule.begin(), opts.relLinerules.toNameRule.end());
-    sets[2].insert(opts.relLinerules.fromNameRule.begin(), opts.relLinerules.fromNameRule.end());
-    sets[2].insert(opts.relLinerules.sNameRule.begin(), opts.relLinerules.sNameRule.end());
-
-    for (const auto& i : opts.statAttrRules.nameRule)
-    {
-        if (i.relRule.kv.first.empty())
-        {
-            sets[0].insert(i.attr);
-        }
-        else
-        {
-            sets[2].insert(i.relRule.kv.first);
-            sets[2].insert(i.attr);
-        }
-    }
-
-    for (const auto& i : opts.edgePlatformRules)
-    {
-        if (i.relRule.kv.first.empty())
-        {
-            sets[1].insert(i.attr);
-        }
-        else
-        {
-            sets[2].insert(i.relRule.kv.first);
-            sets[2].insert(i.attr);
-        }
-    }
-
-    for (const auto& i : opts.statAttrRules.platformRule)
-    {
-        if (i.relRule.kv.first.empty())
-        {
-            sets[0].insert(i.attr);
-        }
-        else
-        {
-            sets[2].insert(i.relRule.kv.first);
-            sets[2].insert(i.attr);
-        }
-    }
-
-    for (const auto& i : opts.statAttrRules.idRule)
-    {
-        if (i.relRule.kv.first.empty())
-        {
-            sets[0].insert(i.attr);
-        }
-        else
-        {
-            sets[2].insert(i.relRule.kv.first);
-            sets[2].insert(i.attr);
-        }
-    }
-}
-
-
-void osm_builder::delete_orphan_edges(graph& g, const osm_read_options& opts)
-{
-    const size_t rounds = 3;
-    for (size_t c = 0; c < rounds; c++)
-    {
-        for (auto i = g.getNds()->begin(); i != g.getNds()->end();)
-        {
-            if ((*i)->getInDeg() + (*i)->getOutDeg() != 1 || (*i)->pl().get_si())
-            {
-                ++i;
-                continue;
-            }
-
-            // check if the removal of this edge would transform a steep angle
-            // full turn at an intersection into a node 2 eligible for contraction
-            // if so, dont delete
-            if (keep_full_turn(*i, opts.fullTurnAngle))
-            {
-                ++i;
-                continue;
-            }
-
-            i = g.delNd(*i);
-            continue;
-            i++;
-        }
-    }
-}
-
-
-void osm_builder::delete_orphan_nodes(graph& g)
-{
-    for (auto i = g.getNds()->begin(); i != g.getNds()->end();)
-    {
-        if ((*i)->getInDeg() + (*i)->getOutDeg() == 0 &&
-            !((*i)->pl().get_si() && (*i)->pl().get_si()->get_group()))
-        {
-            i = g.delNd(i);
-            // TODO(patrick): maybe delete from node grid?
-        }
-        else
-        {
-            i++;
-        }
-    }
-}
-
-
-bool osm_builder::are_edges_similar(const edge& a, const edge& b)
-{
-    if (static_cast<bool>(a.pl().oneWay()) ^ static_cast<bool>(b.pl().oneWay()))
-        return false;
-    if (a.pl().level() != b.pl().level())
-        return false;
-    if (a.pl().get_lines().size() != b.pl().get_lines().size())
-        return false;
-    if (a.pl().get_lines() != b.pl().get_lines())
-        return false;
-
-    if (a.pl().oneWay() && b.pl().oneWay())
-    {
-        if (a.getFrom() != b.getTo() && a.getTo() != b.getFrom())
-            return false;
-    }
-    if (a.pl().is_restricted() || b.pl().is_restricted())
-        return false;
-
-    return true;
-}
-
-
-const edge_payload& osm_builder::merge_edge_payload(edge& a, edge& b)
-{
-    const node* n = nullptr;
-    if (a.getFrom() == b.getFrom())
-        n = a.getFrom();
-    else if (a.getFrom() == b.getTo())
-        n = a.getFrom();
-    else
-        n = a.getTo();
-
-    if (a.getTo() == n && b.getTo() == n)
-    {
-        // --> n <--
-        a.pl().get_geom()->insert(a.pl().get_geom()->end(),
-                                 b.pl().get_geom()->rbegin(),
-                                 b.pl().get_geom()->rend());
-    }
-    else if (a.getTo() == n && b.getFrom() == n)
-    {
-        // --> n -->
-        a.pl().get_geom()->insert(a.pl().get_geom()->end(),
-                                 b.pl().get_geom()->begin(),
-                                 b.pl().get_geom()->end());
-    }
-    else if (a.getFrom() == n && b.getTo() == n)
-    {
-        // <-- n <--
-        std::reverse(a.pl().get_geom()->begin(), a.pl().get_geom()->end());
-        a.pl().get_geom()->insert(a.pl().get_geom()->end(),
-                                 b.pl().get_geom()->rbegin(),
-                                 b.pl().get_geom()->rend());
-    }
-    else
-    {
-        // <-- n -->
-        std::reverse(a.pl().get_geom()->begin(), a.pl().get_geom()->end());
-        a.pl().get_geom()->insert(a.pl().get_geom()->end(),
-                                 b.pl().get_geom()->begin(),
-                                 b.pl().get_geom()->end());
-    }
-
-    a.pl().set_length(a.pl().get_length() + b.pl().get_length());
-
-    return a.pl();
-}
-
-
-void osm_builder::collapse_edges(graph& g)
-{
-    for (auto* n : *g.getNds())
-    {
-        if (n->getOutDeg() + n->getInDeg() != 2 || n->pl().get_si()) continue;
-
-        edge* ea;
-        edge* eb;
-        if (n->getOutDeg() == 2)
-        {
-            ea = *n->getAdjListOut().begin();
-            eb = *n->getAdjListOut().rbegin();
-        }
-        else if (n->getInDeg() == 2)
-        {
-            ea = *n->getAdjListIn().begin();
-            eb = *n->getAdjListIn().rbegin();
-        }
-        else
-        {
-            ea = *n->getAdjListOut().begin();
-            eb = *n->getAdjListIn().begin();
-        }
-
-        // important, we don't have a multigraph! if the same edge
-        // will already exist, leave this node
-        if (g.getEdg(ea->getOtherNd(n), eb->getOtherNd(n))) continue;
-        if (g.getEdg(eb->getOtherNd(n), ea->getOtherNd(n))) continue;
-
-        if (are_edges_similar(*ea, *eb))
-        {
-            if (ea->pl().oneWay() && ea->getOtherNd(n) != ea->getFrom())
-            {
-                g.addEdg(eb->getOtherNd(n), ea->getOtherNd(n), merge_edge_payload(*eb, *ea));
-            }
-            else
-            {
-                g.addEdg(ea->getOtherNd(n), eb->getOtherNd(n), merge_edge_payload(*ea, *eb));
-            }
-            g.delEdg(ea->getFrom(), ea->getTo());
-            g.delEdg(eb->getFrom(), eb->getTo());
-        }
-    }
-}
-
-
-void osm_builder::simplify_geometries(graph& g)
-{
-    for (auto* n : *g.getNds())
-    {
-        for (auto* e : n->getAdjListOut())
-        {
-            (*e->pl().get_geom()) = util::geo::simplify(*e->pl().get_geom(), 0.5);
-        }
-    }
-}
-
-
-uint32_t osm_builder::write_components(graph& g)
-{
-    auto* comp = new component{7};
-    uint32_t comp_counter = 0;
-
-    for (auto* n : *g.getNds())
-    {
-        if (!n->pl().get_component())
-        {
-            using node_edge_pair = std::pair<node*, edge*>;
-            std::stack<node_edge_pair> stack({node_edge_pair(n, 0)});
-            while (!stack.empty())
-            {
-                auto stack_top = stack.top();
-                stack.pop();
-
-                stack_top.first->pl().set_component(comp);
-                for (auto* e : stack_top.first->getAdjListOut())
-                {
-                    if (e->pl().level() < comp->minEdgeLvl)
-                        comp->minEdgeLvl = e->pl().level();
-                    if (!e->getOtherNd(stack_top.first)->pl().get_component())
-                        stack.emplace(e->getOtherNd(stack_top.first), e);
-                }
-                for (auto* e : stack_top.first->getAdjListIn())
-                {
-                    if (e->pl().level() < comp->minEdgeLvl)
-                        comp->minEdgeLvl = e->pl().level();
-                    if (!e->getOtherNd(stack_top.first)->pl().get_component())
-                        stack.emplace(e->getOtherNd(stack_top.first), e);
-                }
-            }
-
-            comp_counter++;
-            comp = new component{7};
-        }
-    }
-
-    // the last comp was not used
-    delete comp;
-
-    return comp_counter;
-}
 
 
 void osm_builder::write_edge_tracks(const edge_tracks& tracks)
@@ -2215,7 +1650,7 @@ void osm_builder::write_edge_tracks(const edge_tracks& tracks)
 
 void osm_builder::writeODirEdgs(graph& g, restrictor& restor)
 {
-    for (auto* n : *g.getNds())
+    for (auto* n : g.getNds())
     {
         for (auto* e : n->getAdjListOut())
         {
@@ -2228,63 +1663,6 @@ void osm_builder::writeODirEdgs(graph& g, restrictor& restor)
     }
 }
 
-
-void osm_builder::writeSelfEdgs(graph& g)
-{
-    for (auto* n : *g.getNds())
-    {
-        if (n->pl().get_si() && n->getAdjListOut().empty())
-        {
-            g.addEdg(n, n);
-        }
-    }
-}
-
-
-bool osm_builder::keep_full_turn(const trgraph::node* n, double ang)
-{
-    if (n->getInDeg() + n->getOutDeg() != 1) return false;
-
-    const trgraph::edge* e = nullptr;
-    if (n->getOutDeg())
-        e = n->getAdjListOut().front();
-    else
-        e = n->getAdjListIn().front();
-
-    auto other = e->getOtherNd(n);
-
-    if (other->getInDeg() + other->getOutDeg() == 3)
-    {
-        const trgraph::edge* a = nullptr;
-        const trgraph::edge* b = nullptr;
-        for (auto f : other->getAdjListIn())
-        {
-            if (f != e && !a)
-                a = f;
-            else if (f != e && !b)
-                b = f;
-        }
-
-        for (auto f : other->getAdjListOut())
-        {
-            if (f != e && !a)
-                a = f;
-            else if (f != e && !b)
-                b = f;
-        }
-
-        auto ap = a->pl().backHop();
-        auto bp = b->pl().backHop();
-        if (a->getTo() != other) ap = a->pl().frontHop();
-        if (b->getTo() != other) bp = b->pl().frontHop();
-
-        return router::angSmaller(ap, *other->pl().get_geom(), bp, ang);
-    }
-
-    return false;
-}
-
-
 void osm_builder::snap_stations(const osm_read_options& opts,
                                 graph& g,
                                const bounding_box& bbox,
@@ -2294,8 +1672,8 @@ void osm_builder::snap_stations(const osm_read_options& opts,
                                const router::node_set& orphanStations,
                                 const bool import_osm_stations)
 {
-    trgraph::node_grid sng = build_node_grid(g, gridSize, bbox.get_full_web_merc_box(), true);
-    trgraph::edge_grid eg = build_edge_grid(g, gridSize, bbox.get_full_web_merc_box());
+    trgraph::node_grid sng = trgraph::node_grid::build_node_grid(g, gridSize, bbox.get_full_web_merc_box(), true);
+    trgraph::edge_grid eg = trgraph::edge_grid::build_edge_grid(g, gridSize, bbox.get_full_web_merc_box());
 
     LOG(DEBUG) << "Grid size of " << sng.getXWidth() << "x" << sng.getYHeight();
 

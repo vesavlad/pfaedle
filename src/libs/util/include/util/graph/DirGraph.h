@@ -32,7 +32,7 @@ public:
     }
     Node<N, E>* addNd(DirNode<N, E>* n)
     {
-        auto ins = Graph<N, E>::getNds()->insert(n);
+        auto ins = Graph<N, E>::getNds().insert(n);
         return *ins.first;
     }
     Node<N, E>* addNd(const N& pl) override

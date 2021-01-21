@@ -178,7 +178,7 @@ private:
                     edge_tracks& etracks,
                     const osm_read_options& opts);
 
-    void read_edges(pugi::xml_document& xml,
+    void read_ways(pugi::xml_document& xml,
                     const relation_map& wayRels,
                     const osm_filter& filter,
                     const osm_id_set& bBoxNodes,
@@ -209,34 +209,10 @@ private:
                            restrictor& res,
                            const router::node_set& orphanStations,
                               const bool import_osm_stations);
-    static void write_geometries(trgraph::graph& g);
-    static void delete_orphan_nodes(trgraph::graph& g);
-    static void delete_orphan_edges(trgraph::graph& g, const osm_read_options& opts);
-    static double distance(const trgraph::node& a, const trgraph::node& b);
     static double webMercDist(const trgraph::node& a, const trgraph::node& b);
 
-    static trgraph::node_grid build_node_grid(trgraph::graph& g, size_t size, const BOX& webMercBox,
-                                              bool which);
-
-    static trgraph::edge_grid build_edge_grid(trgraph::graph& g, size_t size, const BOX& webMercBox);
-
-    static void fix_gaps(trgraph::graph& g, trgraph::node_grid* ng);
-    static void collapse_edges(trgraph::graph& g);
     static void writeODirEdgs(trgraph::graph& g, restrictor& restor);
-    static void writeSelfEdgs(trgraph::graph& g);
     static void write_edge_tracks(const edge_tracks& tracks);
-    static void simplify_geometries(trgraph::graph& g);
-    static uint32_t write_components(trgraph::graph& g);
-    static bool are_edges_similar(const trgraph::edge& a, const trgraph::edge& b);
-    static const trgraph::edge_payload& merge_edge_payload(trgraph::edge& a, trgraph::edge& b);
-    static void get_edge_candidates(const POINT& s, edge_candidate_priority_queue& ret, trgraph::edge_grid& eg, double d);
-
-    static std::set<trgraph::node*> get_matching_nodes(const trgraph::node_payload& s, trgraph::node_grid* ng,
-                                                   double d);
-
-    static trgraph::node* get_matching_node(const trgraph::node_payload& s, trgraph::node_grid& ng, double d);
-
-    static trgraph::node* get_distance_matching_node(const trgraph::node_payload& s, trgraph::node_grid& ng, double d);
 
     static router::node_set snap_station(trgraph::graph& g,
                                          trgraph::node_payload& s,
@@ -262,7 +238,6 @@ private:
 
     static bool is_blocked(const trgraph::edge* e, const trgraph::station_info* si, const POINT& p,
                            double maxD, int maxFullTurns, double minAngle);
-    static bool keep_full_turn(const trgraph::node* n, double ang);
 
     static trgraph::station_group* group_stats(const router::node_set& s);
 
@@ -271,9 +246,6 @@ private:
     std::vector<trgraph::transit_edge_line*> get_lines(const std::vector<size_t>& edgeRels,
                                                        const relation_list& rels,
                                                        const osm_read_options& ops);
-
-    void get_kept_attribute_keys(const osm_read_options& opts, attribute_key_set sets[]) const;
-
 
     void process_restrictions(osmid nid, osmid wid, const restrictions& rawRests, trgraph::edge* e,
                               trgraph::node* n, restrictor& restor) const;

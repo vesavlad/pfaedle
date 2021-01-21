@@ -5,22 +5,41 @@
 #ifndef PFAEDLE_TRGRAPH_GRAPH_H_
 #define PFAEDLE_TRGRAPH_GRAPH_H_
 
-#include "pfaedle/trgraph/edge_payload.h"
-#include "pfaedle/trgraph/node_payload.h"
-#include "util/geo/Grid.h"
 #include "util/graph/DirGraph.h"
 #include "util/graph/UndirGraph.h"
+
+#include <pfaedle/trgraph/node_grid.h>
+#include <pfaedle/trgraph/edge_grid.h>
 
 namespace pfaedle::trgraph
 {
 /*
  * A graph for physical transit networks
  */
-using edge = util::graph::Edge<node_payload, edge_payload>;
-using node = util::graph::Node<node_payload, edge_payload>;
-using graph = util::graph::DirGraph<node_payload, edge_payload>;
-using node_grid = util::geo::Grid<node*, util::geo::Point, PFAEDLE_PRECISION>;
-using edge_grid = util::geo::Grid<edge*, util::geo::Line, PFAEDLE_PRECISION>;
+
+class graph : public util::graph::DirGraph<node_payload, edge_payload>
+{
+public:
+    void write_geometries();
+
+    void delete_orphan_nodes();
+    void delete_orphan_edges(double turn_angle);
+
+    void collapse_edges();
+
+    void simplify_geometries();
+
+    uint32_t write_components();
+
+    void writeSelfEdgs();
+
+    void fix_gaps(trgraph::node_grid& ng);
+
+private:
+    static bool are_edges_similar(const edge& a, const edge& b);
+
+    const edge_payload& merge_edge_payload(edge& a, edge& b);
+};
 
 }  // namespace pfaedle
 

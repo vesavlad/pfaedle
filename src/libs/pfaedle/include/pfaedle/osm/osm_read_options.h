@@ -170,6 +170,153 @@ public:
     multi_attribute_map restrPosRestr;
     multi_attribute_map restrNegRestr;
     multi_attribute_map noRestrFilter;
+
+
+    std::vector<attribute_key_set> get_kept_attribute_keys() const
+    {
+        std::vector<attribute_key_set> sets(3);
+        for (const auto& i : statGroupNAttrRules)
+        {
+            if (i.attr.relRule.kv.first.empty())
+            {
+                sets[0].insert(i.attr.attr);
+            }
+            else
+            {
+                sets[2].insert(i.attr.relRule.kv.first);
+                sets[2].insert(i.attr.attr);
+            }
+        }
+
+        for (const auto& i : keepFilter)
+        {
+            for (auto & set : sets)
+                set.insert(i.first);
+        }
+
+        for (const auto& i : dropFilter)
+        {
+            for (auto & set : sets) set.insert(i.first);
+        }
+
+        for (const auto& i : noHupFilter)
+        {
+            sets[0].insert(i.first);
+        }
+
+        for (const auto& i : oneWayFilter)
+        {
+            sets[1].insert(i.first);
+        }
+
+        for (const auto& i : oneWayFilterRev)
+        {
+            sets[1].insert(i.first);
+        }
+
+        for (const auto& i : twoWayFilter)
+        {
+            sets[1].insert(i.first);
+        }
+
+        for (const auto& i : stationFilter)
+        {
+            sets[0].insert(i.first);
+            sets[2].insert(i.first);
+        }
+
+        for (const auto& i : stationBlockerFilter)
+        {
+            sets[0].insert(i.first);
+        }
+
+        for (uint8_t j = 0; j < 7; j++)
+        {
+            for (const auto& kv : *(levelFilters + j))
+            {
+                sets[1].insert(kv.first);
+            }
+        }
+
+        // restriction system
+        for (const auto& i : restrPosRestr)
+        {
+            sets[2].insert(i.first);
+        }
+        for (const auto& i : restrNegRestr)
+        {
+            sets[2].insert(i.first);
+        }
+        for (const auto& i : noRestrFilter)
+        {
+            sets[2].insert(i.first);
+        }
+
+        sets[1].insert("maxspeed");
+        sets[2].insert("from");
+        sets[2].insert("via");
+        sets[2].insert("to");
+
+        sets[2].insert(relLinerules.toNameRule.begin(), relLinerules.toNameRule.end());
+        sets[2].insert(relLinerules.fromNameRule.begin(), relLinerules.fromNameRule.end());
+        sets[2].insert(relLinerules.sNameRule.begin(), relLinerules.sNameRule.end());
+
+        for (const auto& i : statAttrRules.nameRule)
+        {
+            if (i.relRule.kv.first.empty())
+            {
+                sets[0].insert(i.attr);
+            }
+            else
+            {
+                sets[2].insert(i.relRule.kv.first);
+                sets[2].insert(i.attr);
+            }
+        }
+
+        for (const auto& i : edgePlatformRules)
+        {
+            if (i.relRule.kv.first.empty())
+            {
+                sets[1].insert(i.attr);
+            }
+            else
+            {
+                sets[2].insert(i.relRule.kv.first);
+                sets[2].insert(i.attr);
+            }
+        }
+
+        for (const auto& i : statAttrRules.platformRule)
+        {
+            if (i.relRule.kv.first.empty())
+            {
+                sets[0].insert(i.attr);
+            }
+            else
+            {
+                sets[2].insert(i.relRule.kv.first);
+                sets[2].insert(i.attr);
+            }
+        }
+
+        for (const auto& i : statAttrRules.idRule)
+        {
+            if (i.relRule.kv.first.empty())
+            {
+                sets[0].insert(i.attr);
+            }
+            else
+            {
+                sets[2].insert(i.relRule.kv.first);
+                sets[2].insert(i.attr);
+            }
+        }
+
+        return sets;
+    }
+
+
 };
 
 inline bool operator==(const osm_read_options& a, const osm_read_options& b)
