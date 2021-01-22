@@ -12,3 +12,18 @@
     url=git@github.com:gabime/spdlog.git
     branch=master
     commit=de0dbfa3596a18cd70a4619b6a9766847a941276
+
+[protozero]
+    url=git@github.com:motis-project/protozero.git
+    branch=master
+    commit=8c9f3fa97c2cfdceef86d0b61818ae98e9328f29
+
+[expat]
+    url=git@github.com:motis-project/expat.git
+    branch=master
+    commit=4bb7ffd336872c8199f2fc91a081931659976a44
+
+[osmium]
+    url=git@github.com:motis-project/libosmium.git
+    branch=master
+    commit=672690671b26a38eb163c2487012f50100b7ee74
