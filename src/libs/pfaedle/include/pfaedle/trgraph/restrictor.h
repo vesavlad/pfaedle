@@ -13,17 +13,17 @@
 #include <utility>
 #include <unordered_map>
 
-namespace pfaedle::osm
+namespace pfaedle::trgraph
 {
 
 using RulePair = std::pair<const trgraph::edge*, const trgraph::edge*>;
 using RuleVec = std::vector<RulePair>;
-using DanglPath = std::pair<const trgraph::node*, size_t>;
 // very seldom, there are more than a handful of rules for a node. Use a
 // vector here, should have lesser overhead and be faster for such small
 // numbers
 using Rules = std::unordered_map<const trgraph::node*, RuleVec>;
-using NodeOsmIdP = std::pair<const trgraph::node*, osmid>;
+
+using osmid = uint64_t;
 
 /*
  * Stores restrictions between edges
@@ -40,31 +40,35 @@ public:
              osmid to,
              const trgraph::node* via,
              bool pos);
-    bool may(const trgraph::edge* from, const trgraph::edge* to,
+    bool may(const trgraph::edge* from,
+             const trgraph::edge* to,
              const trgraph::node* via) const;
-    void replaceEdge(const trgraph::edge* old,
-                     const trgraph::edge* newA,
-                     const trgraph::edge* newB);
-    void duplicateEdge(const trgraph::edge* old,
-                       const trgraph::node* via,
-                       const trgraph::edge* newE);
-    void duplicateEdge(const trgraph::edge* old,
-                       const trgraph::edge* newE);
+
+    void replace_edge(const trgraph::edge* old,
+                      const trgraph::edge* newA,
+                      const trgraph::edge* newB);
+    void duplicate_edge(const trgraph::edge* old,
+                        const trgraph::node* via,
+                        const trgraph::edge* newE);
+    void duplicate_edge(const trgraph::edge* old,
+                        const trgraph::edge* newE);
 
 private:
-    void replaceEdge(const trgraph::edge* old,
-                     const trgraph::node* via,
-                     const trgraph::edge* newE);
+    using dangling_path = std::pair<const trgraph::node*, size_t>;
+    using node_id_pair = std::pair<const trgraph::node*, osmid>;
+
+    void replace_edge(const trgraph::edge* old,
+                      const trgraph::node* via,
+                      const trgraph::edge* newE);
 
     Rules _pos;
     Rules _neg;
 
-    std::map<NodeOsmIdP, const trgraph::edge*> _rlx;
+    std::map<node_id_pair, const trgraph::edge*> _rlx;
 
-    std::map<NodeOsmIdP, std::vector<DanglPath>> _posDangling;
-    std::map<NodeOsmIdP, std::vector<DanglPath>> _negDangling;
-
+    std::map<node_id_pair, std::vector<dangling_path>> _posDangling;
+    std::map<node_id_pair, std::vector<dangling_path>> _negDangling;
 };
-}  // namespace pfaedle::osm
+}  // namespace pfaedle::trgraph
 
 #endif  // PFAEDLE_OSM_RESTRICTOR_H_

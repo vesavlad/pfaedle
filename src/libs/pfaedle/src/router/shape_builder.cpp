@@ -52,7 +52,7 @@ shape_builder::shape_builder(pfaedle::gtfs::feed& feed,
                            eval::collector& collector,
                            trgraph::graph& graph,
                            feed_stops& stops,
-                           osm::restrictor& restr,
+                             trgraph::restrictor& restr,
                            const config::config& cfg) :
     _feed(feed),
     _evalFeed(evalFeed),

@@ -13,6 +13,8 @@
 
 namespace pfaedle::trgraph
 {
+
+class restrictor;
 /*
  * A graph for physical transit networks
  */
@@ -34,6 +36,8 @@ public:
     void writeSelfEdgs();
 
     void fix_gaps(trgraph::node_grid& ng);
+
+    void writeODirEdgs(restrictor& restor);
 
 private:
     static bool are_edges_similar(const edge& a, const edge& b);

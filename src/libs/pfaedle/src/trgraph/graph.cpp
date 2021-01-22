@@ -1,4 +1,6 @@
 #include <pfaedle/trgraph/graph.h>
+#include <pfaedle/trgraph/restrictor.h>
+
 #include <util/geo/Geo.h>
 namespace pfaedle::trgraph
 {
@@ -356,6 +358,20 @@ void graph::delete_orphan_edges(double turn_angle)
             it = delNd(it);
             continue;
             it++;
+        }
+    }
+}
+void graph::writeODirEdgs(restrictor& restor)
+{
+    for (auto* n : getNds())
+    {
+        for (auto* e : n->getAdjListOut())
+        {
+            if (getEdg(e->getTo(), e->getFrom()))
+                continue;
+            auto newE = addEdg(e->getTo(), e->getFrom(), e->pl().revCopy());
+            if (e->pl().is_restricted())
+                restor.duplicate_edge(e, newE);
         }
     }
 }

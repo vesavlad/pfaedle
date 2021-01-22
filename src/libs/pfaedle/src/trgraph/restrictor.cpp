@@ -2,19 +2,19 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include "pfaedle/osm/restrictor.h"
+#include "pfaedle/trgraph/restrictor.h"
 #include <logging/logger.h>
 
-using pfaedle::osm::restrictor;
+namespace pfaedle::trgraph
+{
 
-// _____________________________________________________________________________
 void restrictor::relax(osmid wid, const trgraph::node* n,
                        const trgraph::edge* e)
 {
     // the wid is not unique here, because the OSM ways are split into
     // multiple edges. They are only unique as a pair with a "from-via" point.
-    _rlx[NodeOsmIdP(n, wid)] = e;
-    auto i = _posDangling.find(NodeOsmIdP(n, wid));
+    _rlx[node_id_pair(n, wid)] = e;
+    auto i = _posDangling.find(node_id_pair(n, wid));
     if (i != _posDangling.end())
     {
         for (const auto& path : i->second)
@@ -24,7 +24,7 @@ void restrictor::relax(osmid wid, const trgraph::node* n,
         }
     }
 
-    auto j = _negDangling.find(NodeOsmIdP(n, wid));
+    auto j = _negDangling.find(node_id_pair(n, wid));
     if (j != _negDangling.end())
     {
         for (const auto& path : j->second)
@@ -35,31 +35,30 @@ void restrictor::relax(osmid wid, const trgraph::node* n,
     }
 }
 
-// _____________________________________________________________________________
 void restrictor::add(const trgraph::edge* from, osmid to,
                      const trgraph::node* via, bool pos)
 {
     const trgraph::edge* toE = nullptr;
-    if (_rlx.count(NodeOsmIdP(via, to)))
-        toE = _rlx.find(NodeOsmIdP(via, to))->second;
+    if (_rlx.count(node_id_pair(via, to)))
+        toE = _rlx.find(node_id_pair(via, to))->second;
     if (pos)
     {
         _pos[via].push_back(RulePair(from, toE));
         if (!toE)
-            _posDangling[NodeOsmIdP(via, to)].push_back(
-                    DanglPath(via, _pos[via].size() - 1));
+            _posDangling[node_id_pair(via, to)].push_back(
+                    dangling_path(via, _pos[via].size() - 1));
     }
     else
     {
         _neg[via].push_back(RulePair(from, toE));
         if (!toE)
-            _negDangling[NodeOsmIdP(via, to)].push_back(
-                    DanglPath(via, _neg[via].size() - 1));
+            _negDangling[node_id_pair(via, to)].push_back(
+                    dangling_path(via, _neg[via].size() - 1));
     }
 }
 
-// _____________________________________________________________________________
-bool restrictor::may(const trgraph::edge* from, const trgraph::edge* to,
+bool restrictor::may(const trgraph::edge* from,
+                     const trgraph::edge* to,
                      const trgraph::node* via) const
 {
     auto posI = _pos.find(via);
@@ -85,8 +84,7 @@ bool restrictor::may(const trgraph::edge* from, const trgraph::edge* to,
     return true;
 }
 
-// _____________________________________________________________________________
-void restrictor::replaceEdge(const trgraph::edge* old,
+void restrictor::replace_edge(const trgraph::edge* old,
                              const trgraph::edge* newA,
                              const trgraph::edge* newB)
 {
@@ -102,20 +100,18 @@ void restrictor::replaceEdge(const trgraph::edge* old,
         newFrom = newB;
         newTo = newA;
     }
-    replaceEdge(old, old->getFrom(), newFrom);
-    replaceEdge(old, old->getTo(), newTo);
+    replace_edge(old, old->getFrom(), newFrom);
+    replace_edge(old, old->getTo(), newTo);
 }
 
-// _____________________________________________________________________________
-void restrictor::duplicateEdge(const trgraph::edge* old,
+void restrictor::duplicate_edge(const trgraph::edge* old,
                                const trgraph::edge* newE)
 {
-    duplicateEdge(old, old->getFrom(), newE);
-    duplicateEdge(old, old->getTo(), newE);
+    duplicate_edge(old, old->getFrom(), newE);
+    duplicate_edge(old, old->getTo(), newE);
 }
 
-// _____________________________________________________________________________
-void restrictor::duplicateEdge(const trgraph::edge* old,
+void restrictor::duplicate_edge(const trgraph::edge* old,
                                const trgraph::node* via,
                                const trgraph::edge* newE)
 {
@@ -166,8 +162,7 @@ void restrictor::duplicateEdge(const trgraph::edge* old,
     }
 }
 
-// _____________________________________________________________________________
-void restrictor::replaceEdge(const trgraph::edge* old,
+void restrictor::replace_edge(const trgraph::edge* old,
                              const trgraph::node* via,
                              const trgraph::edge* newE)
 {
@@ -190,4 +185,5 @@ void restrictor::replaceEdge(const trgraph::edge* old,
             if (r.second == old) r.second = newE;
         }
     }
+}
 }

@@ -10,10 +10,10 @@
 #include <pfaedle/definitions.h>
 #include <pfaedle/eval/collector.h>
 #include <pfaedle/netgraph/graph.h>
-#include <pfaedle/osm/restrictor.h>
 #include <pfaedle/router/misc.h>
 #include <pfaedle/router/router.h>
 #include <pfaedle/trgraph/graph.h>
+#include <pfaedle/trgraph/restrictor.h>
 
 #include <gtfs/trip.h>
 #include <util/geo/Geo.h>
@@ -60,7 +60,7 @@ public:
                   eval::collector& collector,
                   trgraph::graph& graph,
                   feed_stops& stops,
-                  osm::restrictor& restr,
+                  trgraph::restrictor& restr,
                   const config::config& cfg);
 
     void get_shape(pfaedle::netgraph::graph& ng);
@@ -136,7 +136,7 @@ private:
 
     trip_routing_attributes _rAttrs;
 
-    osm::restrictor& _restr;
+    trgraph::restrictor& _restr;
 };
 }  // namespace pfaedle::router
 

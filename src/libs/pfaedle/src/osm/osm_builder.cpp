@@ -7,7 +7,7 @@
 #include "pfaedle/osm/bounding_box.h"
 #include "pfaedle/osm/osm.h"
 #include "pfaedle/osm/osm_filter.h"
-#include "pfaedle/osm/restrictor.h"
+#include "pfaedle/trgraph/restrictor.h"
 #include "pfaedle/trgraph/station_group.h"
 #include "util/Misc.h"
 #include "util/String.h"
@@ -43,7 +43,8 @@ namespace pfaedle::osm
 /**
  * @return the speed in km/h
  */
-inline double string_to_kmh(std::string str) {
+inline double string_to_kmh(std::string str)
+{
     /**
      * The speed value used for "none" speed limit on German Autobahn is 150=30*5 as this is the biggest value
      * not explicitly used in OSM and can be precisely returned for a factor of 5, 3, 2 and 1. It is fixed and
@@ -73,17 +74,25 @@ inline double string_to_kmh(std::string str) {
     size_t kphInteger = str.find("kph");
 
     double factor;
-    if (mpInteger != std::string::npos) {
+    if (mpInteger != std::string::npos)
+    {
         str = util::trim(str.substr(0, mpInteger));
         // factor = DistanceCalcEarth.KM_MILE;
         factor = 1.609344f;
-    } else if (knotInteger != std::string::npos) {
+    }
+    else if (knotInteger != std::string::npos)
+    {
         str = util::trim(str.substr(0, knotInteger));
-        factor = 1.852; // see https://en.wikipedia.org/wiki/Knot_%28unit%29#Definitions
-    } else {
-        if (kmInteger !=std::string::npos) {
+        factor = 1.852;// see https://en.wikipedia.org/wiki/Knot_%28unit%29#Definitions
+    }
+    else
+    {
+        if (kmInteger != std::string::npos)
+        {
             str = util::trim(str.substr(0, kmInteger));
-        } else if (kphInteger !=std::string::npos) {
+        }
+        else if (kphInteger != std::string::npos)
+        {
             str = util::trim(str.substr(0, kphInteger));
         }
         factor = 1;
@@ -91,7 +100,8 @@ inline double string_to_kmh(std::string str) {
 
     double value = stoi(str) * factor;
 
-    if (value <= 0) {
+    if (value <= 0)
+    {
         return 50;
     }
 
@@ -114,12 +124,12 @@ osm_builder::osm_builder() = default;
 
 
 void osm_builder::read(const std::string& path,
-                      const osm_read_options& opts,
-                      graph& g,
-                      const bounding_box& bbox,
-                      size_t gridSize,
-                      router::feed_stops& fs,
-                      restrictor& res,
+                       const osm_read_options& opts,
+                       graph& g,
+                       const bounding_box& bbox,
+                       size_t gridSize,
+                       router::feed_stops& fs,
+                       trgraph::restrictor& res,
                        bool import_osm_stations)
 {
     if (!bbox.size())
@@ -221,7 +231,7 @@ void osm_builder::read(const std::string& path,
     g.simplify_geometries();
 
     LOG(TRACE) << "Writing other-direction edges...";
-    writeODirEdgs(g, res);
+    g.writeODirEdgs(res);
 
     LOG(TRACE) << "Write dummy node self-edges...";
     g.writeSelfEdgs();
@@ -239,8 +249,8 @@ void osm_builder::read(const std::string& path,
 
 
 void osm_builder::overpass_query_write(std::ostream& out,
-                                  const std::vector<osm_read_options>& opts,
-                                  const bounding_box& latLngBox) const
+                                       const std::vector<osm_read_options>& opts,
+                                       const bounding_box& latLngBox) const
 {
     osm_id_set bboxNodes;
     osm_id_set noHupNodes;
@@ -328,9 +338,9 @@ void osm_builder::overpass_query_write(std::ostream& out,
 
 
 void osm_builder::filter_write(const std::string& in,
-                             const std::string& out,
-                             const std::vector<osm_read_options>& opts,
-                             const bounding_box& box)
+                               const std::string& out,
+                               const std::vector<osm_read_options>& opts,
+                               const bounding_box& box)
 {
     osm_id_set bboxNodes, noHupNodes;
     multi_attribute_map emptyF;
@@ -390,11 +400,11 @@ void osm_builder::filter_write(const std::string& in,
 
 
 void osm_builder::read_write_relations(pugi::xml_document& i,
-                               pugi::xml_node& o,
+                                       pugi::xml_node& o,
                                        osmid_list& ways,
                                        node_id_map& nodes,
-                               const osm_filter& filter,
-                               const attribute_key_set& keepAttrs)
+                                       const osm_filter& filter,
+                                       const attribute_key_set& keepAttrs)
 {
     for (const auto& xmlrel : i.child("osm").children("relation"))
     {
@@ -506,9 +516,9 @@ void osm_builder::read_write_relations(pugi::xml_document& i,
 
 
 void osm_builder::read_write_ways(pugi::xml_document& i,
-                               pugi::xml_node& o,
+                                  pugi::xml_node& o,
                                   osmid_list& ways,
-                               const attribute_key_set& keepAttrs) const
+                                  const attribute_key_set& keepAttrs) const
 {
     node_id_multimap empty;
     for (const auto& wayxml : i.child("osm").children())
@@ -565,8 +575,7 @@ node_payload osm_builder::payload_from_gtfs(const gtfs::stop* s, const osm_read_
             station_info(
                     ops.statNormzer.norm(s->stop_name),
                     ops.trackNormzer.norm(s->platform_code),
-                    false)
-            );
+                    false));
 
 #ifdef PFAEDLE_STATION_IDS
     // debug feature, store station id from GTFS
@@ -583,10 +592,10 @@ node_payload osm_builder::payload_from_gtfs(const gtfs::stop* s, const osm_read_
 
 
 int osm_builder::filter_nodes(pugi::xml_document& xml,
-                             osm_id_set& nodes,
-                             osm_id_set& nohupNodes,
-                             const osm_filter& filter,
-                             const bounding_box& bbox) const
+                              osm_id_set& nodes,
+                              osm_id_set& nohupNodes,
+                              const osm_filter& filter,
+                              const bounding_box& bbox) const
 {
 
     for (const auto& node : xml.child("osm").children("node"))
@@ -636,8 +645,8 @@ bool osm_builder::should_keep_relation(osmid id, const relation_map& rels, const
 
 
 bool osm_builder::keep_way(const osm_way& w, const relation_map& wayRels,
-                         const osm_filter& filter, const osm_id_set& bBoxNodes,
-                         const flat_relations& fl) const
+                           const osm_filter& filter, const osm_id_set& bBoxNodes,
+                           const flat_relations& fl) const
 {
     if (w.id && w.nodes.size() > 1 &&
         (should_keep_relation(w.id, wayRels, fl) || filter.keep(w.attrs, osm_filter::WAY)) &&
@@ -657,13 +666,13 @@ bool osm_builder::keep_way(const osm_way& w, const relation_map& wayRels,
 
 
 void osm_builder::read_ways(pugi::xml_document& xml,
-                           const relation_map& wayRels,
-                           const osm_filter& filter,
-                           const osm_id_set& bBoxNodes,
-                           const attribute_key_set& keepAttrs,
-                             osmid_list& ret,
-                             node_id_map& nodes,
-                           const flat_relations& flatRels)
+                            const relation_map& wayRels,
+                            const osm_filter& filter,
+                            const osm_id_set& bBoxNodes,
+                            const attribute_key_set& keepAttrs,
+                            osmid_list& ret,
+                            node_id_map& nodes,
+                            const flat_relations& flatRels)
 {
     for (const auto& wayxml : xml.child("osm").children("way"))
     {
@@ -695,20 +704,20 @@ void osm_builder::read_ways(pugi::xml_document& xml,
 
 
 void osm_builder::read_edges(pugi::xml_document& xml,
-                           graph& g,
-                           const relation_list& rels,
-                           const relation_map& wayRels,
-                           const osm_filter& filter,
-                           const osm_id_set& bBoxNodes,
+                             graph& g,
+                             const relation_list& rels,
+                             const relation_map& wayRels,
+                             const osm_filter& filter,
+                             const osm_id_set& bBoxNodes,
                              node_id_map& nodes,
                              node_id_multimap& multNodes,
-                           const osm_id_set& noHupNodes,
-                           const attribute_key_set& keepAttrs,
-                           const restrictions& rest,
-                           restrictor& restor,
-                           const flat_relations& flatRels,
+                             const osm_id_set& noHupNodes,
+                             const attribute_key_set& keepAttrs,
+                             const restrictions& rest,
+                             trgraph::restrictor& restor,
+                             const flat_relations& flatRels,
                              edge_tracks& etracks,
-                           const osm_read_options& opts)
+                             const osm_read_options& opts)
 {
     for (const auto& xmlway : xml.child("osm").children("way"))
     {
@@ -789,11 +798,11 @@ void osm_builder::read_edges(pugi::xml_document& xml,
 
 
 void osm_builder::process_restrictions(osmid nid,
-                              osmid wid,
-                              const restrictions& rawRests,
-                              edge* e,
-                              node* n,
-                              restrictor& restor) const
+                                       osmid wid,
+                                       const restrictions& rawRests,
+                                       edge* e,
+                                       node* n,
+                                       trgraph::restrictor& restor) const
 {
     if (rawRests.pos.count(nid))
     {
@@ -832,12 +841,12 @@ void osm_builder::process_restrictions(osmid nid,
 
 
 bool osm_builder::keep_node(const osm_node& n,
-                          const node_id_map& nodes,
-                          const node_id_multimap& multNodes,
-                          const relation_map& nodeRels,
-                          const osm_id_set& bBoxNodes,
-                          const osm_filter& filter,
-                          const flat_relations& fl) const
+                            const node_id_map& nodes,
+                            const node_id_multimap& multNodes,
+                            const relation_map& nodeRels,
+                            const osm_id_set& bBoxNodes,
+                            const osm_filter& filter,
+                            const flat_relations& fl) const
 {
     if (n.id &&
         (nodes.count(n.id) || multNodes.count(n.id) || should_keep_relation(n.id, nodeRels, fl) || filter.keep(n.attrs, osm_filter::NODE)) &&
@@ -852,13 +861,13 @@ bool osm_builder::keep_node(const osm_node& n,
 
 
 void osm_builder::read_write_nodes(pugi::xml_document& i,
-                              pugi::xml_node& o,
-                              const relation_map& nRels,
-                              const osm_filter& filter,
-                              const osm_id_set& bBoxNds,
+                                   pugi::xml_node& o,
+                                   const relation_map& nRels,
+                                   const osm_filter& filter,
+                                   const osm_id_set& bBoxNds,
                                    node_id_map& nds,
-                              const attribute_key_set& keepAttrs,
-                              const flat_relations& f) const
+                                   const attribute_key_set& keepAttrs,
+                                   const flat_relations& f) const
 {
     node_id_multimap empt;
     for (const auto& xmlnode : i.child("osm").children("node"))
@@ -896,17 +905,17 @@ void osm_builder::read_write_nodes(pugi::xml_document& i,
 
 
 void osm_builder::read_nodes(pugi::xml_document& xml,
-                           graph& g,
-                           const relation_list& rels,
-                           const relation_map& nodeRels,
-                           const osm_filter& filter,
-                           const osm_id_set& bBoxNodes,
+                             graph& g,
+                             const relation_list& rels,
+                             const relation_map& nodeRels,
+                             const osm_filter& filter,
+                             const osm_id_set& bBoxNodes,
                              node_id_map& nodes,
                              node_id_multimap& multNodes,
-                           router::node_set& orphanStations,
-                           const attribute_key_set& keepAttrs,
-                           const flat_relations& fl,
-                           const osm_read_options& opts) const
+                             router::node_set& orphanStations,
+                             const attribute_key_set& keepAttrs,
+                             const flat_relations& fl,
+                             const osm_read_options& opts) const
 {
     station_attribute_groups attr_groups;
 
@@ -997,8 +1006,8 @@ void osm_builder::read_relations(pugi::xml_document& xml,
                                  relation_list& rels,
                                  relation_map& nodeRels,
                                  relation_map& wayRels,
-                          const osm_filter& filter,
-                          const attribute_key_set& keepAttrs,
+                                 const osm_filter& filter,
+                                 const attribute_key_set& keepAttrs,
                                  restrictions& rests) const
 {
     for (const auto& xmlrel : xml.child("osm").children("relation"))
@@ -1070,7 +1079,7 @@ void osm_builder::read_relations(pugi::xml_document& xml,
 
 void osm_builder::read_restrictions(const osm_relation& rel,
                                     restrictions& rests,
-                           const osm_filter& filter) const
+                                    const osm_filter& filter) const
 {
     if (!rel.attrs.count("type") || rel.attrs.find("type")->second != "restriction")
         return;
@@ -1119,10 +1128,10 @@ void osm_builder::read_restrictions(const osm_relation& rel,
 
 
 std::string osm_builder::getAttrByFirstMatch(const deep_attribute_list& rule, osmid id,
-                                            const attribute_map& attrs,
-                                            const relation_map& entRels,
-                                            const relation_list& rels,
-                                            const normalizer& normzer) const
+                                             const attribute_map& attrs,
+                                             const relation_map& entRels,
+                                             const relation_list& rels,
+                                             const normalizer& normzer) const
 {
     std::string ret;
     for (const auto& s : rule)
@@ -1153,8 +1162,8 @@ std::vector<std::string> osm_builder::getAttrMatchRanked(
 
 
 std::string osm_builder::get_attribute(const deep_attribute_rule& s, osmid id,
-                                const attribute_map& attrs, const relation_map& entRels,
-                                const relation_list& rels) const
+                                       const attribute_map& attrs, const relation_map& entRels,
+                                       const relation_list& rels) const
 {
     if (s.relRule.kv.first.empty())
     {
@@ -1184,11 +1193,11 @@ std::string osm_builder::get_attribute(const deep_attribute_rule& s, osmid id,
 
 
 std::optional<station_info> osm_builder::get_station_info(node* node, osmid nid,
-                                                    const POINT& pos, const attribute_map& m,
-                                                       station_attribute_groups* groups,
-                                                    const relation_map& nodeRels,
-                                                    const relation_list& rels,
-                                                    const osm_read_options& ops) const
+                                                          const POINT& pos, const attribute_map& m,
+                                                          station_attribute_groups* groups,
+                                                          const relation_map& nodeRels,
+                                                          const relation_list& rels,
+                                                          const osm_read_options& ops) const
 {
     std::string platform;
     std::vector<std::string> names;
@@ -1265,14 +1274,14 @@ double osm_builder::webMercDist(const node& a, const node& b)
 }
 
 
-
 node* osm_builder::depth_search(const edge* e, const station_info* si, const POINT& p,
-                              double maxD, int maxFullTurns, double minAngle,
-                              const search_functor& sfunc)
+                                double maxD, int maxFullTurns, double minAngle,
+                                const search_functor& sfunc)
 {
     // shortcuts
     double dFrom = webMercMeterDist(*e->getFrom()->pl().get_geom(), p);
     double dTo = webMercMeterDist(*e->getTo()->pl().get_geom(), p);
+
     if (dFrom > maxD && dTo > maxD)
         return nullptr;
 
@@ -1343,33 +1352,33 @@ node* osm_builder::depth_search(const edge* e, const station_info* si, const POI
 
 
 bool osm_builder::is_blocked(const edge* e,
-                           const station_info* si,
-                           const POINT& p,
-                           double maxD,
-                           int maxFullTurns,
-                           double minAngle)
+                             const station_info* si,
+                             const POINT& p,
+                             double maxD,
+                             int maxFullTurns,
+                             double minAngle)
 {
     return depth_search(e, si, p, maxD, maxFullTurns, minAngle, block_search_functor());
 }
 
 
 node* osm_builder::eqStatReach(const edge* e, const station_info* si, const POINT& p,
-                              double maxD, int maxFullTurns, double minAngle,
-                              bool orphanSnap)
+                               double maxD, int maxFullTurns, double minAngle,
+                               bool orphanSnap)
 {
     return depth_search(e, si, p, maxD, maxFullTurns, minAngle, eq_search_functor(orphanSnap));
 }
 
 
 std::set<node*> osm_builder::snap_station(graph& g,
-                                        node_payload& s,
-                                        trgraph::edge_grid& eg,
-                                        trgraph::node_grid& sng,
-                                        const osm_read_options& opts,
-                                        restrictor& restor,
-                                        bool surHeur,
-                                        bool orphSnap,
-                                        double maxD,
+                                          node_payload& s,
+                                          trgraph::edge_grid& eg,
+                                          trgraph::node_grid& sng,
+                                          const osm_read_options& opts,
+                                          trgraph::restrictor& restor,
+                                          bool surHeur,
+                                          bool orphSnap,
+                                          double maxD,
                                           bool import_osm_stations)
 {
     assert(s.get_si());
@@ -1377,7 +1386,7 @@ std::set<node*> osm_builder::snap_station(graph& g,
 
     edge_candidate_priority_queue pq;
 
-    if(import_osm_stations)
+    if (import_osm_stations)
     {
         // importing data from osm -> mainly used to correct stations and positions
         const auto* best = sng.get_distance_matching_node(s, opts.maxSnapFallbackHeurDistance);
@@ -1390,7 +1399,8 @@ std::set<node*> osm_builder::snap_station(graph& g,
         {
             pq = eg.get_edge_candidates(*s.get_geom(), maxD);
         }
-    } else
+    }
+    else
     {
         // fallback to normal operating mode
         pq = eg.get_edge_candidates(*s.get_geom(), maxD);
@@ -1400,10 +1410,10 @@ std::set<node*> osm_builder::snap_station(graph& g,
     {
         // no station found in the first round, try again with the nearest
         // surrounding station with matching name
-        const node* best = sng.get_matching_node(s,  opts.maxSnapFallbackHeurDistance);
+        const node* best = sng.get_matching_node(s, opts.maxSnapFallbackHeurDistance);
         if (best)
         {
-            pq  = eg.get_edge_candidates(*best->pl().get_geom(),  maxD);
+            pq = eg.get_edge_candidates(*best->pl().get_geom(), maxD);
         }
         else
         {
@@ -1421,7 +1431,7 @@ std::set<node*> osm_builder::snap_station(graph& g,
                                          *e->getTo()->pl().get_geom());
 
         node* eq = nullptr;
-        if (!(eq = eqStatReach(e, s.get_si(), geom, 2 * maxD, 0,opts.maxAngleSnapReach, orphSnap)))
+        if (!(eq = eqStatReach(e, s.get_si(), geom, 2 * maxD, 0, opts.maxAngleSnapReach, orphSnap)))
         {
             if (e->pl().level() > opts.maxSnapLevel)
                 continue;
@@ -1482,7 +1492,7 @@ std::set<node*> osm_builder::snap_station(graph& g,
                 eg.add(ll, nf);
 
                 // replace edge in restrictor
-                restor.replaceEdge(e, ne, nf);
+                restor.replace_edge(e, ne, nf);
 
                 g.delEdg(e->getFrom(), e->getTo());
                 eg.remove(e);
@@ -1628,8 +1638,6 @@ std::vector<transit_edge_line*> osm_builder::get_lines(
 }
 
 
-
-
 void osm_builder::write_edge_tracks(const edge_tracks& tracks)
 {
     for (const auto& tr : tracks)
@@ -1648,28 +1656,13 @@ void osm_builder::write_edge_tracks(const edge_tracks& tracks)
 }
 
 
-void osm_builder::writeODirEdgs(graph& g, restrictor& restor)
-{
-    for (auto* n : g.getNds())
-    {
-        for (auto* e : n->getAdjListOut())
-        {
-            if (g.getEdg(e->getTo(), e->getFrom()))
-                continue;
-            auto newE = g.addEdg(e->getTo(), e->getFrom(), e->pl().revCopy());
-            if (e->pl().is_restricted())
-                restor.duplicateEdge(e, newE);
-        }
-    }
-}
-
 void osm_builder::snap_stations(const osm_read_options& opts,
                                 graph& g,
-                               const bounding_box& bbox,
-                               size_t gridSize,
-                               router::feed_stops& fs,
-                               restrictor& res,
-                               const router::node_set& orphanStations,
+                                const bounding_box& bbox,
+                                size_t gridSize,
+                                router::feed_stops& fs,
+                                trgraph::restrictor& res,
+                                const router::node_set& orphanStations,
                                 const bool import_osm_stations)
 {
     trgraph::node_grid sng = trgraph::node_grid::build_node_grid(g, gridSize, bbox.get_full_web_merc_box(), true);

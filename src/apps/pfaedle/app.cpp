@@ -303,7 +303,7 @@ ret_code app::run()
         pfaedle::router::feed_stops f_stops =
                 pfaedle::router::write_mot_stops(feeds_.front(), used_mots, cfg_.shapeTripId);
 
-        pfaedle::osm::restrictor restrictor;
+        pfaedle::trgraph::restrictor restrictor;
         pfaedle::trgraph::graph graph;
         pfaedle::osm::osm_builder osm_builder;
 

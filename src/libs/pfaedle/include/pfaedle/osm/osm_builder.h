@@ -10,11 +10,11 @@
 #include <pfaedle/osm/osm_filter.h>
 #include <pfaedle/osm/osm_id_set.h>
 #include <pfaedle/osm/osm_read_options.h>
-#include <pfaedle/osm/restrictor.h>
 #include <pfaedle/router/router.h>
 #include <pfaedle/trgraph/graph.h>
 #include <pfaedle/trgraph/node_payload.h>
 #include <pfaedle/trgraph/normalizer.h>
+#include <pfaedle/trgraph/restrictor.h>
 #include <pfaedle/trgraph/station_info.h>
 #include <util/geo/Geo.h>
 #include <util/xml/XmlWriter.h>
@@ -95,7 +95,7 @@ public:
               const bounding_box& box,
               size_t gridSize,
               router::feed_stops& fs,
-              restrictor& res,
+              trgraph::restrictor& res,
               bool import_osm_stations);
 
     // Based on the list of options, output an overpass XML query for getting
@@ -173,7 +173,7 @@ private:
                     const osm_id_set& noHupNodes,
                     const attribute_key_set& keepAttrs,
                     const restrictions& rest,
-                    restrictor& restor,
+                    trgraph::restrictor& restor,
                     const flat_relations& flatRels,
                     edge_tracks& etracks,
                     const osm_read_options& opts);
@@ -206,12 +206,11 @@ private:
                            const bounding_box& bbox,
                            size_t gridSize,
                            router::feed_stops& fs,
-                           restrictor& res,
+                              trgraph::restrictor& res,
                            const router::node_set& orphanStations,
                               const bool import_osm_stations);
     static double webMercDist(const trgraph::node& a, const trgraph::node& b);
 
-    static void writeODirEdgs(trgraph::graph& g, restrictor& restor);
     static void write_edge_tracks(const edge_tracks& tracks);
 
     static router::node_set snap_station(trgraph::graph& g,
@@ -219,7 +218,7 @@ private:
                                          trgraph::edge_grid& eg,
                                          trgraph::node_grid& sng,
                                          const osm_read_options& opts,
-                                         restrictor& restor,
+                                         trgraph::restrictor& restor,
                                          bool surHeur,
                                          bool orphSnap,
                                          double maxD,
@@ -248,7 +247,7 @@ private:
                                                        const osm_read_options& ops);
 
     void process_restrictions(osmid nid, osmid wid, const restrictions& rawRests, trgraph::edge* e,
-                              trgraph::node* n, restrictor& restor) const;
+                              trgraph::node* n, trgraph::restrictor& restor) const;
 
     std::string getAttrByFirstMatch(const deep_attribute_list& rule, osmid id,
                                     const attribute_map& attrs, const relation_map& entRels,
