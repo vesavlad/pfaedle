@@ -113,8 +113,10 @@ public:
                       const bounding_box& box);
 
 private:
-    int filter_nodes(pugi::xml_document& xml, osm_id_set& nodes,
-                     osm_id_set& noHupNodes, const osm_filter& filter,
+    int filter_nodes(pugi::xml_document& xml,
+                     osm_id_set& nodes,
+                     osm_id_set& noHupNodes,
+                     const osm_filter& filter,
                      const bounding_box& bbox) const;
 
     void read_relations(pugi::xml_document& xml,

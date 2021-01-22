@@ -305,13 +305,13 @@ ret_code app::run()
 
         pfaedle::trgraph::restrictor restrictor;
         pfaedle::trgraph::graph graph;
-        pfaedle::osm::osm_builder osm_builder;
 
         pfaedle::osm::bounding_box box(BOX_PADDING);
         pfaedle::router::shape_builder::get_gtfs_box(feeds_.front(), cmd_route_types, cfg_.shapeTripId, cfg_.dropShapes, box);
 
         if (!f_stops.empty())
         {
+            pfaedle::osm::osm_builder osm_builder;
             osm_builder.read(cfg_.osmPath,
                              mot_cfg.osmBuildOpts,
                              graph,
