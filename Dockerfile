@@ -27,4 +27,4 @@ RUN apt-get update && \
 COPY --from=builder /usr/local/etc/pfaedle /usr/local/etc/pfaedle
 COPY --from=builder /usr/local/bin/pfaedle /usr/local/bin/pfaedle
 
-ENTRYPOINT ["/usr/local/bin/pfaedle"]
+ENTRYPOINT ["/bin/bash"]
