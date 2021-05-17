@@ -27,7 +27,7 @@ public:
     const std::vector<mot_config>& get_configs() const;
 
 private:
-    osm::key_val_pair getKv(const std::string& kv) const;
+    std::pair<std::string, std::string> getKv(const std::string& kv) const;
     osm::filter_rule getFRule(const std::string& kv) const;
 
     trgraph::ReplRules getNormRules(const std::vector<std::string>& arr) const;

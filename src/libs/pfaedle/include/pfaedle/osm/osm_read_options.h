@@ -27,21 +27,18 @@ using node_id_multimap = std::unordered_map<osmid, std::set<trgraph::node*>>;
 using edge_candidate = std::pair<double, trgraph::edge*>;
 using edge_candidate_priority_queue = std::priority_queue<edge_candidate>;
 using relation_map = std::unordered_map<osmid, std::vector<size_t>>;
-using relation_vec = std::vector<attribute_map>;
 using attribute_list = std::vector<std::string>;
 
 using attribute_flag_pair = std::pair<std::string, uint64_t>;
 using multi_attribute_map = std::unordered_map<std::string, std::map<std::string, uint64_t>>;
 
-using key_val_pair = std::pair<std::string, std::string>;
 using flat_relations = std::set<size_t>;
 
 using edge_tracks = std::unordered_map<const trgraph::edge*, std::string>;
 
-class relation_list
+struct relation_list
 {
-public:
-    relation_vec rels;
+    std::vector<attribute_map> rels;
     flat_relations flat;
 };
 
@@ -59,9 +56,9 @@ class filter_rule
 {
 public:
     filter_rule() :
-        kv(key_val_pair("", ""))
+        kv("", "")
     {}
-    key_val_pair kv;
+    std::pair<std::string, std::string> kv;
     std::set<std::string> flags;
 };
 

@@ -16,12 +16,12 @@
 #include <string>
 #include <unistd.h>
 
-using pfaedle::osm::osm_id_set;
+namespace pfaedle::osm
+{
 
 size_t osm_id_set::LOOKUPS = 0;
 size_t osm_id_set::FLOOKUPS = 0;
 
-// _____________________________________________________________________________
 osm_id_set::osm_id_set() :
     _closed(false),
     _sorted(true),
@@ -39,32 +39,34 @@ osm_id_set::osm_id_set() :
     _outBuffer = new unsigned char[OBUFFER_S];
 }
 
-// _____________________________________________________________________________
 osm_id_set::~osm_id_set()
 {
     delete _bitset;
     delete[] _buffer;
-    if (!_closed) delete[] _outBuffer;
+    if (!_closed)
+        delete[] _outBuffer;
 }
 
-// _____________________________________________________________________________
 void osm_id_set::add(osmid id)
 {
-    if (_closed) throw std::exception();
+    if (_closed)
+        throw std::exception();
     diskAdd(id);
 
     if (_last > id) _sorted = false;
     _last = id;
-    if (id < _smallest) _smallest = id;
-    if (id > _biggest) _biggest = id;
+    if (id < _smallest)
+        _smallest = id;
+    if (id > _biggest)
+        _biggest = id;
 
-    for (int i = 0; i < 10; i++) (*_bitset)[hash(id, i)] = 1;
+    for (int i = 0; i < 10; i++)
+        (*_bitset)[hash(id, i)] = true;
 }
 
-// _____________________________________________________________________________
 void osm_id_set::diskAdd(osmid id)
 {
-    memcpy(_outBuffer + _obufpos, &id, 8);
+    std::memcpy(_outBuffer + _obufpos, &id, 8);
 
     _obufpos += 8;
 
@@ -82,14 +84,12 @@ void osm_id_set::diskAdd(osmid id)
     }
 }
 
-// _____________________________________________________________________________
 size_t osm_id_set::getBlock(osmid id) const
 {
     auto it = std::upper_bound(_blockEnds.begin(), _blockEnds.end(), id);
     return (it - _blockEnds.begin());
 }
 
-// _____________________________________________________________________________
 bool osm_id_set::diskHas(osmid id) const
 {
     assert(_sorted);
@@ -131,7 +131,6 @@ bool osm_id_set::diskHas(osmid id) const
     return false;
 }
 
-// _____________________________________________________________________________
 bool osm_id_set::has(osmid id) const
 {
     LOOKUPS++;
@@ -151,7 +150,6 @@ bool osm_id_set::has(osmid id) const
     return has;
 }
 
-// _____________________________________________________________________________
 void osm_id_set::close() const
 {
     ssize_t w = cwrite(_file, _outBuffer, _obufpos);
@@ -164,7 +162,6 @@ void osm_id_set::close() const
     if (!_sorted) sort();
 }
 
-// _____________________________________________________________________________
 void osm_id_set::sort() const
 {
     // sort file via an external merge sort
@@ -173,10 +170,10 @@ void osm_id_set::sort() const
     size_t parts = _fsize / SORT_BUFFER_S + 1;
     size_t partsBufSize = ((SORT_BUFFER_S / 8) / parts + 1) * 8;
 
-    unsigned char* buf = new unsigned char[SORT_BUFFER_S];
-    unsigned char** partbufs = new unsigned char*[parts];
-    size_t* partpos = new size_t[parts];
-    size_t* partsize = new size_t[parts];
+    auto* buf = new unsigned char[SORT_BUFFER_S];
+    auto** partbufs = new unsigned char*[parts];
+    auto* partpos = new size_t[parts];
+    auto* partsize = new size_t[parts];
 
     // sort the 'parts' number of file parts independently
     for (size_t i = 0; i < parts; i++)
@@ -219,7 +216,7 @@ void osm_id_set::sort() const
 
         assert(smallestP > -1);
 
-        memcpy(buf + (i % SORT_BUFFER_S), &smallest, 8);
+        std::memcpy(buf + (i % SORT_BUFFER_S), &smallest, 8);
 
         if ((i + 8) % BUFFER_S == 0) _blockEnds.push_back(smallest);
 
@@ -249,7 +246,6 @@ void osm_id_set::sort() const
     _sorted = true;
 }
 
-// _____________________________________________________________________________
 size_t osm_id_set::cwrite(int f, const void* buf, size_t n) const
 {
     ssize_t w = write(f, buf, n);
@@ -261,7 +257,6 @@ size_t osm_id_set::cwrite(int f, const void* buf, size_t n) const
     return w;
 }
 
-// _____________________________________________________________________________
 size_t osm_id_set::cread(int f, void* buf, size_t n) const
 {
     ssize_t w = read(f, buf, n);
@@ -273,14 +268,12 @@ size_t osm_id_set::cread(int f, void* buf, size_t n) const
     return w;
 }
 
-// _____________________________________________________________________________
 uint32_t osm_id_set::knuth(uint32_t in) const
 {
     const uint32_t prime = 2654435769;
     return (in * prime) >> 2;
 }
 
-// _____________________________________________________________________________
 uint32_t osm_id_set::jenkins(uint32_t in) const
 {
     in = (in + 0x7ed55d16) + (in << 12);
@@ -292,13 +285,11 @@ uint32_t osm_id_set::jenkins(uint32_t in) const
     return in >> 2;
 }
 
-// _____________________________________________________________________________
 uint32_t osm_id_set::hash(uint32_t in, int i) const
 {
     return (knuth(in) + jenkins(in) * i) % BLOOMF_BITS;
 }
 
-// _____________________________________________________________________________
 int osm_id_set::openTmpFile() const
 {
     const std::string& fname = getTmpFName("", "");
@@ -317,4 +308,5 @@ int osm_id_set::openTmpFile() const
     posix_fadvise(file, 0, 0, POSIX_FADV_SEQUENTIAL);
 #endif
     return file;
+}
 }

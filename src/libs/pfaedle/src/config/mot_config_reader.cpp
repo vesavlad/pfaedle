@@ -16,7 +16,6 @@ using pfaedle::config::mot_config;
 using pfaedle::config::mot_config_reader;
 using pfaedle::osm::deep_attribute_rule;
 using pfaedle::osm::filter_rule;
-using pfaedle::osm::key_val_pair;
 using pfaedle::trgraph::ReplRules;
 
 // _____________________________________________________________________________
@@ -625,9 +624,9 @@ filter_rule mot_config_reader::getFRule(const std::string& r) const
 }
 
 // _____________________________________________________________________________
-key_val_pair mot_config_reader::getKv(const std::string& kv) const
+std::pair<std::string, std::string> mot_config_reader::getKv(const std::string& kv) const
 {
-    osm::key_val_pair ret;
+    std::pair<std::string, std::string> ret;
     size_t p = kv.find('=', 0);
     ret.first = kv.substr(0, p);
 

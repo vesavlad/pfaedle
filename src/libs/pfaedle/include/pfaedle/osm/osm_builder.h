@@ -125,7 +125,7 @@ private:
                         relation_map& wayRels,
                         const osm_filter& filter,
                         const attribute_key_set& keepAttrs,
-                        restrictions& rests) const;
+                        restrictions& restrictions) const;
 
     void read_restrictions(const osm_relation& rel,
                            restrictions& rests,
@@ -166,7 +166,8 @@ private:
                               const attribute_key_set& keepAttrs);
 
     void read_edges(pugi::xml_document& xml,
-                    trgraph::graph& g, const relation_list& rels,
+                    trgraph::graph& g,
+                    const relation_list& rels,
                     const relation_map& wayRels,
                     const osm_filter& filter,
                     const osm_id_set& bBoxNodes,

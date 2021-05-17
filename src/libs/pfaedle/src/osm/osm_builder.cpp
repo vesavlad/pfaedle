@@ -30,6 +30,10 @@ using util::geo::Point;
 namespace pfaedle::osm
 {
 
+const static size_t RELATION_INDEX = 2;
+const static size_t WAY_INDEX = 1;
+const static size_t NODE_INDEX = 0;
+
 /**
  * @return the speed in km/h
  */
@@ -133,9 +137,9 @@ void osm_builder::read(const std::string& path,
         osm_id_set bboxNodes, noHupNodes;
 
         node_id_map nodes;
-        node_id_multimap mult_nodes;
-        relation_list intm_rels;
-        relation_map node_rels, wayRels;
+        node_id_multimap nodes_multi_map;
+        relation_list intermodal_rels;
+        relation_map node_rels, way_rels;
 
         restrictions raw_rests;
 
@@ -145,10 +149,10 @@ void osm_builder::read(const std::string& path,
 
         pugi::xml_document doc;
         pugi::xml_parse_result result = doc.load_file(path.c_str());
-        if (!result)
+        if (result.status != pugi::status_ok)
             return;
 
-        // we do four passes of the file here to be as memory creedy as possible:
+        // we do four passes of the file here to be as memory greedy as possible:
         // - the first pass collects all node IDs which are
         //    * inside the given bounding box
         //    * (TODO: maybe more filtering?)
@@ -166,16 +170,16 @@ void osm_builder::read(const std::string& path,
         filter_nodes(doc, bboxNodes, noHupNodes, filter, bbox);
 
         LOG(TRACE) << "Reading relations...";
-        read_relations(doc, intm_rels, node_rels, wayRels, filter, attr_keys[2], raw_rests);
+        read_relations(doc, intermodal_rels, node_rels, way_rels, filter, attr_keys[RELATION_INDEX], raw_rests);
 
         LOG(TRACE) << "Reading edges...";
-        read_edges(doc, g, intm_rels, wayRels, filter, bboxNodes, nodes, mult_nodes,
-                   noHupNodes, attr_keys[1], raw_rests, res, intm_rels.flat, e_tracks,
+        read_edges(doc, g, intermodal_rels, way_rels, filter, bboxNodes, nodes, nodes_multi_map,
+                   noHupNodes, attr_keys[WAY_INDEX], raw_rests, res, intermodal_rels.flat, e_tracks,
                    opts);
 
         LOG(TRACE) << "Reading kept nodes...";
-        read_nodes(doc, g, intm_rels, node_rels, filter, bboxNodes, nodes,
-                   mult_nodes, orphan_stations, attr_keys[0], intm_rels.flat, opts);
+        read_nodes(doc, g, intermodal_rels, node_rels, filter, bboxNodes, nodes,
+                   nodes_multi_map, orphan_stations, attr_keys[NODE_INDEX], intermodal_rels.flat, opts);
     }
 
     LOG(TRACE) << "OSM ID set lookups: " << osm::osm_id_set::LOOKUPS
@@ -935,8 +939,7 @@ void osm_builder::read_nodes(pugi::xml_document& xml,
                 n->pl().set_geom(pos);
                 if (filter.station(nd.attrs))
                 {
-                    auto si = get_station_info(n, nd.id, pos, nd.attrs, &attr_groups, nodeRels,
-                                               rels, opts);
+                    auto si = get_station_info(n, nd.id, pos, nd.attrs, &attr_groups, nodeRels, rels, opts);
                     if (si.has_value())
                     {
                         n->pl().set_si(si.value());
@@ -954,8 +957,7 @@ void osm_builder::read_nodes(pugi::xml_document& xml,
                     node->pl().set_geom(pos);
                     if (filter.station(nd.attrs))
                     {
-                        auto si = get_station_info(node, nd.id, pos, nd.attrs, &attr_groups, nodeRels,
-                                                   rels, opts);
+                        auto si = get_station_info(node, nd.id, pos, nd.attrs, &attr_groups, nodeRels, rels, opts);
                         if (si.has_value())
                         {
                             node->pl().set_si(si.value());
@@ -998,7 +1000,7 @@ void osm_builder::read_relations(pugi::xml_document& xml,
                                  relation_map& wayRels,
                                  const osm_filter& filter,
                                  const attribute_key_set& keepAttrs,
-                                 restrictions& rests) const
+                                 restrictions& restrictions) const
 {
     for (const auto& xmlrel : xml.child("osm").children("relation"))
     {
@@ -1062,7 +1064,7 @@ void osm_builder::read_relations(pugi::xml_document& xml,
         }
 
         // TODO(patrick): this is not needed for the filtering - remove it here!
-        read_restrictions(rel, rests, filter);
+        read_restrictions(rel, restrictions, filter);
     }
 }
 
