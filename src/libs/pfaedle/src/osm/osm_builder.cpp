@@ -622,43 +622,6 @@ int osm_builder::filter_nodes(const pugi::xml_document& xml,
 }
 
 
-bool osm_builder::should_keep_relation(osmid id, const relation_map& rels, const flat_relations& fl) const
-{
-    auto it = rels.find(id);
-
-    if (it == rels.end()) return false;
-
-    for (osmid rel_id : it->second)
-    {
-        // as soon as any of this entities relations is not flat, return true
-        if (!fl.count(rel_id)) return true;
-    }
-
-    return false;
-}
-
-
-bool osm_builder::keep_way(const osm_way& w, const relation_map& wayRels,
-                           const osm_filter& filter, const osm_id_set& bBoxNodes,
-                           const flat_relations& fl) const
-{
-    if (w.id && w.nodes.size() > 1 &&
-        (should_keep_relation(w.id, wayRels, fl) || filter.keep(w.attrs, osm_filter::WAY)) &&
-        !filter.drop(w.attrs, osm_filter::WAY))
-    {
-        for (osmid nid : w.nodes)
-        {
-            if (bBoxNodes.has(nid))
-            {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-
 void osm_builder::read_ways(const pugi::xml_document& xml,
                             const relation_map& wayRels,
                             const osm_filter& filter,
@@ -685,7 +648,7 @@ void osm_builder::read_ways(const pugi::xml_document& xml,
                 w.attrs[key] = val;
         }
 
-        if (keep_way(w, wayRels, filter, bBoxNodes, flatRels))
+        if (w.keep_way(wayRels, filter, bBoxNodes, flatRels))
         {
             ret.push_back(w.id);
             for (auto n : w.nodes)
@@ -732,7 +695,7 @@ void osm_builder::read_edges(const pugi::xml_document& xml,
                 w.attrs[key] = val;
             }
         }
-        if (keep_way(w, wayRels, filter, bBoxNodes, flatRels))
+        if (w.keep_way(wayRels, filter, bBoxNodes, flatRels))
         {
             trgraph::node* last = nullptr;
             std::vector<trgraph::transit_edge_line*> lines;
@@ -835,24 +798,6 @@ void osm_builder::process_restrictions(osmid nid,
 }
 
 
-bool osm_builder::keep_node(const osm_node& n,
-                            const node_id_map& nodes,
-                            const node_id_multimap& multNodes,
-                            const relation_map& nodeRels,
-                            const osm_id_set& bBoxNodes,
-                            const osm_filter& filter,
-                            const flat_relations& fl) const
-{
-    if (n.id &&
-        (nodes.count(n.id) || multNodes.count(n.id) || should_keep_relation(n.id, nodeRels, fl) || filter.keep(n.attrs, osm_filter::NODE)) &&
-        (nodes.count(n.id) || bBoxNodes.has(n.id)) &&
-        (nodes.count(n.id) || multNodes.count(n.id) || !filter.drop(n.attrs, osm_filter::NODE)))
-    {
-        return true;
-    }
-
-    return false;
-}
 
 
 void osm_builder::read_write_nodes(pugi::xml_document& i,
@@ -881,7 +826,7 @@ void osm_builder::read_write_nodes(pugi::xml_document& i,
                 nd.attrs[key] = val;
         }
 
-        if (keep_node(nd, nds, empt, nRels, bBoxNds, filter, f))
+        if (nd.keep_node(nds, empt, nRels, bBoxNds, filter, f))
         {
             nds[nd.id] = nullptr;
             pugi::xml_node node = o.append_child("node");
@@ -930,7 +875,7 @@ void osm_builder::read_nodes(const pugi::xml_document& xml,
                 nd.attrs[key] = val;
         }
 
-        if (keep_node(nd, nodes, multNodes, nodeRels, bBoxNodes, filter, fl))
+        if (nd.keep_node(nodes, multNodes, nodeRels, bBoxNodes, filter, fl))
         {
             auto pos = util::geo::latLngToWebMerc(nd.lat, nd.lng);
             if (nodes.count(nd.id))

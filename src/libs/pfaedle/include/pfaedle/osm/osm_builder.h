@@ -190,14 +190,6 @@ private:
                     node_id_map& nodes,
                     const flat_relations& flatRels);
 
-    bool keep_way(const osm_way& w, const relation_map& wayRels, const osm_filter& filter,
-                  const osm_id_set& bBoxNodes, const flat_relations& fl) const;
-
-
-    bool keep_node(const osm_node& n, const node_id_map& nodes,
-                   const node_id_multimap& multNodes, const relation_map& nodeRels,
-                   const osm_id_set& bBoxNodes, const osm_filter& filter,
-                   const flat_relations& fl) const;
 
     std::optional<trgraph::station_info> get_station_info(trgraph::node* node, osmid nid, const POINT& pos,
                                                        const attribute_map& m, station_attribute_groups* groups,
@@ -265,8 +257,6 @@ private:
 
     std::string get_attribute(const deep_attribute_rule& s, osmid id, const attribute_map& attrs,
                         const relation_map& entRels, const relation_list& rels) const;
-
-    bool should_keep_relation(osmid id, const relation_map& rels, const flat_relations& fl) const;
 
     std::map<trgraph::transit_edge_line, trgraph::transit_edge_line*> _lines;
     std::map<size_t, trgraph::transit_edge_line*> _relLines;

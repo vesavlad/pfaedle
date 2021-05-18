@@ -26,13 +26,11 @@ using node_id_map = std::unordered_map<osmid, trgraph::node*>;
 using node_id_multimap = std::unordered_map<osmid, std::set<trgraph::node*>>;
 using edge_candidate = std::pair<double, trgraph::edge*>;
 using edge_candidate_priority_queue = std::priority_queue<edge_candidate>;
-using relation_map = std::unordered_map<osmid, std::vector<size_t>>;
 using attribute_list = std::vector<std::string>;
 
 using attribute_flag_pair = std::pair<std::string, uint64_t>;
 using multi_attribute_map = std::unordered_map<std::string, std::map<std::string, uint64_t>>;
 
-using flat_relations = std::set<size_t>;
 
 using edge_tracks = std::unordered_map<const trgraph::edge*, std::string>;
 
