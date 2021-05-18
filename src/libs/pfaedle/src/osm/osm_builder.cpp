@@ -585,7 +585,7 @@ trgraph::node_payload osm_builder::payload_from_gtfs(const gtfs::stop* s, const 
 }
 
 
-int osm_builder::filter_nodes(pugi::xml_document& xml,
+int osm_builder::filter_nodes(const pugi::xml_document& xml,
                               osm_id_set& nodes,
                               osm_id_set& nohupNodes,
                               const osm_filter& filter,
@@ -659,7 +659,7 @@ bool osm_builder::keep_way(const osm_way& w, const relation_map& wayRels,
 }
 
 
-void osm_builder::read_ways(pugi::xml_document& xml,
+void osm_builder::read_ways(const pugi::xml_document& xml,
                             const relation_map& wayRels,
                             const osm_filter& filter,
                             const osm_id_set& bBoxNodes,
@@ -697,7 +697,7 @@ void osm_builder::read_ways(pugi::xml_document& xml,
 }
 
 
-void osm_builder::read_edges(pugi::xml_document& xml,
+void osm_builder::read_edges(const pugi::xml_document& xml,
                              trgraph::graph& g,
                              const relation_list& rels,
                              const relation_map& wayRels,
@@ -708,7 +708,7 @@ void osm_builder::read_edges(pugi::xml_document& xml,
                              const osm_id_set& noHupNodes,
                              const attribute_key_set& keepAttrs,
                              const restrictions& rest,
-                             trgraph::restrictor& restor,
+                             trgraph::restrictor& restrictor,
                              const flat_relations& flatRels,
                              edge_tracks& etracks,
                              const osm_read_options& opts)
@@ -767,13 +767,14 @@ void osm_builder::read_edges(pugi::xml_document& xml,
                 {
                     n = nodes[nid];
                 }
+
                 if (last)
                 {
                     auto e = g.addEdg(last, n, trgraph::edge_payload());
                     if (!e) continue;
 
-                    process_restrictions(nid, w.id, rest, e, n, restor);
-                    process_restrictions(lastnid, w.id, rest, e, last, restor);
+                    process_restrictions(nid, w.id, rest, e, n, restrictor);
+                    process_restrictions(lastnid, w.id, rest, e, last, restrictor);
 
                     e->pl().add_lines(lines);
                     e->pl().set_level(filter.level(w.attrs));
@@ -898,7 +899,7 @@ void osm_builder::read_write_nodes(pugi::xml_document& i,
 }
 
 
-void osm_builder::read_nodes(pugi::xml_document& xml,
+void osm_builder::read_nodes(const pugi::xml_document& xml,
                              trgraph::graph& g,
                              const relation_list& rels,
                              const relation_map& nodeRels,
@@ -931,11 +932,10 @@ void osm_builder::read_nodes(pugi::xml_document& xml,
 
         if (keep_node(nd, nodes, multNodes, nodeRels, bBoxNodes, filter, fl))
         {
-            trgraph::node* n = nullptr;
             auto pos = util::geo::latLngToWebMerc(nd.lat, nd.lng);
             if (nodes.count(nd.id))
             {
-                n = nodes[nd.id];
+                trgraph::node* n = nodes[nd.id];
                 n->pl().set_geom(pos);
                 if (filter.station(nd.attrs))
                 {
@@ -994,7 +994,7 @@ void osm_builder::read_nodes(pugi::xml_document& xml,
 }
 
 
-void osm_builder::read_relations(pugi::xml_document& xml,
+void osm_builder::read_relations(const pugi::xml_document& xml,
                                  relation_list& rels,
                                  relation_map& nodeRels,
                                  relation_map& wayRels,
@@ -1119,7 +1119,8 @@ void osm_builder::read_restrictions(const osm_relation& rel,
 }
 
 
-std::string osm_builder::getAttrByFirstMatch(const deep_attribute_list& rule, osmid id,
+std::string osm_builder::getAttrByFirstMatch(const deep_attribute_list& rule,
+                                             osmid id,
                                              const attribute_map& attrs,
                                              const relation_map& entRels,
                                              const relation_list& rels,

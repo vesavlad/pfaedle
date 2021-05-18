@@ -113,13 +113,13 @@ public:
                       const bounding_box& box);
 
 private:
-    int filter_nodes(pugi::xml_document& xml,
+    int filter_nodes(const pugi::xml_document& xml,
                      osm_id_set& nodes,
                      osm_id_set& noHupNodes,
                      const osm_filter& filter,
                      const bounding_box& bbox) const;
 
-    void read_relations(pugi::xml_document& xml,
+    void read_relations(const pugi::xml_document& xml,
                         relation_list& rels,
                         relation_map& nodeRels,
                         relation_map& wayRels,
@@ -131,7 +131,7 @@ private:
                            restrictions& rests,
                            const osm_filter& filter) const;
 
-    void read_nodes(pugi::xml_document& xml,
+    void read_nodes(const pugi::xml_document& xml,
                     trgraph::graph& g,
                     const relation_list& rels,
                     const relation_map& nodeRels,
@@ -165,7 +165,7 @@ private:
                               const osm_filter& filter,
                               const attribute_key_set& keepAttrs);
 
-    void read_edges(pugi::xml_document& xml,
+    void read_edges(const pugi::xml_document& xml,
                     trgraph::graph& g,
                     const relation_list& rels,
                     const relation_map& wayRels,
@@ -176,12 +176,12 @@ private:
                     const osm_id_set& noHupNodes,
                     const attribute_key_set& keepAttrs,
                     const restrictions& rest,
-                    trgraph::restrictor& restor,
+                    trgraph::restrictor& restrictor,
                     const flat_relations& flatRels,
                     edge_tracks& etracks,
                     const osm_read_options& opts);
 
-    void read_ways(pugi::xml_document& xml,
+    void read_ways(const pugi::xml_document& xml,
                     const relation_map& wayRels,
                     const osm_filter& filter,
                     const osm_id_set& bBoxNodes,

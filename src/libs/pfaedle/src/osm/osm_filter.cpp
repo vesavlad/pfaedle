@@ -150,10 +150,14 @@ bool osm_filter::valMatches(const std::string& a, const std::string& b, bool m)
     if (m)
     {
         // search for occurances in semicolon separated list
-        if (a.find(std::string(";") + b) != std::string::npos) return true;
-        if (a.find(b + ";") != std::string::npos) return true;
-        if (a.find(std::string("; ") + b) != std::string::npos) return true;
-        if (a.find(b + " ;") != std::string::npos) return true;
+        if (a.find(std::string(";") + b) != std::string::npos)
+            return true;
+        if (a.find(b + ";") != std::string::npos)
+            return true;
+        if (a.find(std::string("; ") + b) != std::string::npos)
+            return true;
+        if (a.find(b + " ;") != std::string::npos)
+            return true;
     }
 
     return a == b;
