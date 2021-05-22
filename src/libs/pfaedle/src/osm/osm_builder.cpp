@@ -12,6 +12,9 @@
 #include "util/Misc.h"
 #include "util/String.h"
 
+//#include <osmium/handler/node_locations_for_ways.hpp>
+#include "osm_reader.h"
+
 #include <logging/logger.h>
 #include <pugixml.hpp>
 #include <algorithm>
@@ -130,6 +133,15 @@ void osm_builder::read(const std::string& path,
         return;
 
     LOG(INFO) << "Reading OSM file " << path << " ... ";
+    osm_reader::read_configuration read_configuration {
+        opts,
+        g,
+        res
+    };
+    LOG_INFO()<<"Start reading pbf";
+    osm_reader reader{read_configuration};
+    reader.read(path, bbox);
+    LOG_INFO()<<"Finish reading pbf";
 
     router::node_set orphan_stations;
     edge_tracks e_tracks;
@@ -585,6 +597,17 @@ trgraph::node_payload osm_builder::payload_from_gtfs(const gtfs::stop* s, const 
 }
 
 
+/**
+ * @brief Filters the node from the provided xml into nodes and nohup nodes
+ * @param xml - source used for node reading
+ * @param nodes - nodes to keep
+ * @param nohupNodes - Nodes that should act as "no-hup" nodes.
+ *                     These are nodes that are contained in multiple ways, but cannot be used to switch from one way to another
+ *                     (for example, a track crossing in rail networks)
+ * @param filter
+ * @param bbox
+ * @return
+ */
 int osm_builder::filter_nodes(const pugi::xml_document& xml,
                               osm_id_set& nodes,
                               osm_id_set& nohupNodes,
@@ -974,7 +997,7 @@ void osm_builder::read_relations(const pugi::xml_document& xml,
                 rel.dropFlags = drop_flags;
             }
 
-            rels.rels.emplace_back(rel.attrs);
+            rels.attributes.emplace_back(rel.attrs);
         }
 
         // processing members
@@ -997,15 +1020,15 @@ void osm_builder::read_relations(const pugi::xml_document& xml,
 
         if (rel.keepFlags & osm::REL_NO_DOWN)
         {
-            rels.flat.insert(rels.rels.size() - 1);
+            rels.flat.insert(rels.attributes.size() - 1);
         }
         for (osmid id : rel.nodes)
         {
-            nodeRels[id].push_back(rels.rels.size() - 1);
+            nodeRels[id].push_back(rels.attributes.size() - 1);
         }
         for (osmid id : rel.ways)
         {
-            wayRels[id].push_back(rels.rels.size() - 1);
+            wayRels[id].push_back(rels.attributes.size() - 1);
         }
 
         // TODO(patrick): this is not needed for the filtering - remove it here!
@@ -1116,11 +1139,11 @@ std::string osm_builder::get_attribute(const deep_attribute_rule& s, osmid id,
         {
             for (const auto& rel_id : entRels.find(id)->second)
             {
-                if (osm_filter::contained(rels.rels[rel_id], s.relRule.kv))
+                if (osm_filter::contained(rels.attributes[rel_id], s.relRule.kv))
                 {
-                    if (rels.rels[rel_id].count(s.attr))
+                    if (rels.attributes[rel_id].count(s.attr))
                     {
-                        return rels.rels[rel_id].find(s.attr)->second;
+                        return rels.attributes[rel_id].find(s.attr)->second;
                     }
                 }
             }
@@ -1152,7 +1175,7 @@ std::optional<trgraph::station_info> osm_builder::get_station_info(trgraph::node
 
 #ifdef PFAEDLE_STATION_IDS
     ret.setId(getAttrByFirstMatch(ops.statAttrRules.idRule, nid, m, node_relations_,
-                                  rels, ops.idNormzer));
+                                  attributes, ops.idNormzer));
 #endif
 
     for (size_t i = 1; i < names.size(); i++) ret.add_alternative_name(names[i]);
@@ -1510,7 +1533,7 @@ std::vector<trgraph::transit_edge_line*> osm_builder::get_lines(
             bool found = false;
             for (const auto& r : ops.relLinerules.sNameRule)
             {
-                for (const auto& rel_attr : rels.rels[rel_id])
+                for (const auto& rel_attr : rels.attributes[rel_id])
                 {
                     if (rel_attr.first == r)
                     {
@@ -1526,7 +1549,7 @@ std::vector<trgraph::transit_edge_line*> osm_builder::get_lines(
             found = false;
             for (const auto& r : ops.relLinerules.fromNameRule)
             {
-                for (const auto& rel_attr : rels.rels[rel_id])
+                for (const auto& rel_attr : rels.attributes[rel_id])
                 {
                     if (rel_attr.first == r)
                     {
@@ -1543,7 +1566,7 @@ std::vector<trgraph::transit_edge_line*> osm_builder::get_lines(
             found = false;
             for (const auto& r : ops.relLinerules.toNameRule)
             {
-                for (const auto& rel_attr : rels.rels[rel_id])
+                for (const auto& rel_attr : rels.attributes[rel_id])
                 {
                     if (rel_attr.first == r)
                     {
@@ -1731,4 +1754,5 @@ void osm_builder::snap_stations(const osm_read_options& opts,
         }
     }
 }
+
 }

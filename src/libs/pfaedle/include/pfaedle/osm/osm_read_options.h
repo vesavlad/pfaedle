@@ -36,7 +36,7 @@ using edge_tracks = std::unordered_map<const trgraph::edge*, std::string>;
 
 struct relation_list
 {
-    std::vector<attribute_map> rels;
+    std::vector<attribute_map> attributes;
     flat_relations flat;
 };
 

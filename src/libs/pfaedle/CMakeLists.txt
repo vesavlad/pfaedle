@@ -29,6 +29,7 @@ configure_file (
 
 file(GLOB_RECURSE pfaedle_SRC *.cpp)
 add_library(pfaedle-lib ${pfaedle_SRC})
+
 target_link_libraries(pfaedle-lib
         PUBLIC logging
         PRIVATE osmium
@@ -38,6 +39,8 @@ target_link_libraries(pfaedle-lib
         PUBLIC pfaedle-generated
         PUBLIC pfaedle-util
         PUBLIC configparser
-        PUBLIC pugixml)
-target_include_directories(pfaedle-lib PUBLIC include)
+        PUBLIC pugixml
+        PUBLIC z
+        )
+target_include_directories(pfaedle-lib PUBLIC include ${osmpbf_INCLUDE_DIRS})
 
