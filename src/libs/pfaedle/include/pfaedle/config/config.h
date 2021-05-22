@@ -36,7 +36,7 @@ struct config
     bool useCaching{false};
     bool writeOverpass{false};
     bool inPlace{false};
-    double gridSize{2000};
+    size_t gridSize{2000};
     bool interpolate_times{false};
     bool import_osm_stops{false};
 
