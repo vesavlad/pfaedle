@@ -263,18 +263,18 @@ namespace pfaedle::osm
                 for (osmid nid : w.nodes) {
                     trgraph::node *n = nullptr;
                     if (reader.restricted_node_set.has(nid)) {
-                        n = reader.configuration.g.addNd();
+                        n = reader.configuration.graph.addNd();
                         reader.nodes_multi_map[nid].insert(n);
                     } else if (!reader.nodes.count(nid)) {
                         if (!reader.usable_node_set.has(nid)) continue;
-                        n = reader.configuration.g.addNd();
+                        n = reader.configuration.graph.addNd();
                         reader.nodes[nid] = n;
                     } else {
                         n = reader.nodes[nid];
                     }
 
                     if (last) {
-                        auto e = reader.configuration.g.addEdg(last, n, trgraph::edge_payload());
+                        auto e = reader.configuration.graph.addEdg(last, n, trgraph::edge_payload());
                         if (!e) continue;
 
                         reader.process_restrictions(nid, w.id, e, n);
@@ -357,7 +357,7 @@ namespace pfaedle::osm
                 } else {
                     // these are nodes without any connected edges
                     if (reader.filter.station(nd.attrs)) {
-                        auto tmp = reader.configuration.g.addNd(trgraph::node_payload(pos));
+                        auto tmp = reader.configuration.graph.addNd(trgraph::node_payload(pos));
                         auto si = pfaedle::osm::osm_reader::get_station_info(tmp, nd.id, pos, nd.attrs, &attr_groups,
                                                                              reader.node_rels,
                                                                              reader.intermodal_rels,
@@ -390,21 +390,46 @@ namespace pfaedle::osm
         if (!bbox.size())
             return;
 
+
+        LOG(TRACE) << "Reading bounding box nodes...";
+        LOG(TRACE) << "Reading relations...";
         osmium::io::File file{path};
         // read relations and nodes filtering
         osmium::io::Reader reader_pass1{file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::relation};
         osmium::apply(reader_pass1, relation_handler(*this, bbox));
         reader_pass1.close();
 
+        LOG(TRACE) << "Reading edges...";
         // read ways
         osmium::io::Reader reader_pass2{file, osmium::osm_entity_bits::way };
         osmium::apply(reader_pass2, way_handler(*this));
         reader_pass2.close();
 
+        LOG(TRACE) << "Reading kept nodes...";
         // read nodes
         osmium::io::Reader reader_pass3{file, osmium::osm_entity_bits::node };
         osmium::apply(reader_pass3, node_handler(*this));
         reader_pass3.close();
+
+
+        LOG(TRACE) << "OSM ID set lookups: " << osm::osm_id_set::LOOKUPS
+                   << ", file lookups: " << osm::osm_id_set::FLOOKUPS;
+
+        LOG(TRACE) << "Applying edge track numbers...";
+        for (const auto& tr : e_tracks)
+        {
+            if (tr.first->getTo()->pl().get_si() &&
+                tr.first->getTo()->pl().get_si()->get_track().empty())
+            {
+                tr.first->getTo()->pl().get_si()->set_track(tr.second);
+            }
+            if (tr.first->getFrom()->pl().get_si() &&
+                tr.first->getFrom()->pl().get_si()->get_track().empty())
+            {
+                tr.first->getFrom()->pl().get_si()->set_track(tr.second);
+            }
+        }
+        e_tracks.clear();
     }
 
 

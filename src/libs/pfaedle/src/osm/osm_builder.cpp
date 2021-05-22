@@ -9,8 +9,6 @@
 #include "pfaedle/osm/osm_filter.h"
 #include "pfaedle/trgraph/restrictor.h"
 #include "pfaedle/trgraph/station_group.h"
-#include "util/Misc.h"
-#include "util/String.h"
 
 //#include <osmium/handler/node_locations_for_ways.hpp>
 #include "osm_reader.h"
@@ -19,9 +17,6 @@
 #include <pugixml.hpp>
 #include <algorithm>
 #include <iostream>
-#include <limits>
-#include <map>
-#include <stack>
 #include <string>
 #include <utility>
 #include <vector>
@@ -32,78 +27,6 @@ using util::geo::Point;
 
 namespace pfaedle::osm
 {
-
-const static size_t RELATION_INDEX = 2;
-const static size_t WAY_INDEX = 1;
-const static size_t NODE_INDEX = 0;
-
-/**
- * @return the speed in km/h
- */
-inline double string_to_kmh(std::string str)
-{
-    /**
-     * The speed value used for "none" speed limit on German Autobahn is 150=30*5 as this is the biggest value
-     * not explicitly used in OSM and can be precisely returned for a factor of 5, 3, 2 and 1. It is fixed and
-     * not DecimalEncodedValue.getMaxInt to allow special case handling.
-     */
-    static constexpr double UNLIMITED_SIGN_SPEED = 150;
-
-    if (str.empty() || util::trim(str).empty())
-        return 50;
-
-    // on some German autobahns and a very few other places
-    if ("none" == str)
-        return UNLIMITED_SIGN_SPEED;
-
-    if (util::ends_with(str, ":rural") || util::ends_with(str, ":trunk"))
-        return 80;
-
-    if (util::ends_with(str, ":urban"))
-        return 50;
-
-    if (str == "walk" || util::ends_with(str, ":living_street"))
-        return 6;
-
-    size_t mpInteger = str.find("mp");
-    size_t knotInteger = str.find("knots");
-    size_t kmInteger = str.find("km");
-    size_t kphInteger = str.find("kph");
-
-    double factor;
-    if (mpInteger != std::string::npos)
-    {
-        str = util::trim(str.substr(0, mpInteger));
-        // factor = DistanceCalcEarth.KM_MILE;
-        factor = 1.609344f;
-    }
-    else if (knotInteger != std::string::npos)
-    {
-        str = util::trim(str.substr(0, knotInteger));
-        factor = 1.852;// see https://en.wikipedia.org/wiki/Knot_%28unit%29#Definitions
-    }
-    else
-    {
-        if (kmInteger != std::string::npos)
-        {
-            str = util::trim(str.substr(0, kmInteger));
-        }
-        else if (kphInteger != std::string::npos)
-        {
-            str = util::trim(str.substr(0, kphInteger));
-        }
-        factor = 1;
-    }
-
-    double value = stoi(str) * factor;
-
-    if (value <= 0)
-    {
-        return 50;
-    }
-
-    return value;
-}
 
 bool eq_search_functor::operator()(const trgraph::node* cand, const trgraph::station_info* si) const
 {
@@ -133,73 +56,11 @@ void osm_builder::read(const std::string& path,
         return;
 
     LOG(INFO) << "Reading OSM file " << path << " ... ";
-    osm_reader::read_configuration read_configuration {
-        opts,
-        g,
-        res
-    };
+    osm_reader::read_configuration read_configuration { opts,g,res};
     LOG_INFO()<<"Start reading pbf";
     osm_reader reader{read_configuration};
     reader.read(path, bbox);
     LOG_INFO()<<"Finish reading pbf";
-
-    router::node_set orphan_stations;
-    edge_tracks e_tracks;
-    {
-        osm_id_set bboxNodes, noHupNodes;
-
-        node_id_map nodes;
-        node_id_multimap nodes_multi_map;
-        relation_list intermodal_rels;
-        relation_map node_rels, way_rels;
-
-        restrictions raw_rests;
-
-        std::vector<attribute_key_set> attr_keys = opts.get_kept_attribute_keys();
-
-        osm_filter filter(opts);
-
-        pugi::xml_document doc;
-        pugi::xml_parse_result result = doc.load_file(path.c_str());
-        if (result.status != pugi::status_ok)
-            return;
-
-        // we do four passes of the file here to be as memory greedy as possible:
-        // - the first pass collects all node IDs which are
-        //    * inside the given bounding box
-        //    * (TODO: maybe more filtering?)
-        //   these nodes are stored on the HD via OsmIdSet (which implements a
-        //   simple bloom filter / base 256 encoded id store
-        // - the second pass collects filtered relations
-        // - the third pass collects filtered ways which contain one of the nodes
-        //   from pass 1
-        // - the forth pass collects filtered nodes which were
-        //    * collected as node ids in pass 1
-        //    * match the filter criteria
-        //    * have been used in a way in pass 3
-
-        LOG(TRACE) << "Reading bounding box nodes...";
-        filter_nodes(doc, bboxNodes, noHupNodes, filter, bbox);
-
-        LOG(TRACE) << "Reading relations...";
-        read_relations(doc, intermodal_rels, node_rels, way_rels, filter, attr_keys[RELATION_INDEX], raw_rests);
-
-        LOG(TRACE) << "Reading edges...";
-        read_edges(doc, g, intermodal_rels, way_rels, filter, bboxNodes, nodes, nodes_multi_map,
-                   noHupNodes, attr_keys[WAY_INDEX], raw_rests, res, intermodal_rels.flat, e_tracks,
-                   opts);
-
-        LOG(TRACE) << "Reading kept nodes...";
-        read_nodes(doc, g, intermodal_rels, node_rels, filter, bboxNodes, nodes,
-                   nodes_multi_map, orphan_stations, attr_keys[NODE_INDEX], intermodal_rels.flat, opts);
-    }
-
-    LOG(TRACE) << "OSM ID set lookups: " << osm::osm_id_set::LOOKUPS
-               << ", file lookups: " << osm::osm_id_set::FLOOKUPS;
-
-    LOG(TRACE) << "Applying edge track numbers...";
-    write_edge_tracks(e_tracks);
-    e_tracks.clear();
 
     {
         LOG(TRACE) << "Fixing gaps...";
@@ -211,7 +72,7 @@ void osm_builder::read(const std::string& path,
     g.write_geometries();
 
     LOG(TRACE) << "Snapping stations...";
-    snap_stations(opts, g, bbox, gridSize, fs, res, orphan_stations, import_osm_stations);
+    snap_stations(opts, g, bbox, gridSize, fs, res, reader.get_orphan_stations(), import_osm_stations);
 
     LOG(TRACE) << "Deleting orphan nodes...";
     g.delete_orphan_nodes();
@@ -388,9 +249,9 @@ void osm_builder::filter_write(const std::string& in,
         filter = filter.merge(osm_filter(o.keepFilter, o.dropFilter));
     }
 
-    filter_nodes(input_doc, bboxNodes, noHupNodes, filter, box);
+    //filter_nodes(input_doc, bboxNodes, noHupNodes, filter, box);
 
-    read_relations(input_doc, rels, nodeRels, wayRels, filter, attr_keys[2], rests);
+    //read_relations(input_doc, rels, nodeRels, wayRels, filter, attr_keys[2], rests);
     read_ways(input_doc, wayRels, filter, bboxNodes, attr_keys[1], ways, nodes, rels.flat);
 
     read_write_nodes(input_doc, osm_child, nodeRels, filter, bboxNodes, nodes, attr_keys[0], rels.flat);
@@ -399,8 +260,7 @@ void osm_builder::filter_write(const std::string& in,
     std::sort(ways.begin(), ways.end());
     read_write_relations(input_doc, osm_child, ways, nodes, filter, attr_keys[2]);
 
-    std::ofstream outstr;
-    outstr.open(out);
+    std::ofstream outstr{out};
     outout_doc.save(outstr);
 }
 
@@ -597,52 +457,7 @@ trgraph::node_payload osm_builder::payload_from_gtfs(const gtfs::stop* s, const 
 }
 
 
-/**
- * @brief Filters the node from the provided xml into nodes and nohup nodes
- * @param xml - source used for node reading
- * @param nodes - nodes to keep
- * @param nohupNodes - Nodes that should act as "no-hup" nodes.
- *                     These are nodes that are contained in multiple ways, but cannot be used to switch from one way to another
- *                     (for example, a track crossing in rail networks)
- * @param filter
- * @param bbox
- * @return
- */
-int osm_builder::filter_nodes(const pugi::xml_document& xml,
-                              osm_id_set& nodes,
-                              osm_id_set& nohupNodes,
-                              const osm_filter& filter,
-                              const bounding_box& bbox) const
-{
 
-    for (const auto& node : xml.child("osm").children("node"))
-    {
-        osmid cur_id = 0;
-
-        double y = node.attribute("lat").as_double();
-        double x = node.attribute("lon").as_double();
-
-        if (bbox.contains(Point(x, y)))
-        {
-            cur_id = util::atoul(node.attribute("id").value());
-            nodes.add(cur_id);
-        }
-
-        if (cur_id == 0)
-            continue;
-
-        for (const auto& tag : node.children("tag"))
-        {
-            if (filter.nohup(tag.attribute("k").as_string(),
-                             tag.attribute("v").as_string()))
-            {
-                nohupNodes.add(cur_id);
-            }
-        }
-    }
-
-    return 0;
-}
 
 
 void osm_builder::read_ways(const pugi::xml_document& xml,
@@ -681,145 +496,6 @@ void osm_builder::read_ways(const pugi::xml_document& xml,
         }
     }
 }
-
-
-void osm_builder::read_edges(const pugi::xml_document& xml,
-                             trgraph::graph& g,
-                             const relation_list& rels,
-                             const relation_map& wayRels,
-                             const osm_filter& filter,
-                             const osm_id_set& bBoxNodes,
-                             node_id_map& nodes,
-                             node_id_multimap& multNodes,
-                             const osm_id_set& noHupNodes,
-                             const attribute_key_set& keepAttrs,
-                             const restrictions& rest,
-                             trgraph::restrictor& restrictor,
-                             const flat_relations& flatRels,
-                             edge_tracks& etracks,
-                             const osm_read_options& opts)
-{
-    for (const auto& xmlway : xml.child("osm").children("way"))
-    {
-        osm_way w;
-        w.id = xmlway.attribute("id").as_ullong();
-        for (const auto& nd : xmlway.children("nd"))
-        {
-            osmid node_id = nd.attribute("ref").as_ullong();
-            w.nodes.emplace_back(node_id);
-        }
-
-        for (const auto& tag : xmlway.children("tag"))
-        {
-            const auto& key = tag.attribute("k").as_string();
-            const auto& val = tag.attribute("v").as_string();
-            if (keepAttrs.count(key))
-            {
-                w.attrs[key] = val;
-            }
-        }
-        if (w.keep_way(wayRels, filter, bBoxNodes, flatRels))
-        {
-            trgraph::node* last = nullptr;
-            std::vector<trgraph::transit_edge_line*> lines;
-            if (wayRels.count(w.id))
-            {
-                lines = get_lines(wayRels.find(w.id)->second, rels, opts);
-            }
-            std::string track =
-                    getAttrByFirstMatch(opts.edgePlatformRules,
-                                        w.id,
-                                        w.attrs,
-                                        wayRels,
-                                        rels,
-                                        opts.trackNormzer);
-
-            osmid lastnid = 0;
-            for (osmid nid : w.nodes)
-            {
-                trgraph::node* n = nullptr;
-                if (noHupNodes.has(nid))
-                {
-                    n = g.addNd();
-                    multNodes[nid].insert(n);
-                }
-                else if (!nodes.count(nid))
-                {
-                    if (!bBoxNodes.has(nid)) continue;
-                    n = g.addNd();
-                    nodes[nid] = n;
-                }
-                else
-                {
-                    n = nodes[nid];
-                }
-
-                if (last)
-                {
-                    auto e = g.addEdg(last, n, trgraph::edge_payload());
-                    if (!e) continue;
-
-                    process_restrictions(nid, w.id, rest, e, n, restrictor);
-                    process_restrictions(lastnid, w.id, rest, e, last, restrictor);
-
-                    e->pl().add_lines(lines);
-                    e->pl().set_level(filter.level(w.attrs));
-                    e->pl().set_max_speed(string_to_kmh(w.attrs["maxspeed"]));
-                    if (!track.empty()) etracks[e] = track;
-
-                    if (filter.oneway(w.attrs)) e->pl().setOneWay(1);
-                    if (filter.onewayrev(w.attrs)) e->pl().setOneWay(2);
-                }
-                lastnid = nid;
-                last = n;
-            }
-        }
-    }
-}
-
-
-void osm_builder::process_restrictions(osmid nid,
-                                       osmid wid,
-                                       const restrictions& rawRests,
-                                       trgraph::edge* e,
-                                       trgraph::node* n,
-                                       trgraph::restrictor& restor) const
-{
-    if (rawRests.pos.count(nid))
-    {
-        for (const auto& kv : rawRests.pos.find(nid)->second)
-        {
-            if (kv.eFrom == wid)
-            {
-                e->pl().set_restricted();
-                restor.add(e, kv.eTo, n, true);
-            }
-            else if (kv.eTo == wid)
-            {
-                e->pl().set_restricted();
-                restor.relax(wid, n, e);
-            }
-        }
-    }
-
-    if (rawRests.neg.count(nid))
-    {
-        for (const auto& kv : rawRests.neg.find(nid)->second)
-        {
-            if (kv.eFrom == wid)
-            {
-                e->pl().set_restricted();
-                restor.add(e, kv.eTo, n, false);
-            }
-            else if (kv.eTo == wid)
-            {
-                e->pl().set_restricted();
-                restor.relax(wid, n, e);
-            }
-        }
-    }
-}
-
 
 
 
@@ -866,367 +542,6 @@ void osm_builder::read_write_nodes(pugi::xml_document& i,
     }
 }
 
-
-void osm_builder::read_nodes(const pugi::xml_document& xml,
-                             trgraph::graph& g,
-                             const relation_list& rels,
-                             const relation_map& nodeRels,
-                             const osm_filter& filter,
-                             const osm_id_set& bBoxNodes,
-                             node_id_map& nodes,
-                             node_id_multimap& multNodes,
-                             router::node_set& orphanStations,
-                             const attribute_key_set& keepAttrs,
-                             const flat_relations& fl,
-                             const osm_read_options& opts) const
-{
-    station_attribute_groups attr_groups;
-
-    for (const auto& xmlnode : xml.child("osm").children("node"))
-    {
-        osm_node nd;
-        nd.lat = xmlnode.attribute("lat").as_double();
-        nd.lng = xmlnode.attribute("lon").as_double();
-        nd.id = xmlnode.attribute("id").as_ullong();
-
-        for (const auto& tag : xmlnode.children("tag"))
-        {
-            const auto& key = tag.attribute("k").as_string();
-            const auto& val = tag.attribute("v").as_string();
-
-            if (keepAttrs.count(key))
-                nd.attrs[key] = val;
-        }
-
-        if (nd.keep_node(nodes, multNodes, nodeRels, bBoxNodes, filter, fl))
-        {
-            auto pos = util::geo::latLngToWebMerc(nd.lat, nd.lng);
-            if (nodes.count(nd.id))
-            {
-                trgraph::node* n = nodes[nd.id];
-                n->pl().set_geom(pos);
-                if (filter.station(nd.attrs))
-                {
-                    auto si = get_station_info(n, nd.id, pos, nd.attrs, &attr_groups, nodeRels, rels, opts);
-                    if (si.has_value())
-                    {
-                        n->pl().set_si(si.value());
-                    }
-                }
-                else if (filter.blocker(nd.attrs))
-                {
-                    n->pl().set_blocker();
-                }
-            }
-            else if (multNodes.count(nd.id))
-            {
-                for (auto* node : multNodes[nd.id])
-                {
-                    node->pl().set_geom(pos);
-                    if (filter.station(nd.attrs))
-                    {
-                        auto si = get_station_info(node, nd.id, pos, nd.attrs, &attr_groups, nodeRels, rels, opts);
-                        if (si.has_value())
-                        {
-                            node->pl().set_si(si.value());
-                        }
-                    }
-                    else if (filter.blocker(nd.attrs))
-                    {
-                        node->pl().set_blocker();
-                    }
-                }
-            }
-            else
-            {
-                // these are nodes without any connected edges
-                if (filter.station(nd.attrs))
-                {
-                    auto tmp = g.addNd(trgraph::node_payload(pos));
-                    auto si = get_station_info(tmp, nd.id, pos, nd.attrs, &attr_groups, nodeRels, rels, opts);
-
-                    if (si.has_value())
-                    {
-                        tmp->pl().set_si(si.value());
-                    }
-
-                    if (tmp->pl().get_si())
-                    {
-                        tmp->pl().get_si()->set_is_from_osm(false);
-                        orphanStations.insert(tmp);
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-void osm_builder::read_relations(const pugi::xml_document& xml,
-                                 relation_list& rels,
-                                 relation_map& nodeRels,
-                                 relation_map& wayRels,
-                                 const osm_filter& filter,
-                                 const attribute_key_set& keepAttrs,
-                                 restrictions& restrictions) const
-{
-    for (const auto& xmlrel : xml.child("osm").children("relation"))
-    {
-        osm_relation rel;
-        uint64_t keep_flags = 0;
-        uint64_t drop_flags = 0;
-
-        rel.id = xmlrel.attribute("id").as_ullong();
-        // processing attributes
-        {
-            for (const auto& tag : xmlrel.children("tag"))
-            {
-                const auto& key = tag.attribute("k").as_string();
-                const auto& value = tag.attribute("v").as_string();
-                if (keepAttrs.count(key))
-                {
-                    rel.attrs[key] = value;
-                }
-            }
-
-            if (rel.id && !rel.attrs.empty() &&
-                (keep_flags = filter.keep(rel.attrs, osm_filter::REL)) &&
-                !(drop_flags = filter.drop(rel.attrs, osm_filter::REL)))
-            {
-                rel.keepFlags = keep_flags;
-                rel.dropFlags = drop_flags;
-            }
-
-            rels.attributes.emplace_back(rel.attrs);
-        }
-
-        // processing members
-        for (const auto& member : xmlrel.children("member"))
-        {
-            const auto& type = member.attribute("type").as_string();
-            if (strcmp(type, "node") == 0)
-            {
-                osmid id = member.attribute("ref").as_ullong();
-                rel.nodes.emplace_back(id);
-                rel.nodeRoles.emplace_back(member.attribute("role").as_string());
-            }
-            if (strcmp(type, "way") == 0)
-            {
-                osmid id = member.attribute("ref").as_ullong();
-                rel.ways.emplace_back(id);
-                rel.wayRoles.emplace_back(member.attribute("role").as_string());
-            }
-        }
-
-        if (rel.keepFlags & osm::REL_NO_DOWN)
-        {
-            rels.flat.insert(rels.attributes.size() - 1);
-        }
-        for (osmid id : rel.nodes)
-        {
-            nodeRels[id].push_back(rels.attributes.size() - 1);
-        }
-        for (osmid id : rel.ways)
-        {
-            wayRels[id].push_back(rels.attributes.size() - 1);
-        }
-
-        // TODO(patrick): this is not needed for the filtering - remove it here!
-        read_restrictions(rel, restrictions, filter);
-    }
-}
-
-
-void osm_builder::read_restrictions(const osm_relation& rel,
-                                    restrictions& rests,
-                                    const osm_filter& filter) const
-{
-    if (!rel.attrs.count("type") || rel.attrs.find("type")->second != "restriction")
-        return;
-
-    bool pos = filter.posRestr(rel.attrs);
-    bool neg = filter.negRestr(rel.attrs);
-
-    if (!pos && !neg)
-        return;
-
-    osmid from = 0;
-    osmid to = 0;
-    osmid via = 0;
-
-    for (size_t i = 0; i < rel.ways.size(); i++)
-    {
-        if (rel.wayRoles[i] == "from")
-        {
-            if (from) return;// only one from member supported
-            from = rel.ways[i];
-        }
-        if (rel.wayRoles[i] == "to")
-        {
-            if (to) return;// only one to member supported
-            to = rel.ways[i];
-        }
-    }
-
-    for (size_t i = 0; i < rel.nodes.size(); i++)
-    {
-        if (rel.nodeRoles[i] == "via")
-        {
-            via = rel.nodes[i];
-            break;
-        }
-    }
-
-    if (from && to && via)
-    {
-        if (pos)
-            rests.pos[via].emplace_back(from, to);
-        else if (neg)
-            rests.neg[via].emplace_back(from, to);
-    }
-}
-
-
-std::string osm_builder::getAttrByFirstMatch(const deep_attribute_list& rule,
-                                             osmid id,
-                                             const attribute_map& attrs,
-                                             const relation_map& entRels,
-                                             const relation_list& rels,
-                                             const trgraph::normalizer& normzer) const
-{
-    std::string ret;
-    for (const auto& s : rule)
-    {
-        ret = normzer.norm(get_attribute(s, id, attrs, entRels, rels));
-        if (!ret.empty()) return ret;
-    }
-    return ret;
-}
-
-
-std::vector<std::string> osm_builder::getAttrMatchRanked(
-        const deep_attribute_list& rule, osmid id, const attribute_map& attrs,
-        const relation_map& entRels, const relation_list& rels,
-        const trgraph::normalizer& normzer) const
-{
-    std::vector<std::string> ret;
-    for (const auto& s : rule)
-    {
-        std::string tmp = normzer.norm(get_attribute(s, id, attrs, entRels, rels));
-        if (!tmp.empty())
-        {
-            ret.push_back(tmp);
-        }
-    }
-    return ret;
-}
-
-
-std::string osm_builder::get_attribute(const deep_attribute_rule& s, osmid id,
-                                       const attribute_map& attrs, const relation_map& entRels,
-                                       const relation_list& rels) const
-{
-    if (s.relRule.kv.first.empty())
-    {
-        if (attrs.find(s.attr) != attrs.end())
-        {
-            return attrs.find(s.attr)->second;
-        }
-    }
-    else
-    {
-        if (entRels.count(id))
-        {
-            for (const auto& rel_id : entRels.find(id)->second)
-            {
-                if (osm_filter::contained(rels.attributes[rel_id], s.relRule.kv))
-                {
-                    if (rels.attributes[rel_id].count(s.attr))
-                    {
-                        return rels.attributes[rel_id].find(s.attr)->second;
-                    }
-                }
-            }
-        }
-    }
-    return "";
-}
-
-
-std::optional<trgraph::station_info> osm_builder::get_station_info(trgraph::node* node, osmid nid,
-                                                          const POINT& pos, const attribute_map& m,
-                                                          station_attribute_groups* groups,
-                                                          const relation_map& nodeRels,
-                                                          const relation_list& rels,
-                                                          const osm_read_options& ops) const
-{
-    std::string platform;
-    std::vector<std::string> names;
-
-    names = getAttrMatchRanked(ops.statAttrRules.nameRule, nid, m, nodeRels, rels,
-                               ops.statNormzer);
-    platform = getAttrByFirstMatch(ops.statAttrRules.platformRule, nid, m,
-                                   nodeRels, rels, ops.trackNormzer);
-
-    if (names.empty())
-        return std::nullopt;
-
-    trgraph::station_info ret(names[0], platform, true);
-
-#ifdef PFAEDLE_STATION_IDS
-    ret.setId(getAttrByFirstMatch(ops.statAttrRules.idRule, nid, m, node_relations_,
-                                  attributes, ops.idNormzer));
-#endif
-
-    for (size_t i = 1; i < names.size(); i++) ret.add_alternative_name(names[i]);
-
-    bool group_found = false;
-
-    for (const auto& rule : ops.statGroupNAttrRules)
-    {
-        if (group_found) break;
-        std::string rule_val = get_attribute(rule.attr, nid, m, nodeRels, rels);
-        if (!rule_val.empty())
-        {
-            // check if a matching group exists
-            for (auto* group : (*groups)[rule.attr.attr][rule_val])
-            {
-                if (group_found) break;
-                for (const auto* member : group->get_nodes())
-                {
-                    if (webMercMeterDist(*member->pl().get_geom(), pos) <= rule.maxDist)
-                    {
-                        // ok, group is matching
-                        group_found = true;
-                        if (node) group->add_node(node);
-                        ret.set_group(group);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    if (!group_found)
-    {
-        for (const auto& rule : ops.statGroupNAttrRules)
-        {
-            std::string rule_val = get_attribute(rule.attr, nid, m, nodeRels, rels);
-            if (!rule_val.empty())
-            {
-                // add new group
-                auto* g = new trgraph::station_group();
-                if (node)
-                    g->add_node(node);
-                ret.set_group(g);
-                (*groups)[rule.attr.attr][rule_val].push_back(g);
-                break;
-            }
-        }
-    }
-
-    return ret;
-}
 
 
 double osm_builder::webMercDist(const trgraph::node& a, const trgraph::node& b)
@@ -1512,111 +827,6 @@ trgraph::station_group* osm_builder::group_stats(const router::node_set& s)
 }
 
 
-std::vector<trgraph::transit_edge_line*> osm_builder::get_lines(
-        const std::vector<size_t>& edgeRels,
-        const relation_list& rels,
-        const osm_read_options& ops)
-{
-    std::vector<trgraph::transit_edge_line*> ret;
-    for (size_t rel_id : edgeRels)
-    {
-        trgraph::transit_edge_line* elp = nullptr;
-
-        if (_relLines.count(rel_id))
-        {
-            elp = _relLines[rel_id];
-        }
-        else
-        {
-            trgraph::transit_edge_line el;
-
-            bool found = false;
-            for (const auto& r : ops.relLinerules.sNameRule)
-            {
-                for (const auto& rel_attr : rels.attributes[rel_id])
-                {
-                    if (rel_attr.first == r)
-                    {
-                        el.shortName = ops.lineNormzer.norm(rel_attr.second);
-                        //ops.lineNormzer.norm(pfxml::file::decode(relAttr.second));
-                        if (!el.shortName.empty())
-                            found = true;
-                    }
-                }
-                if (found) break;
-            }
-
-            found = false;
-            for (const auto& r : ops.relLinerules.fromNameRule)
-            {
-                for (const auto& rel_attr : rels.attributes[rel_id])
-                {
-                    if (rel_attr.first == r)
-                    {
-                        el.fromStr = ops.lineNormzer.norm(rel_attr.second);
-                        //ops.statNormzer.norm(pfxml::file::decode(relAttr.second));
-                        if (!el.fromStr.empty())
-                            found = true;
-                    }
-                }
-                if (found)
-                    break;
-            }
-
-            found = false;
-            for (const auto& r : ops.relLinerules.toNameRule)
-            {
-                for (const auto& rel_attr : rels.attributes[rel_id])
-                {
-                    if (rel_attr.first == r)
-                    {
-                        el.toStr = ops.lineNormzer.norm(rel_attr.second);
-                        //ops.statNormzer.norm(pfxml::file::decode(relAttr.second));
-                        if (!el.toStr.empty()) found = true;
-                    }
-                }
-                if (found) break;
-            }
-
-            if (el.shortName.empty() && el.fromStr.empty() && el.toStr.empty())
-                continue;
-
-            if (_lines.count(el))
-            {
-                elp = _lines[el];
-                _relLines[rel_id] = elp;
-            }
-            else
-            {
-                elp = new trgraph::transit_edge_line(el);
-                _lines[el] = elp;
-                _relLines[rel_id] = elp;
-            }
-        }
-        ret.push_back(elp);
-    }
-    return ret;
-}
-
-
-void osm_builder::write_edge_tracks(const edge_tracks& tracks)
-{
-    for (const auto& tr : tracks)
-    {
-        if (tr.first->getTo()->pl().get_si() &&
-            tr.first->getTo()->pl().get_si()->get_track().empty())
-        {
-            tr.first->getTo()->pl().get_si()->set_track(tr.second);
-        }
-        if (tr.first->getFrom()->pl().get_si() &&
-            tr.first->getFrom()->pl().get_si()->get_track().empty())
-        {
-            tr.first->getFrom()->pl().get_si()->set_track(tr.second);
-        }
-    }
-}
-
-
 void osm_builder::snap_stations(const osm_read_options& opts,
                                 trgraph::graph& g,
                                 const bounding_box& bbox,
@@ -1624,7 +834,7 @@ void osm_builder::snap_stations(const osm_read_options& opts,
                                 router::feed_stops& fs,
                                 trgraph::restrictor& res,
                                 const router::node_set& orphanStations,
-                                const bool import_osm_stations)
+                                bool import_osm_stations)
 {
     trgraph::node_grid sng = trgraph::node_grid::build_node_grid(g, gridSize, bbox.get_full_web_merc_box(), true);
     trgraph::edge_grid eg = trgraph::edge_grid::build_edge_grid(g, gridSize, bbox.get_full_web_merc_box());

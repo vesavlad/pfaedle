@@ -18,36 +18,46 @@ namespace pfaedle::osm
     using util::geo::Point;
 
     class relation_handler;
+
     class way_handler;
+
     class node_handler;
 
     class osm_reader
     {
         friend class relation_handler;
+
         friend class way_handler;
+
         friend class node_handler;
 
     public:
         struct read_configuration
         {
             const osm_read_options &options;
-            trgraph::graph &g;
+            trgraph::graph &graph;
             trgraph::restrictor &restrictor;
         };
 
         explicit osm_reader(const osm_reader::read_configuration &configuration);
 
-        void read(const std::string& path, const bounding_box& bbox);
+        void read(const std::string &path, const bounding_box &bbox);
+
+
+        const router::node_set &get_orphan_stations() const
+        {
+            return orphan_stations;
+        }
+
     private:
         static std::optional<trgraph::station_info> get_station_info(trgraph::node *node,
-                                                              osmid nid,
-                                                              const POINT &pos,
-                                                              const attribute_map &m,
-                                                              station_attribute_groups *groups,
-                                                              const relation_map &nodeRels,
-                                                              const relation_list &rels,
-                                                              const osm_read_options &ops);
-
+                                                                     osmid nid,
+                                                                     const POINT &pos,
+                                                                     const attribute_map &m,
+                                                                     station_attribute_groups *groups,
+                                                                     const relation_map &nodeRels,
+                                                                     const relation_list &rels,
+                                                                     const osm_read_options &ops);
 
 
         static std::string get_attribute(const deep_attribute_rule &s,
@@ -56,7 +66,8 @@ namespace pfaedle::osm
                                          const relation_map &entRels,
                                          const relation_list &rels);
 
-        static std::string get_attribute_by_first_match(const deep_attribute_list &rule, osmid id,
+        static std::string get_attribute_by_first_match(const deep_attribute_list &rule,
+                                                        osmid id,
                                                         const attribute_map &attrs,
                                                         const relation_map &entRels,
                                                         const relation_list &rels,
@@ -81,7 +92,7 @@ namespace pfaedle::osm
 
     private:
 
-        const read_configuration& configuration;
+        const read_configuration &configuration;
 
         router::node_set orphan_stations;
         edge_tracks e_tracks;

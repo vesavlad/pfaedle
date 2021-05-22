@@ -113,37 +113,6 @@ public:
                       const bounding_box& box);
 
 private:
-    int filter_nodes(const pugi::xml_document& xml,
-                     osm_id_set& nodes,
-                     osm_id_set& noHupNodes,
-                     const osm_filter& filter,
-                     const bounding_box& bbox) const;
-
-    void read_relations(const pugi::xml_document& xml,
-                        relation_list& rels,
-                        relation_map& nodeRels,
-                        relation_map& wayRels,
-                        const osm_filter& filter,
-                        const attribute_key_set& keepAttrs,
-                        restrictions& restrictions) const;
-
-    void read_restrictions(const osm_relation& rel,
-                           restrictions& rests,
-                           const osm_filter& filter) const;
-
-    void read_nodes(const pugi::xml_document& xml,
-                    trgraph::graph& g,
-                    const relation_list& rels,
-                    const relation_map& nodeRels,
-                    const osm_filter& filter,
-                    const osm_id_set& bBoxNodes,
-                    node_id_map& nodes,
-                    node_id_multimap& multNodes,
-                    router::node_set& orphanStations,
-                    const attribute_key_set& keepAttrs,
-                    const flat_relations& fl,
-                    const osm_read_options& opts) const;
-
     void read_write_nodes(pugi::xml_document& i,
                           pugi::xml_node& o,
                           const relation_map& nRels,
@@ -165,22 +134,6 @@ private:
                               const osm_filter& filter,
                               const attribute_key_set& keepAttrs);
 
-    void read_edges(const pugi::xml_document& xml,
-                    trgraph::graph& g,
-                    const relation_list& rels,
-                    const relation_map& wayRels,
-                    const osm_filter& filter,
-                    const osm_id_set& bBoxNodes,
-                    node_id_map& nodes,
-                    node_id_multimap& multNodes,
-                    const osm_id_set& noHupNodes,
-                    const attribute_key_set& keepAttrs,
-                    const restrictions& rest,
-                    trgraph::restrictor& restrictor,
-                    const flat_relations& flatRels,
-                    edge_tracks& etracks,
-                    const osm_read_options& opts);
-
     void read_ways(const pugi::xml_document& xml,
                     const relation_map& wayRels,
                     const osm_filter& filter,
@@ -191,22 +144,15 @@ private:
                     const flat_relations& flatRels);
 
 
-    std::optional<trgraph::station_info> get_station_info(trgraph::node* node, osmid nid, const POINT& pos,
-                                                       const attribute_map& m, station_attribute_groups* groups,
-                                                       const relation_map& nodeRels, const relation_list& rels,
-                                                       const osm_read_options& ops) const;
-
     static void snap_stations(const osm_read_options& opts,
                            trgraph::graph& g,
                            const bounding_box& bbox,
                            size_t gridSize,
                            router::feed_stops& fs,
-                              trgraph::restrictor& res,
+                           trgraph::restrictor& res,
                            const router::node_set& orphanStations,
-                              const bool import_osm_stations);
+                           bool import_osm_stations);
     static double webMercDist(const trgraph::node& a, const trgraph::node& b);
-
-    static void write_edge_tracks(const edge_tracks& tracks);
 
     static router::node_set snap_station(trgraph::graph& g,
                                          trgraph::node_payload& s,
@@ -236,27 +182,6 @@ private:
     static trgraph::station_group* group_stats(const router::node_set& s);
 
     static trgraph::node_payload payload_from_gtfs(const pfaedle::gtfs::stop* s, const osm_read_options& ops);
-
-    std::vector<trgraph::transit_edge_line*> get_lines(const std::vector<size_t>& edgeRels,
-                                                       const relation_list& rels,
-                                                       const osm_read_options& ops);
-
-    void process_restrictions(osmid nid, osmid wid, const restrictions& rawRests, trgraph::edge* e,
-                              trgraph::node* n, trgraph::restrictor& restor) const;
-
-    std::string getAttrByFirstMatch(const deep_attribute_list& rule, osmid id,
-                                    const attribute_map& attrs, const relation_map& entRels,
-                                    const relation_list& rels,
-                                    const trgraph::normalizer& norm) const;
-
-    std::vector<std::string> getAttrMatchRanked(const deep_attribute_list& rule, osmid id,
-                                                const attribute_map& attrs,
-                                                const relation_map& entRels,
-                                                const relation_list& rels,
-                                                const trgraph::normalizer& norm) const;
-
-    std::string get_attribute(const deep_attribute_rule& s, osmid id, const attribute_map& attrs,
-                        const relation_map& entRels, const relation_list& rels) const;
 
     std::map<trgraph::transit_edge_line, trgraph::transit_edge_line*> _lines;
     std::map<size_t, trgraph::transit_edge_line*> _relLines;
