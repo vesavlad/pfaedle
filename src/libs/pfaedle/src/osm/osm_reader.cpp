@@ -1,13 +1,26 @@
-#include "osm_reader.h"
+#include <pfaedle/osm/bounding_box.h>
+#include <util/Misc.h>
+
+
 #include <osmium/handler.hpp>
 #include <osmium/visitor.hpp>
 #include <osmium/io/pbf_input.hpp>
 #include <osmium/io/xml_input.hpp>
 #include <osmium/io/reader.hpp>
 
+#ifdef __linux__
+// Utility class gives us access to memory usage information
+#include <osmium/util/memory.hpp>
+#endif
+#include <osmium/geom/haversine.hpp>
+#include <osmium/geom/mercator_projection.hpp>
+
+#include "osm_reader.h"
+
 namespace pfaedle::osm
 {
-
+    using util::geo::webMercMeterDist;
+    using util::geo::Point;
 
     const static size_t RELATION_INDEX = 2;
     const static size_t WAY_INDEX = 1;
@@ -128,10 +141,8 @@ namespace pfaedle::osm
                 uint64_t keep_flags = 0;
                 uint64_t drop_flags = 0;
                 for (const auto &tag : relation.tags()) {
-                    const auto &key = tag.key();
-                    const auto &value = tag.value();
-                    if (reader.kept_attribute_keys[RELATION_INDEX].count(key)) {
-                        rel.attrs[key] = value;
+                    if (reader.kept_attribute_keys[RELATION_INDEX].count(tag.key())) {
+                        rel.attrs[tag.key()] = tag.value();
                     }
                 }
 
@@ -147,16 +158,17 @@ namespace pfaedle::osm
 
             // processing members
             for (const auto &member : relation.members()) {
-                const auto &type = member.type();
-                if (type == osmium::item_type::node) {
-                    osmid id = member.ref();
-                    rel.nodes.emplace_back(id);
-                    rel.nodeRoles.emplace_back(member.role());
-                }
-                if (type == osmium::item_type::way) {
-                    osmid id = member.ref();
-                    rel.ways.emplace_back(id);
-                    rel.wayRoles.emplace_back(member.role());
+                switch (member.type()) {
+                    case osmium::item_type::node:
+                        rel.nodes.emplace_back(member.ref());
+                        rel.nodeRoles.emplace_back(member.role());
+                        break;
+                    case osmium::item_type::way:
+                        rel.ways.emplace_back(member.ref());
+                        rel.wayRoles.emplace_back(member.role());
+                        break;
+                    default:
+                        break;
                 }
             }
 
@@ -170,7 +182,7 @@ namespace pfaedle::osm
                 reader.way_rels[id].push_back(reader.intermodal_rels.attributes.size() - 1);
             }
 
-
+            // processing restrictions
             {
 
                 if (!rel.attrs.count("type") || rel.attrs.find("type")->second != "restriction")
@@ -205,10 +217,11 @@ namespace pfaedle::osm
                 }
 
                 if (from && to && via) {
-                    if (pos)
+                    if (pos) {
                         reader.raw_rests.pos[via].emplace_back(from, to);
-                    else if (neg)
+                    } else if (neg) {
                         reader.raw_rests.neg[via].emplace_back(from, to);
+                    }
                 }
             }
         }
@@ -390,24 +403,22 @@ namespace pfaedle::osm
         if (!bbox.size())
             return;
 
-
         LOG(TRACE) << "Reading bounding box nodes...";
         LOG(TRACE) << "Reading relations...";
-        osmium::io::File file{path};
         // read relations and nodes filtering
-        osmium::io::Reader reader_pass1{file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::relation};
+        osmium::io::Reader reader_pass1{path, osmium::osm_entity_bits::node | osmium::osm_entity_bits::relation};
         osmium::apply(reader_pass1, relation_handler(*this, bbox));
         reader_pass1.close();
 
         LOG(TRACE) << "Reading edges...";
         // read ways
-        osmium::io::Reader reader_pass2{file, osmium::osm_entity_bits::way };
+        osmium::io::Reader reader_pass2{path, osmium::osm_entity_bits::way };
         osmium::apply(reader_pass2, way_handler(*this));
         reader_pass2.close();
 
         LOG(TRACE) << "Reading kept nodes...";
         // read nodes
-        osmium::io::Reader reader_pass3{file, osmium::osm_entity_bits::node };
+        osmium::io::Reader reader_pass3{path, osmium::osm_entity_bits::node };
         osmium::apply(reader_pass3, node_handler(*this));
         reader_pass3.close();
 
@@ -430,6 +441,16 @@ namespace pfaedle::osm
             }
         }
         e_tracks.clear();
+
+#ifdef __linux__
+        // Because of the huge amount of OSM data, some Osmium-based programs
+        // (though not this one) can use huge amounts of data. So checking actual
+        // memore usage is often useful and can be done easily with this class.
+        // (Currently only works on Linux, not macOS and Windows.)
+        osmium::MemoryUsage memory;
+
+        LOG_INFO() << "Memory used: " << memory.peak() << " MBytes";
+#endif
     }
 
 
@@ -452,7 +473,7 @@ namespace pfaedle::osm
         trgraph::station_info ret(names[0], platform, true);
 
 #ifdef PFAEDLE_STATION_IDS
-        ret.setId(getAttrByFirstMatch(ops.statAttrRules.idRule, nid, m, node_relations_,
+        ret.set_id(get_attribute_by_first_match(ops.statAttrRules.idRule, nid, m, nodeRels,
                                   attributes, ops.idNormzer));
 #endif
 
@@ -528,8 +549,7 @@ namespace pfaedle::osm
         for (const auto &s : rule) {
             const auto &attribute = get_attribute(s, id, attrs, entRels, rels);
             ret = normzer.norm(attribute);
-            if (!ret.empty())
-                return ret;
+            if (!ret.empty()) { return ret; }
         }
         return ret;
     }
@@ -580,13 +600,11 @@ namespace pfaedle::osm
                     for (const auto &rel_attr : rels.attributes[rel_id]) {
                         if (rel_attr.first == r) {
                             el.fromStr = ops.lineNormzer.norm(rel_attr.second);
-                            //ops.statNormzer.norm(pfxml::file::decode(relAttr.second));
                             if (!el.fromStr.empty())
                                 found = true;
                         }
                     }
-                    if (found)
-                        break;
+                    if (found) break;
                 }
 
                 found = false;
@@ -594,7 +612,6 @@ namespace pfaedle::osm
                     for (const auto &rel_attr : rels.attributes[rel_id]) {
                         if (rel_attr.first == r) {
                             el.toStr = ops.lineNormzer.norm(rel_attr.second);
-                            //ops.statNormzer.norm(pfxml::file::decode(relAttr.second));
                             if (!el.toStr.empty()) found = true;
                         }
                     }

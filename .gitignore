@@ -29,3 +29,4 @@ trgraph-*
 eval/osm/*osm*
 eval/gtfs/*
 eval/osmconvert
+rip.txt

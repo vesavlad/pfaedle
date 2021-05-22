@@ -104,11 +104,11 @@ public:
                               const std::vector<osm_read_options>& opts,
                               const bounding_box& latLngBox) const;
 
-    // Based on the list of options, read an OSM file from in and output an
-    // OSM file to out which contains exactly the entities that are needed
-    // from the file at in
-    void filter_write(const std::string& in,
-                      const std::string& out,
+    // Based on the list of options, read an OSM file from input_file and output an
+    // OSM file to output_file which contains exactly the entities that are needed
+    // from the file at input_file
+    void filter_write(const std::string& input_file,
+                      const std::string& output_file,
                       const std::vector<osm_read_options>& opts,
                       const bounding_box& box);
 

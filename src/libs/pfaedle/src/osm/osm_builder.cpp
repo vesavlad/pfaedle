@@ -204,8 +204,8 @@ void osm_builder::overpass_query_write(std::ostream& out,
 }
 
 
-void osm_builder::filter_write(const std::string& in,
-                               const std::string& out,
+void osm_builder::filter_write(const std::string& input_file,
+                               const std::string& output_file,
                                const std::vector<osm_read_options>& opts,
                                const bounding_box& box)
 {
@@ -225,7 +225,7 @@ void osm_builder::filter_write(const std::string& in,
     node_id_multimap multNodes;
 
     pugi::xml_document input_doc;
-    input_doc.load_file(in.c_str());
+    input_doc.load_file(input_file.c_str());
 
     pugi::xml_document outout_doc;
     auto osm_child = outout_doc.append_child("osm");
@@ -260,7 +260,7 @@ void osm_builder::filter_write(const std::string& in,
     std::sort(ways.begin(), ways.end());
     read_write_relations(input_doc, osm_child, ways, nodes, filter, attr_keys[2]);
 
-    std::ofstream outstr{out};
+    std::ofstream outstr{output_file};
     outout_doc.save(outstr);
 }
 

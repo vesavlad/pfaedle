@@ -7,28 +7,20 @@
 #include <pfaedle/osm/osm_read_options.h>
 #include <pfaedle/osm/osm_id_set.h>
 #include <pfaedle/osm/osm_filter.h>
-#include "util/Misc.h"
-#include <pfaedle/osm/bounding_box.h>
 #include <pfaedle/trgraph/restrictor.h>
 #include <pfaedle/trgraph/station_group.h>
 
 namespace pfaedle::osm
 {
-    using util::geo::webMercMeterDist;
-    using util::geo::Point;
-
+    class bounding_box;
     class relation_handler;
-
     class way_handler;
-
     class node_handler;
 
     class osm_reader
     {
         friend class relation_handler;
-
         friend class way_handler;
-
         friend class node_handler;
 
     public:
