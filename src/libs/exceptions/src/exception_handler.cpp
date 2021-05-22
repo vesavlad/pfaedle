@@ -28,6 +28,7 @@ std::string build_throw_message(const std::type_info* type_info, void* thrown_ex
     return make_message_with_call_stack("Instance of unknown type thrown");
 }
 
+#if 0
 
 /**
  * We're replacing here a function from the standard library by our own implementation.
@@ -54,6 +55,7 @@ void __cxa_throw(void* thrown_exception, std::type_info* pvtinfo, void (*dest)(v
     /// Pass the exception to the standard exception handling mechanism, by calling __cxa_throw from stdlib
     orig_cxa_throw(thrown_exception, pvtinfo, dest);
 }
+#endif
 
 void my_terminate()
 {
