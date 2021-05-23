@@ -148,9 +148,9 @@ int main(int argc, char** argv)
         DirNode<int, int>* a = new DirNode<int, int>(0);
         DirNode<int, int>* b = new DirNode<int, int>(0);
         g.addNd(a);
-        assert(g.getNds()->size() == (size_t) 1);
+        assert(g.getNds().size() == (size_t) 1);
         g.addNd(b);
-        assert(g.getNds()->size() == (size_t) 2);
+        assert(g.getNds().size() == (size_t) 2);
 
         g.addEdg(a, b);
         assert(a->getDeg() == (size_t) 1);
@@ -189,9 +189,9 @@ int main(int argc, char** argv)
         UndirNode<int, int>* a = new UndirNode<int, int>(0);
         UndirNode<int, int>* b = new UndirNode<int, int>(0);
         g.addNd(a);
-        assert(g.getNds()->size() == (size_t) 1);
+        assert(g.getNds().size() == (size_t) 1);
         g.addNd(b);
-        assert(g.getNds()->size() == (size_t) 2);
+        assert(g.getNds().size() == (size_t) 2);
 
         g.addEdg(a, b);
         assert(a->getDeg() == (size_t) 1);
