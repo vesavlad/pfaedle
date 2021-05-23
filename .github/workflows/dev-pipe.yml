@@ -2,6 +2,7 @@ name: Process v1/v2 push or pr
 on:
   push:
     branches:
+      - feature/add-osmium
       - v2
       - v1
   pull_request:
@@ -38,7 +39,7 @@ jobs:
       run: ctest -C ${{ matrix.build_type }}
 
   docker-push:
-    if: github.ref == 'refs/heads/v1' || github.ref == 'refs/heads/v2'
+    if: github.ref == 'refs/heads/v1' || github.ref == 'refs/heads/v2' || github.ref == 'refs/heads/feature/add-osmium'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
