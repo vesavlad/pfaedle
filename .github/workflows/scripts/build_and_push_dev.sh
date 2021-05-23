@@ -1,7 +1,7 @@
 DOCKER_IMAGE="vladvesa/pfaedle"
 
 COMMIT_HASH=$(git rev-parse --short "$GITHUB_SHA")
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
+BRANCH=$(git rev-parse --abbrev-ref HEAD | sed 's/\//-/')
 
 DOCKER_TAG=$BRANCH-"latest"
 
