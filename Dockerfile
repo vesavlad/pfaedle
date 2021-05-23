@@ -3,7 +3,7 @@ FROM ubuntu AS builder
 WORKDIR /app
 
 RUN apt-get update && \
-	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends clang cmake git make ca-certificates wget
+	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends clang cmake git make ca-certificates wget libz-dev libbz2-dev
 
 RUN mkdir /usr/local/share/ca-certificates/cacert.org && \
 	wget -P /usr/local/share/ca-certificates/cacert.org http://www.cacert.org/certs/root.crt http://www.cacert.org/certs/class3.crt && \
@@ -21,7 +21,7 @@ RUN mkdir build && \
 FROM ubuntu
 
 RUN apt-get update && \
-	apt-get install -y libgomp1 && \
+	apt-get install -y libgomp1 libz-dev libbz2-dev && \
 	rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /usr/local/etc/pfaedle /usr/local/etc/pfaedle
