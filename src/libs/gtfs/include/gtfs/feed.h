@@ -109,6 +109,12 @@ class feed
 public:
     feed();
 
+    feed(const feed&) = delete;
+    feed(feed&&) = delete;
+
+    feed& operator=(const feed& record) = delete;
+    feed& operator=(feed&& record) = delete;
+
     pfaedle::gtfs::stop_time_provider& stop_time_provider() const;
     pfaedle::gtfs::routes_provider& routes_provider() const;
     pfaedle::gtfs::trips_provider& trips_provider() const;

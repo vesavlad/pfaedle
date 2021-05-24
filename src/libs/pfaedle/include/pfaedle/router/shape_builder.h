@@ -96,7 +96,7 @@ private:
                                             std::vector<double>& hopTimes,
                                             std::vector<double>& costs);
 
-    void set_shape(pfaedle::gtfs::trip& t,
+    void set_shape(pfaedle::gtfs::trip* t,
                    const pfaedle::gtfs::shape& s,
                    const std::vector<double>& dists,
                    const std::vector<double>& costs);

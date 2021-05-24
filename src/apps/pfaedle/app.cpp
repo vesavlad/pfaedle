@@ -345,7 +345,7 @@ ret_code app::run()
             }
         }
 
-        pfaedle::router::shape_builder shape_builder(feeds_.front(),
+        pfaedle::router::shape_builder shape_builder(feeds_[0],
                                                     eval_feed,
                                                     cmd_route_types,
                                                     mot_cfg,

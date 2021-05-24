@@ -267,14 +267,14 @@ void shape_builder::get_shape(pfaedle::netgraph::graph& ng)
         std::vector<double> distances;
         std::vector<double> times;
         std::vector<double> costs;
-        const pfaedle::gtfs::shape& shp = get_gtfs_shape(cshp, *clusters[i][0], distances, times, costs);
+        pfaedle::gtfs::shape shp = get_gtfs_shape(cshp, *clusters[i][0], distances, times, costs);
 
         LOG(TRACE) << "Took " << EDijkstra::ITERS - iters << " iterations.";
         iters = EDijkstra::ITERS;
 
         tot_num_trips += clusters[i].size();
 
-        for (auto t : clusters[i])
+        for (auto* t : clusters[i])
         {
             if (_cfg.evaluate)
             {
@@ -297,7 +297,7 @@ void shape_builder::get_shape(pfaedle::netgraph::graph& ng)
 
             if(t->shape().has_value())
             {
-                gtfs::shape& shape = t->shape().value();
+                gtfs::shape& shape = t->shape()->get();
                 if (!shape.empty() && shpUsage[shape.shape_id] > 0)
                 {
                     shpUsage[t->shape_id]--;
@@ -308,8 +308,7 @@ void shape_builder::get_shape(pfaedle::netgraph::graph& ng)
                     }
                 }
             }
-            set_shape(*t, shp, distances, costs);
-
+            set_shape(t, shp, distances, costs);
         }
     }
 
@@ -334,9 +333,9 @@ void shape_builder::get_shape(pfaedle::netgraph::graph& ng)
     }
 }
 
-void shape_builder::set_shape(pfaedle::gtfs::trip& t, const pfaedle::gtfs::shape& s, const std::vector<double>& dists, const std::vector<double>& costs)
+void shape_builder::set_shape(pfaedle::gtfs::trip* t, const pfaedle::gtfs::shape& s, const std::vector<double>& dists, const std::vector<double>& costs)
 {
-    const auto& stop_times = t.stop_times();
+    const auto& stop_times = t->stop_times();
     assert(dists.size() == stop_times.size() && costs.size() == stop_times.size());
 
     double total_cost = 0.f;
@@ -373,8 +372,10 @@ void shape_builder::set_shape(pfaedle::gtfs::trip& t, const pfaedle::gtfs::shape
     }
 
     std::lock_guard guard(_shpMutex);
-    _feed.shapes.emplace(s.shape_id, s);
-    t.shape_id = s.shape_id;
+    _feed.shapes[s.shape_id] = s;
+    _feed.trips.at(t->trip_id).shape_id = s.shape_id;
+//    _feed.shapes.emplace(s.shape_id, s);
+//    t->shape_id = s.shape_id;
 }
 
 pfaedle::gtfs::shape shape_builder::get_gtfs_shape(
@@ -680,9 +681,9 @@ clusters shape_builder::cluster_trips(pfaedle::gtfs::feed& f, const route_type_s
     std::map<stop_pair, std::vector<size_t>> cluster_idx;
 
     clusters ret;
-    for (auto& trip_pair : f.trips)
+    for (std::pair<const pfaedle::gtfs::Id,pfaedle::gtfs::trip>& trip_pair : f.trips)
     {
-        auto& trip = trip_pair.second;
+        gtfs::trip& trip = trip_pair.second;
         if(trip.shape().has_value() && !trip.shape()->get().empty() && !_cfg.dropShapes)
             continue;
 
@@ -696,22 +697,22 @@ clusters shape_builder::cluster_trips(pfaedle::gtfs::feed& f, const route_type_s
             continue;
 
         bool found = false;
-        stop_pair pair(&trip.stop_times().begin()->get().stop()->get(),
-                       &trip.stop_times().rbegin()->get().stop()->get());
+        stop_pair pair{std::addressof(trip.stop_times().begin()->get().stop()->get()),
+                       std::addressof(trip.stop_times().rbegin()->get().stop()->get())};
         const auto& c = cluster_idx[pair];
 
-        for (auto i : c)
+        for (auto& i : c)
         {
             if (routingEqual(*ret[i][0], trip))
             {
-                ret[i].push_back(&trip);
+                ret[i].push_back(std::addressof(trip));
                 found = true;
                 break;
             }
         }
         if (!found)
         {
-            ret.push_back(cluster{&trip});
+            ret.emplace_back(cluster{std::addressof(trip)});
             // explicit call to write render attrs to cache
             getRAttrs(trip);
             cluster_idx[pair].push_back(ret.size() - 1);
