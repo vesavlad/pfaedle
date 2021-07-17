@@ -141,6 +141,8 @@ std::set<route_type> get_route_types_from_string(std::string name)
         ret.insert(route_type::AerialLift);
         ret.insert(route_type::Funicular);
         ret.insert(route_type::Trolleybus);
+        ret.insert(route_type::SchoolBus);
+        ret.insert(route_type::SchoolAndPublicServiceBus);
         return ret;
     }
 
@@ -195,6 +197,12 @@ std::set<route_type> get_route_types_from_string(std::string name)
         return ret;
     }
 
+    if (name == "school") {
+        ret.insert(route_type::SchoolBus);
+        ret.insert(route_type::SchoolAndPublicServiceBus);
+        return ret;
+    }
+
     return ret;
 }
 std::string get_hex_color_string(uint32_t color)
@@ -208,6 +216,9 @@ std::string get_route_type_string(route_type t)
 {
     if (t == route_type::CoachService)
         return "coach";
+
+    if (t == route_type::SchoolBus || t == route_type::SchoolAndPublicServiceBus)
+        return "school";
 
     static std::string names[12] = {"tram", "subway", "rail", "bus", "ferry", "cablecar", "gondola", "funicular", "", "", "", "trolleybus"};
     return names[static_cast<size_t>(t)];
@@ -265,8 +276,6 @@ route_type get_route_type(int t)
         case 709:
         case 710:
         case 711:
-        case 712:
-        case 713:
         case 714:
         case 715:
         case 716:
@@ -278,6 +287,9 @@ route_type get_route_type(int t)
         case 1506:
         case 1507:
             return route_type::Bus;
+        case 712:
+        case 713:
+            return route_type::SchoolBus;
         case 1:
         case 401:
         case 402:
